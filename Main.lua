@@ -4,10 +4,8 @@ if not shared then
 end
 
 -- Initialize Luraph globals if they do not exist.
-if not LPH_OBFUSCATED then
-	loadstring([[
-		function LPH_NO_VIRTUALIZE(...) return ... end
-	]])()
+getgenv().LPH_NO_VIRTUALIZE = function(...)
+	return ...
 end
 
 ---@module Utility.Profiler
