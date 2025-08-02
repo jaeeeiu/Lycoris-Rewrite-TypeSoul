@@ -82,14 +82,7 @@ HitboxOptions.new = LPH_NO_VIRTUALIZE(function(target, timing, filter)
 		return self
 	end
 
-	for _, instance in next, collectionService:GetTagged("CanHit") do
-		local model = instance:FindFirstAncestorWhichIsA("Model")
-		if not model or model ~= character then
-			continue
-		end
-
-		table.insert(self.filter, instance)
-	end
+	self.filter = { character }
 
 	return self
 end)
