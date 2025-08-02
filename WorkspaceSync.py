@@ -20,8 +20,8 @@ SYNC_TIMING_DIR = os.path.abspath('./Timings/' + sys.argv[2])
 if not os.path.exists(SYNC_TIMING_DIR):
     os.makedirs(SYNC_TIMING_DIR)
 
-TARGET_DIR = os.path.abspath(sys.argv[1] + "/Lycoris-TypeSoul-Rewrite-Modules")
-TIMING_DIR = os.path.abspath(sys.argv[1] + "/Lycoris-TypeSoul-Rewrite-Timings")
+TARGET_DIR = os.path.abspath(sys.argv[1] + "/Lycoris-Rewrite-TypeSoul-Modules")
+TIMING_DIR = os.path.abspath(sys.argv[1] + "/Lycoris-Rewrite-TypeSoul-Timings")
 
 if not os.path.exists(TARGET_DIR):
     print(f"Target directory does not exist: {TARGET_DIR}")
