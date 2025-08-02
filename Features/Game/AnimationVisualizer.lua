@@ -183,7 +183,7 @@ return LPH_NO_VIRTUALIZE(function()
 	speedText.Name = "SpeedText"
 	speedText.FontFace = Font.new("rbxasset://fonts/families/RobotoMono.json")
 	speedText.TextColor3 = Library.FontColor
-	speedText.Text = "Speed (???)"
+	speedText.Text = "Speed (???) - Hit (???)"
 	speedText.BackgroundTransparency = 1
 	speedText.BackgroundColor3 = Color3.new(1, 1, 1)
 	speedText.BorderSizePixel = 0
@@ -433,6 +433,16 @@ return LPH_NO_VIRTUALIZE(function()
 
 		-- Update speed amount.
 		speedText.Text = currentTrack and string.format("Speed (%.2f)", currentTrack.Speed) or "Speed (???)"
+
+		local success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrame")
+
+		if not success and not kf then
+			success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrameStart")
+		end
+
+		if success and kf then
+			speedText.Text = string.format("Speed (%.2f) - Hit (%.2f)", currentTrack.Speed, kf)
+		end
 
 		if not currentTrack or not currentPlaybackData then
 			return
