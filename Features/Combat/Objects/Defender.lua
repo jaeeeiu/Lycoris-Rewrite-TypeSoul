@@ -540,6 +540,9 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	-- Parry if possible.
 	-- We'll assume that we're in the parry state. There's no other type.
 	InputClient.block(true)
+
+	task.wait(Configuration.expectOptionValue("ParryHoldTime") - self.rtt())
+
 	InputClient.block(false)
 end)
 

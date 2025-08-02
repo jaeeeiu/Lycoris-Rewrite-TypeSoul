@@ -145,6 +145,15 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = {},
 	})
 
+	autoDefenseDepBox:AddSlider("ParryHoldTime", {
+		Text = "Parry Hold Time",
+		Min = 0,
+		Max = 500,
+		Default = 0,
+		Suffix = "ms",
+		Rounding = 1,
+	})
+
 	autoDefenseDepBox:SetupDependencies({
 		{ autoDefenseToggle, true },
 	})
