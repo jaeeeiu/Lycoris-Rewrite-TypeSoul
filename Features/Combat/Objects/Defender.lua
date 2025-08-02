@@ -1,0 +1,744 @@
+---@module Utility.Logger
+local Logger = require("Utility/Logger")
+
+---@module Utility.Configuration
+local Configuration = require("Utility/Configuration")
+
+---@module Features.Combat.Objects.Task
+local Task = require("Features/Combat/Objects/Task")
+
+---@module Utility.Maid
+local Maid = require("Utility/Maid")
+
+---@module GUI.Library
+local Library = require("GUI/Library")
+
+---@module Game.Timings.ModuleManager
+local ModuleManager = require("Game/Timings/ModuleManager")
+
+---@module Utility.TaskSpawner
+local TaskSpawner = require("Utility/TaskSpawner")
+
+---@module Features.Combat.Targeting
+local Targeting = require("Features/Combat/Targeting")
+
+---@module Features.Combat.PositionHistory
+local PositionHistory = require("Features/Combat/PositionHistory")
+
+---@module Features.Combat.Objects.HitboxOptions
+local HitboxOptions = require("Features/Combat/Objects/HitboxOptions")
+
+---@module Game.InputClient
+local InputClient = require("Game/InputClient")
+
+---@class Defender
+---@field tasks Task[]
+---@field tmaid Maid Cleaned up every clean cycle.
+---@field rhook table<string, function> Hooked functions that we can restore on clean-up.
+---@field markers table<string, boolean> Blocking markers for unknown length timings. If the entry exists and is true, then we're blocking.
+---@field maid Maid
+---@field vpart Part?
+---@field ppart Part?
+local Defender = {}
+Defender.__index = Defender
+Defender.__type = "Defender"
+
+-- Services.
+local stats = game:GetService("Stats")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local userInputService = game:GetService("UserInputService")
+local players = game:GetService("Players")
+local textChatService = game:GetService("TextChatService")
+
+-- Constants.
+local MAX_VISUALIZATION_TIME = 5.0
+local MAX_REPEAT_WAIT = 10.0
+
+---Log a miss to the UI library with distance check.
+---@param type string
+---@param key string
+---@param name string?
+---@param distance number
+---@param parent string? If provided, will be shown in the log.
+---@return boolean
+function Defender:miss(type, key, name, distance, parent)
+	if not Configuration.expectToggleValue("ShowLoggerWindow") then
+		return false
+	end
+
+	if
+		distance < (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
+		or distance > (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
+	then
+		return false
+	end
+
+	Library:AddMissEntry(type, key, name, distance, parent)
+
+	return true
+end
+
+---Fetch distance.
+---@param from Model? | BasePart?
+---@return number?
+function Defender:distance(from)
+	if not from then
+		return
+	end
+
+	local entRootPart = from
+
+	if from:IsA("Model") then
+		entRootPart = from:FindFirstChild("HumanoidRootPart")
+	end
+
+	if not entRootPart then
+		return
+	end
+
+	local localCharacter = players.LocalPlayer.Character
+	if not localCharacter then
+		return
+	end
+
+	local localRootPart = localCharacter:FindFirstChild("HumanoidRootPart")
+	if not localRootPart then
+		return
+	end
+
+	return (entRootPart.Position - localRootPart.Position).Magnitude
+end
+
+---Find target - hookable function.
+---@param self Defender
+---@param entity Model
+---@return Target?
+Defender.target = LPH_NO_VIRTUALIZE(function(self, entity)
+	return Targeting.find(entity)
+end)
+
+---Repeat until parry end.
+---@param self Defender
+---@param entity Model
+---@param timing Timing
+---@param info RepeatInfo
+Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
+	local distance = self:distance(entity)
+	if not distance then
+		return Logger.warn("Stopping RPUE '%s' because the distance is not valid.", timing.name)
+	end
+
+	if timing and (distance < timing.imdd or distance > timing.imxd) then
+		return self:notify(timing, "Distance is out of range.")
+	end
+
+	if not self:rc(info) then
+		return Logger.warn("Stopping RPUE '%s' because the repeat condition is not valid.", timing.name)
+	end
+
+	local target = self:target(entity)
+
+	local options = HitboxOptions.new(CFrame.new(), timing)
+	options.spredict = true
+	options.part = target and target.root
+	options.entity = entity
+
+	local success = target and self:hc(options, timing.duih and info or nil)
+
+	info.index = info.index + 1
+
+	self:mark(
+		Task.new(
+			string.format("RPUE_%s_%i", timing.name, info.index),
+			timing:rpd() - self.rtt(),
+			timing.punishable,
+			timing.after,
+			self.rpue,
+			self,
+			self.entity,
+			timing,
+			info
+		)
+	)
+
+	if not target then
+		return Logger.warn("Skipping RPUE '%s' because the target is not valid.", timing.name)
+	end
+
+	if not success then
+		return Logger.warn("Skipping RPUE '%s' because we are not in the hitbox.", timing.name)
+	end
+
+	self:notify(timing, "(%i) Action 'RPUE Parry' is being executed.", info.index)
+
+	InputClient.block(true)
+	InputClient.block(false)
+end)
+
+---Check if we're in a valid state to proceed with action handling. Extend me.
+---@param self Defender
+---@param timing Timing
+---@param action Action
+---@return boolean
+Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
+	local selectedFilters = Configuration.expectOptionValue("AutoDefenseFilters") or {}
+
+	local chatInputBarConfiguration = textChatService:FindFirstChildOfClass("ChatInputBarConfiguration")
+
+	if
+		selectedFilters["Disable When Textbox Focused"]
+		and (userInputService:GetFocusedTextBox() or chatInputBarConfiguration.IsFocused)
+	then
+		return self:notify(timing, "User is typing in a text box.")
+	end
+
+	if selectedFilters["Disable When Window Not Active"] and not iswindowactive() then
+		return self:notify(timing, "Window is not active.")
+	end
+
+	if timing.tag == "M1" and selectedFilters["Filter Out M1s"] then
+		return self:notify(timing, "Attacker is using a 'M1' attack.")
+	end
+
+	if timing.tag == "Mantra" and selectedFilters["Filter Out Mantras"] then
+		return self:notify(timing, "Attacker is using a 'Mantra' attack.")
+	end
+
+	if timing.tag == "Critical" and selectedFilters["Filter Out Criticals"] then
+		return self:notify(timing, "Attacker is using a 'Critical' attack.")
+	end
+
+	if timing.tag == "Undefined" and selectedFilters["Filter Out Undefined"] then
+		return self:notify(timing, "Attacker is using an 'Undefined' attack.")
+	end
+
+	return true
+end)
+
+---Update visualizations.
+---@param self Defender
+Defender.vupdate = LPH_NO_VIRTUALIZE(function(self)
+	-- Calculate whether or not we should be showing visualizations.
+	local showVisualizations = Configuration.expectToggleValue("EnableVisualizations")
+		and os.clock() - self.lvisualization <= MAX_VISUALIZATION_TIME
+
+	-- Set transparency.
+	if self.vpart then
+		self.vpart.Transparency = showVisualizations and 0.85 or 1.0
+	end
+
+	if self.ppart then
+		self.ppart.Transparency = showVisualizations and 0.85 or 1.0
+	end
+end)
+
+---Run hitbox check. Returns wheter if the hitbox is being touched.
+---@todo: An issue is that the player's current look vector will not be the same as when they attack due to a parry timing being seperate from the attack causing this check to fail.
+---@param self Defender
+---@param cframe CFrame
+---@param fd boolean
+---@param size Vector3
+---@param filter Instance[]
+---@param identifier string
+---@return boolean
+Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier)
+	local overlapParams = OverlapParams.new()
+	overlapParams.FilterDescendantsInstances = filter
+	overlapParams.FilterType = Enum.RaycastFilterType.Include
+
+	local character = players.LocalPlayer.Character
+	if not character then
+		return nil
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	-- Used CFrame.
+	local usedCFrame = cframe
+
+	if fd then
+		usedCFrame = usedCFrame * CFrame.new(0, 0, -(size.Z / 2))
+	end
+
+	-- Detect hit.
+	local hit = #workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams) > 0
+
+	-- Visualize color.
+	local visColor = hit and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+
+	-- Create visualization part if it doesn't exist.
+	if not self.vpart then
+		-- Create part.
+		local vpart = Instance.new("Part")
+		vpart.Parent = workspace
+		vpart.Anchored = true
+		vpart.CanCollide = false
+		vpart.Material = Enum.Material.SmoothPlastic
+
+		-- Set part.
+		self.vpart = vpart
+	end
+
+	-- Create player part if it doesn't exist.
+	if not self.ppart then
+		-- Create part.
+		local ppart = Instance.new("Part")
+		ppart.Parent = workspace
+		ppart.Anchored = true
+		ppart.CanCollide = false
+		ppart.Material = Enum.Material.Plastic
+
+		-- Set part.
+		self.ppart = ppart
+	end
+
+	-- Visual part.
+	self.vpart.Size = size
+	self.vpart.CFrame = usedCFrame
+	self.vpart.Color = visColor
+	self.vpart.Name = string.format("VP_%s", identifier)
+
+	-- Player part.
+	self.ppart.Size = root.Size
+	self.ppart.CFrame = root.CFrame
+	self.ppart.Color = visColor
+	self.ppart.Name = string.format("PP_%s", identifier)
+
+	-- Set timestamp.
+	self.lvisualization = os.clock()
+
+	-- Return reuslt.
+	return hit
+end)
+
+---Check initial state.
+---@param self Defender
+---@param from Model? | BasePart?
+---@param pair TimingContainerPair
+---@param name string
+---@param key string
+---@return Timing?
+Defender.initial = LPH_NO_VIRTUALIZE(function(self, from, pair, name, key)
+	-- Find timing.
+	local timing = pair:index(key)
+
+	-- Fetch distance.
+	local distance = self:distance(from)
+	if not distance then
+		return nil
+	end
+
+	-- Check for distance; if we have a timing.
+	if timing and (distance < timing.imdd or distance > timing.imxd) then
+		return nil
+	end
+
+	-- Check for no timing. If so, let's log a miss.
+	---@note: Ignore return value.
+	if not timing then
+		self:miss(self.__type, key, name, distance, from and tostring(from.Parent) or nil)
+		return nil
+	end
+
+	-- Return timing.
+	return timing
+end)
+
+---Logger notify.
+---@param self Defender
+---@param timing Timing
+---@param str string
+Defender.notify = LPH_NO_VIRTUALIZE(function(self, timing, str, ...)
+	if not Configuration.expectToggleValue("EnableNotifications") then
+		return
+	end
+
+	Logger.notify("[%s] (%s) %s", timing.name, self.__type, string.format(str, ...))
+end)
+
+---Get receiving delay.
+---@todo: Replace this average with the real RakNet receiving delay when we can do more reversing.
+---@return number
+function Defender.rdelay()
+	return players.LocalPlayer:GetNetworkPing()
+end
+
+---Get sending delay.
+---@return number
+function Defender.sdelay()
+	return math.max(Defender.rtt() - Defender.rdelay(), 0.0)
+end
+
+---Get data ping.
+---@note: https://devforum.roblox.com/t/in-depth-information-about-robloxs-remoteevents-instance-replication-and-physics-replication-w-sources/1847340
+---@note: The forum post above is misleading, not only is it the RTT time, please note that this also takes into account all delays like frame time.
+---@note: This is our round-trip time (e.g double the ping) since we have a receiving delay (replication) and a sending delay when we send the input to the server.
+---@todo: For every usage, the sending delay needs to be continously updated. The receiving one must be calculated once at initial send for AP ping compensation.
+---@return number
+function Defender.rtt()
+	local network = stats:FindFirstChild("Network")
+	if not network then
+		return
+	end
+
+	local serverStatsItem = network:FindFirstChild("ServerStatsItem")
+	if not serverStatsItem then
+		return
+	end
+
+	local dataPingItem = serverStatsItem:FindFirstChild("Data Ping")
+	if not dataPingItem then
+		return
+	end
+
+	return (dataPingItem:GetValue() / 1000)
+end
+
+---Repeat conditional.
+---@param self Defender
+---@param info RepeatInfo
+---@return boolean
+Defender.rc = LPH_NO_VIRTUALIZE(function(self, info)
+	if os.clock() - info.start >= MAX_REPEAT_WAIT then
+		return false
+	end
+
+	return true
+end)
+
+---Handle delay until in hitbox.
+---@param self Defender
+---@param options HitboxOptions
+---@param info RepeatInfo
+---@return boolean
+Defender.duih = LPH_NO_VIRTUALIZE(function(self, options, info)
+	while task.wait() do
+		if not self:rc(info) then
+			return false
+		end
+
+		if not self:hc(options, nil) then
+			continue
+		end
+
+		return true
+	end
+end)
+
+---Handle hitbox check options.
+---@param self Defender
+---@param options HitboxOptions
+---@param info RepeatInfo? Pass this in if you want to use the repeat until in hitbox conditional.
+---@return boolean
+Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
+	local action = options.action
+	local timing = options.timing
+
+	if action and action.ihbc then
+		return true
+	end
+
+	if info then
+		return self:duih(options, info)
+	end
+
+	local hitbox = action and action.hitbox or timing.hitbox
+
+	if timing.duih then
+		hitbox = timing.hitbox
+	end
+
+	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, timing.name)
+
+	if result then
+		return result
+	end
+
+	if not options.spredict then
+		return false
+	end
+
+	local character = players.LocalPlayer.Character
+	if not character then
+		return false
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+
+	local closest = PositionHistory.closest(tick() - self.sdelay())
+	if not closest then
+		return false
+	end
+
+	local oldCFrame = root.CFrame
+
+	root.CFrame = closest
+
+	result = self:hitbox(options:extrapolate(), timing.fhb, hitbox, options.filter, timing.name)
+
+	root.CFrame = oldCFrame
+
+	if not result then
+		return false
+	end
+
+	self.vpart.Color = Color3.fromRGB(255, 0, 255)
+	self.ppart.Color = Color3.fromRGB(255, 0, 255)
+
+	return true
+end)
+
+---Handle end block.
+---@param self Defender
+Defender.bend = LPH_NO_VIRTUALIZE(function(self)
+	-- Iterate for start block tasks.
+	for idx, task in next, self.tasks do
+		-- Check if task is a start block.
+		if task.identifier ~= "Start Block" then
+			continue
+		end
+
+		-- End start block tasks.
+		task:cancel()
+
+		-- Clear in table.
+		self.tasks[idx] = nil
+	end
+
+	InputClient.block(false)
+end)
+
+---Handle action.
+---@param self Defender
+---@param timing Timing
+---@param action Action
+Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
+	if not self:valid(timing, action) then
+		return
+	end
+
+	self:notify(timing, "Action type '%s' is being executed.", action._type)
+
+	if action._type == "Start Block" then
+		return InputClient.block(true)
+	end
+
+	if action._type == "End Block" then
+		return self:bend()
+	end
+
+	if action._type == "Dash" then
+		return InputClient.dash()
+	end
+
+	-- Parry if possible.
+	-- We'll assume that we're in the parry state. There's no other type.
+	InputClient.block(true)
+	InputClient.block(false)
+end)
+
+---Check if we have input blocking tasks.
+---@param self Defender
+---@return boolean
+Defender.blocking = LPH_NO_VIRTUALIZE(function(self)
+	for _, marker in next, self.markers do
+		if not marker then
+			continue
+		end
+
+		return true
+	end
+
+	for _, task in next, self.tasks do
+		if not task:blocking() then
+			continue
+		end
+
+		return true
+	end
+end)
+
+---Mark task.
+---@param task Task
+function Defender:mark(task)
+	self.tasks[#self.tasks + 1] = task
+end
+
+---Clean up hooks.
+function Defender:clhook()
+	for key, old in next, self.rhook do
+		if not self[key] then
+			continue
+		end
+
+		self[key] = old
+	end
+
+	self.rhook = {}
+end
+
+---Clean up all tasks.
+---@param self Defender
+Defender.clean = LPH_NO_VIRTUALIZE(function(self)
+	-- Clean-up hooks.
+	self:clhook()
+
+	-- Clear temporary maid.
+	self.tmaid:clean()
+
+	-- Clear markers.
+	self.markers = {}
+
+	-- Teleport visualizations away.
+	if self.vpart then
+		self.vpart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
+	end
+
+	if self.ppart then
+		self.ppart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
+	end
+
+	-- Was there a start block, end block, or parry?
+	local blocking = false
+
+	for idx, task in next, self.tasks do
+		-- Cancel task.
+		task:cancel()
+
+		-- Clear in table.
+		self.tasks[idx] = nil
+
+		-- Check.
+		blocking = blocking
+			or (task.identifier == "Start Block" or task.identifier == "End Block" or task.identifier == "Parry")
+	end
+
+	-- Run end block, just in case we get stuck.
+	if blocking then
+		InputClient.block(false)
+	end
+end)
+
+---Process module.
+---@param self Defender
+---@param timing Timing
+---@varargs any
+Defender.module = LPH_NO_VIRTUALIZE(function(self, timing, ...)
+	-- Get loaded function.
+	local lf = ModuleManager.modules[timing.smod]
+	if not lf then
+		return self:notify(timing, "No module '%s' found.", timing.smod)
+	end
+
+	-- Create identifier.
+	local identifier = string.format("Defender_RunModule_%s", timing.smod)
+
+	-- Notify.
+	if not timing.smn then
+		self:notify(timing, "Running module '%s' on timing.", timing.smod)
+	end
+
+	-- Run module.
+	self.tmaid:mark(TaskSpawner.spawn(identifier, lf, self, timing, ...))
+end)
+
+---Add a action to the defender object.
+---@param self Defender
+---@param timing Timing
+---@param action Action
+Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
+	-- Get ping.
+	local ping = self.rtt()
+
+	-- Add action.
+	self:mark(
+		Task.new(action._type, action:when() - ping, timing.punishable, timing.after, self.handle, self, timing, action)
+	)
+
+	-- Log.
+	self:notify(timing, "Added action '%s' (%.2fs) with ping '%.2f' subtracted.", action.name, action:when(), ping)
+end)
+
+---Add actions from timing to defender object.
+---@param self Defender
+---@param timing Timing
+Defender.actions = LPH_NO_VIRTUALIZE(function(self, timing)
+	for _, action in next, timing.actions:get() do
+		self:action(timing, action)
+	end
+end)
+
+---Safely replace a function in the defender object.
+---@param key string
+---@param new function
+---@return boolean, function
+function Defender:hook(key, new)
+	-- Check if we're already hooked.
+	if self.rhook[key] then
+		Logger.warn("Cannot hook '%s' because it is already hooked.", key)
+		return false, nil
+	end
+
+	-- Get our assumed old / target function.
+	local old = self[key]
+
+	-- Check if function.
+	if typeof(old) ~= "function" then
+		Logger.warn("Cannot hook '%s' because it is not a function.", key)
+		return false, nil
+	end
+
+	-- Create hook.
+	self[key] = new
+
+	-- Add to hook table with the old function so we can restore it on clean-up.
+	self.rhook[key] = old
+
+	-- Log.
+	Logger.warn("Hooked '%s' with new function.", key)
+
+	return true, old
+end
+
+---Detach defender object.
+function Defender:detach()
+	-- Clean self.
+	self:clean()
+	self.maid:clean()
+
+	-- Destroy parts.
+	if self.vpart then
+		self.vpart:Destroy()
+	end
+
+	if self.ppart then
+		self.ppart:Destroy()
+	end
+
+	-- Set object nil.
+	self = nil
+end
+
+---Create new Defender object.
+---@return Defender
+function Defender.new()
+	local self = setmetatable({}, Defender)
+	self.tasks = {}
+	self.rhook = {}
+	self.tmaid = Maid.new()
+	self.maid = Maid.new()
+	self.ppart = nil
+	self.vpart = nil
+	self.markers = {}
+	self.lvisualization = os.clock()
+	return self
+end
+
+-- Return Defender module.
+return Defender

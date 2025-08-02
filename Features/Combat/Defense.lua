@@ -1,0 +1,242 @@
+---@module Utility.Signal
+local Signal = require("Utility/Signal")
+
+---@module Utility.Maid
+local Maid = require("Utility/Maid")
+
+---@module Features.Combat.Objects.AnimatorDefender
+local AnimatorDefender = require("Features/Combat/Objects/AnimatorDefender")
+
+---@module Features.Combat.Objects.PartDefender
+local PartDefender = require("Features/Combat/Objects/PartDefender")
+
+---@module Features.Combat.Objects.SoundDefender
+local SoundDefender = require("Features/Combat/Objects/SoundDefender")
+
+---@module Utility.Configuration
+local Configuration = require("Utility/Configuration")
+
+---@module Features.Combat.PositionHistory
+local PositionHistory = require("Features/Combat/PositionHistory")
+
+---@module Utility.Logger
+local Logger = require("Utility/Logger")
+
+-- Handle all defense related functions.
+local Defense = {}
+
+-- Services.
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+
+-- Maids.
+local defenseMaid = Maid.new()
+
+-- Defender objects.
+local defenderObjects = {}
+local defenderPartObjects = {}
+local defenderAnimationObjects = {}
+
+-- Stored deleted playback data.
+local deletedPlaybackData = {}
+
+-- Update.
+local lastVisualizationUpdate = os.clock()
+
+---Add animator defender.
+---@param animator Animator
+local addAnimatorDefender = LPH_NO_VIRTUALIZE(function(animator)
+	local animationDefender = AnimatorDefender.new(animator)
+	defenderObjects[animator] = animationDefender
+	defenderAnimationObjects[animator] = animationDefender
+end)
+
+---Add sound defender.
+---@param sound Sound
+local addSoundDefender = LPH_NO_VIRTUALIZE(function(sound)
+	---@note: If there's nothing to base the sound position off of, then I'm just gonna skip it bruh.
+	local part = sound:FindFirstAncestorWhichIsA("BasePart")
+	if not part then
+		return
+	end
+
+	-- Add sound defender.
+	defenderObjects[sound] = SoundDefender.new(sound, part)
+end)
+
+---On game descendant added.
+---@param descendant Instance
+local onGameDescendantAdded = LPH_NO_VIRTUALIZE(function(descendant)
+	if descendant:IsA("Animator") then
+		return addAnimatorDefender(descendant)
+	end
+
+	if descendant:IsA("Sound") then
+		return addSoundDefender(descendant)
+	end
+
+	if descendant:IsA("BasePart") then
+		return Defense.cdpo(descendant)
+	end
+end)
+
+---On game descendant removed.
+---@param descendant Instance
+local onGameDescendantRemoved = LPH_NO_VIRTUALIZE(function(descendant)
+	local object = defenderObjects[descendant]
+	if not object then
+		return
+	end
+
+	if object.rpbdata then
+		deletedPlaybackData[descendant] = object.rpbdata
+	end
+
+	if defenderPartObjects[descendant] then
+		defenderPartObjects[descendant] = nil
+	end
+
+	if defenderAnimationObjects[descendant] then
+		defenderAnimationObjects[descendant] = nil
+	end
+
+	object:detach()
+	object[descendant] = nil
+end)
+
+---Update history.
+local updateHistory = LPH_NO_VIRTUALIZE(function()
+	local character = players.LocalPlayer.Character
+	if not character then
+		return
+	end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then
+		return
+	end
+
+	PositionHistory.add(humanoidRootPart.CFrame, tick())
+end)
+
+---Update visualizations.
+local updateVisualizations = LPH_NO_VIRTUALIZE(function()
+	if os.clock() - lastVisualizationUpdate <= 1.0 then
+		return
+	end
+
+	lastVisualizationUpdate = os.clock()
+
+	for _, object in next, defenderObjects do
+		if not object.vupdate then
+			continue
+		end
+
+		object:vupdate()
+	end
+end)
+
+---Update defenders.
+local updateDefenders = LPH_NO_VIRTUALIZE(function()
+	for _, object in next, defenderAnimationObjects do
+		object:update()
+	end
+
+	if not Configuration.expectToggleValue("EnableAutoDefense") then
+		return
+	end
+
+	for _, object in next, defenderPartObjects do
+		object:update()
+	end
+end)
+
+---Create a defender part object.
+---@param part BasePart
+---@param timing PartTiming
+---@return PartDefender?
+Defense.cdpo = LPH_NO_VIRTUALIZE(function(part, timing)
+	local partDefender = PartDefender.new(part, timing)
+	if not partDefender then
+		return nil
+	end
+
+	defenderObjects[part] = partDefender
+	defenderPartObjects[part] = partDefender
+
+	return partDefender
+end)
+
+---Return the defender animation object for an entity.
+---@param entity Instance
+---@return AnimatorDefender?
+Defense.dao = LPH_NO_VIRTUALIZE(function(entity)
+	for _, object in next, defenderAnimationObjects do
+		if object.entity ~= entity then
+			continue
+		end
+
+		return object
+	end
+end)
+
+---Get playback data of first defender with Animation ID.
+---@param aid string
+---@return PlaybackData?
+Defense.agpd = LPH_NO_VIRTUALIZE(function(aid)
+	---@note: Grabbing from 'rpbdata' means that we know that the data has been fully recorded.
+	for _, object in next, defenderAnimationObjects do
+		local pbdata = object.rpbdata[aid]
+		if not pbdata then
+			continue
+		end
+
+		return pbdata
+	end
+
+	---@note: Fallback to deleted playback data if that doesn't exist.
+	for _, rpbdata in next, deletedPlaybackData do
+		local pbdata = rpbdata[aid]
+		if not pbdata then
+			continue
+		end
+
+		return pbdata
+	end
+end)
+
+---Initialize defense.
+function Defense.init()
+	-- Signals.
+	local gameDescendantAdded = Signal.new(game.DescendantAdded)
+	local gameDescendantRemoved = Signal.new(game.DescendantRemoving)
+	local renderStepped = Signal.new(runService.RenderStepped)
+	local postSimulation = Signal.new(runService.PostSimulation)
+
+	defenseMaid:mark(gameDescendantAdded:connect("Defense_OnDescendantAdded", onGameDescendantAdded))
+	defenseMaid:mark(gameDescendantRemoved:connect("Defense_OnDescendantRemoved", onGameDescendantRemoved))
+	defenseMaid:mark(renderStepped:connect("Defense_UpdateVisualizations", updateVisualizations))
+	defenseMaid:mark(renderStepped:connect("Defense_UpdateHistory", updateHistory))
+	defenseMaid:mark(postSimulation:connect("Defense_UpdateDefenders", updateDefenders))
+
+	for _, descendant in next, game:GetDescendants() do
+		onGameDescendantAdded(descendant)
+	end
+
+	-- Log.
+	Logger.warn("Defense initialized.")
+end
+
+---Detach defense.
+function Defense.detach()
+	for _, object in next, defenderObjects do
+		object:detach()
+	end
+
+	defenseMaid:clean()
+
+	Logger.warn("Defense detached.")
+end
+
+-- Return Defense module.
+return Defense
