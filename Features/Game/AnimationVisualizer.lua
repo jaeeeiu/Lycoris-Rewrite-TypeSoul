@@ -306,8 +306,15 @@ return LPH_NO_VIRTUALIZE(function()
 			descendant:Destroy()
 		end
 
+		-- Archivable.
+		playbackData.entity.Archivable = true
+
 		-- Load the model & center it.
 		local entity = playbackData.entity:Clone()
+		if not entity then
+			return AnimationVisualizer.message("Failed To Clone Entity")
+		end
+
 		entity.Parent = worldModel
 		entity:PivotTo(CFrame.new(0, 0, 0))
 
