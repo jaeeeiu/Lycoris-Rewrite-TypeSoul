@@ -49,7 +49,7 @@ local renderStepped = Signal.new(runService.RenderStepped)
 local menuMaid = Maid.new()
 
 -- Constants.
-local MENU_TITLE = "Lycoris Rewrite | Type Soul"
+local MENU_TITLE = "Linoria V2 | Type Soul"
 
 ---Initialize menu.
 function Menu.init()

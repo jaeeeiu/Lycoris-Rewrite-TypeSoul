@@ -50,7 +50,7 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 	end
 
 	if Configuration.expectToggleValue("InfoSpoofing") and Configuration.expectToggleValue("SpoofOtherPlayers") then
-		playerName = "Lycoris Rewrite On Top"
+		playerName = "Linoria V2 On Top"
 	end
 
 	self.label = playerName

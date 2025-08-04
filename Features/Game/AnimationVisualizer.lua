@@ -189,7 +189,9 @@ return LPH_NO_VIRTUALIZE(function()
 	speedText.BorderSizePixel = 0
 	speedText.BorderColor3 = Color3.new()
 	speedText.TextSize = 12
-	speedText.Size = UDim2.new(0, 150, 0, 20)
+	speedText.Position = UDim2.new(0.02, 0, 0, 0)
+	speedText.TextXAlignment = Enum.TextXAlignment.Left
+	speedText.Size = UDim2.new(1, 0, 0, 20)
 	speedText.ZIndex = 19
 	speedText.Parent = viewportFrame
 
@@ -442,14 +444,16 @@ return LPH_NO_VIRTUALIZE(function()
 		speedText.Text = currentTrack and string.format("Speed (%.2f) - Hit (???)", currentTrack.Speed)
 			or "Speed (???) - Hit (???)"
 
-		local success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrame")
+		if currentTrack then
+			local success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrame")
 
-		if not success and not kf then
-			success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrameStart")
-		end
+			if not success and not kf then
+				success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrameStart")
+			end
 
-		if success and kf then
-			speedText.Text = string.format("Speed (%.2f) - Hit (%.2f)", currentTrack.Speed, kf)
+			if success and kf then
+				speedText.Text = string.format("Speed (%.2f) - Hit (%.2f)", currentTrack.Speed, kf)
+			end
 		end
 
 		if not currentTrack or not currentPlaybackData then
