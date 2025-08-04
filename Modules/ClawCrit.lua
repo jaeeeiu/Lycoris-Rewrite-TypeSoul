@@ -7,15 +7,18 @@ local Action = getfenv().Action
 return function(self, timing)
 	local distance = self:distance(self.entity)
 	local action = Action.new()
-	action._when = 350
+	action._when = 330
+	if distance >= 10 then
+		action._when = 480
+	end
 	if distance >= 12 then
-		action._when = 550
+		action._when = 530
 	end
 	if distance >= 16 then
-		action._when = 620
+		action._when = 570
 	end
 	if distance >= 21 then
-		action._when = 680
+		action._when = 660
 	end
 	action._type = "Parry"
 	action.hitbox = Vector3.new(15, 15, 25)
