@@ -189,7 +189,7 @@ return LPH_NO_VIRTUALIZE(function()
 	speedText.BorderSizePixel = 0
 	speedText.BorderColor3 = Color3.new()
 	speedText.TextSize = 12
-	speedText.Size = UDim2.new(0, 82, 0, 20)
+	speedText.Size = UDim2.new(0, 150, 0, 20)
 	speedText.ZIndex = 19
 	speedText.Parent = viewportFrame
 
@@ -439,7 +439,8 @@ return LPH_NO_VIRTUALIZE(function()
 		hideBorderRight.Visible = not (hs == mhs or hs == 0)
 
 		-- Update speed amount.
-		speedText.Text = currentTrack and string.format("Speed (%.2f)", currentTrack.Speed) or "Speed (???)"
+		speedText.Text = currentTrack and string.format("Speed (%.2f) - Hit (???)", currentTrack.Speed)
+			or "Speed (???) - Hit (???)"
 
 		local success, kf = pcall(currentTrack.GetTimeOfKeyframe, currentTrack, "HitFrame")
 
