@@ -5,6 +5,7 @@ local Action = getfenv().Action
 ---@param self AnimatorDefender
 ---@param timing AnimationTiming
 return function(self, timing)
+	task.wait(0.1)
 	local action = Action.new()
 	action._when = (370 * 0.75) / self.track.Speed
 	action._type = "Parry"

@@ -5,11 +5,13 @@ local Action = getfenv().Action
 ---@param self AnimatorDefender
 ---@param timing AnimationTiming
 return function(self, timing)
-	task.wait(0.1)
+	local distance = self:distance(self.entity)
+
 	local action = Action.new()
-	action._when = (390 * 0.75) / self.track.Speed
+	action._when = math.min(290 + distance * 15, 1300)
 	action._type = "Parry"
-	action.hitbox = Vector3.new(13, 13, 14)
-	action.name = string.format("(%.2f) Dynamic Muramasa Timing", self.track.Speed)
+	action.hitbox = Vector3.new(15, 15, 40)
+	action.name = string.format("(%.2f) Dynamic Quilge Crit Timing", distance)
+
 	return self:action(timing, action)
 end
