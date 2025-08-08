@@ -7,9 +7,12 @@ local Profiler = require("Utility/Profiler")
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
 
----Spawn delayed task.
+-- Services.
+local RunService = game:GetService("RunService")
+
+---Spawn delayed task where the delay can be variable.
 ---@param label string
----@param delay number
+---@param delay function
 ---@param callback function
 ---@vararg any
 function TaskSpawner.delay(label, delay, callback, ...)
@@ -19,15 +22,21 @@ function TaskSpawner.delay(label, delay, callback, ...)
 		Logger.trace("onTaskFunctionError - (%s) - %s", label, error)
 	end
 
-	-- Wrap callback in profiler and error handling.
+	-- Wrap callback in profiler and error handling and delay handling.
 	local taskFunction = Profiler.wrap(
 		label,
 		LPH_NO_VIRTUALIZE(function(...)
+			local timestamp = os.clock()
+
+			while os.clock() - timestamp < delay() do
+				RunService.RenderStepped:Wait()
+			end
+
 			return xpcall(callback, onTaskFunctionError, ...)
 		end)
 	)
 
-	return task.delay(delay, taskFunction, ...)
+	return task.spawn(taskFunction, ...)
 end
 
 ---Spawn task.

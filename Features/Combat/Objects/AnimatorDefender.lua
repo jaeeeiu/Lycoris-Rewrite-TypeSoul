@@ -228,30 +228,21 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	end
 
 	-- Start RPUE.
-	local info = RepeatInfo.new(timing)
+	local info = RepeatInfo.new(timing, self.rdelay())
 	info.track = track
 
-	self:mark(
-		Task.new(
-			string.format("RPUE_%s_%i", timing.name, 0),
-			timing:rsd() - self.rtt(),
-			timing.punishable,
-			timing.after,
-			self.rpue,
-			self,
-			self.entity,
-			timing,
-			info
-		)
-	)
+	self:mark(Task.new(string.format("RPUE_%s_%i", timing.name, 0), function()
+		return timing:rsd() - info.irdelay - self.sdelay()
+	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	-- Notify.
 	self:notify(
 		timing,
-		"Added RPUE '%s' (%.2fs, then every %.2fs) with relevant ping subtracted.",
+		"Added RPUE '%s' (%.2fs, then every %.2fs) with ping '%.2f' (changing) subtracted.",
 		timing.name,
 		timing:rsd(),
-		timing:rpd()
+		timing:rpd(),
+		self.rtt()
 	)
 end)
 

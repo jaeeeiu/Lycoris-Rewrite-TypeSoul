@@ -10,6 +10,7 @@ local Configuration = require("Utility/Configuration")
 ---@field when number A timestamp when the task will be executed.
 ---@field punishable number A window in seconds where the task can be punished.
 ---@field after number A window in seconds where the task can be executed.
+---@field delay function
 local Task = {}
 Task.__index = Task
 
@@ -21,12 +22,12 @@ function Task:blocking()
 	end
 
 	-- We've exceeded the execution time. Block if we're within the after window.
-	if os.clock() >= self.when then
-		return os.clock() <= self.when + self.after
+	if os.clock() >= self:when() then
+		return os.clock() <= self:when() + self.after
 	end
 
 	---@note: Allow us to do inputs up until a certain amount of time before the task happens.
-	return os.clock() >= self.when - self.punishable
+	return os.clock() >= self:when() - self.punishable
 end
 
 ---Cancel task.
@@ -38,9 +39,15 @@ function Task:cancel()
 	task.cancel(self.thread)
 end
 
+---Get when approximately the task will be executed.
+---@return number
+function Task:when()
+	return self.when + self.delay()
+end
+
 ---Create new Task object.
 ---@param identifier string
----@param delay number?
+---@param delay function
 ---@param punishable number
 ---@param after number
 ---@param callback function
@@ -49,7 +56,7 @@ end
 function Task.new(identifier, delay, punishable, after, callback, ...)
 	local self = setmetatable({}, Task)
 	self.identifier = identifier
-	self.when = os.clock() + delay
+	self.delay = delay
 	self.punishable = punishable
 	self.after = after
 	self.thread = TaskSpawner.delay("Action_" .. identifier, delay, callback, ...)

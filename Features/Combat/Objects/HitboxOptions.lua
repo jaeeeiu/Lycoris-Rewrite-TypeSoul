@@ -27,7 +27,7 @@ HitboxOptions.extrapolate = LPH_NO_VIRTUALIZE(function(self)
 
 	-- Calculate send delay for the target entity.
 	local player = players:GetPlayerFromCharacter(self.entity)
-	local sd = player and player:GetAttribute("AveragePing") or 0.0
+	local sd = player and (player:GetAttribute("AveragePing") / 2) or 0.0
 
 	---@module Features.Combat.Objects.Defender
 	---@note: Another stupid bug. Don't know why this happens.
