@@ -14,7 +14,7 @@ return function(self, timing)
 	action.name = string.format("(%.2f) Dynamic Tri Cero Timing", speed)
 
 	if speed > 1.0 then
-		action._when = 310
+		action._when = 600
 	end
 
 	return self:action(timing, action)
