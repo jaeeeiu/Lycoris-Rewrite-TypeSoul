@@ -45,7 +45,6 @@ Defender.__type = "Defender"
 
 -- Services.
 local stats = game:GetService("Stats")
-local replicatedStorage = game:GetService("ReplicatedStorage")
 local userInputService = game:GetService("UserInputService")
 local players = game:GetService("Players")
 local textChatService = game:GetService("TextChatService")
@@ -147,19 +146,9 @@ Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 
 	info.index = info.index + 1
 
-	self:mark(
-		Task.new(
-			string.format("RPUE_%s_%i", timing.name, info.index),
-			timing:rpd() - self.rtt(),
-			timing.punishable,
-			timing.after,
-			self.rpue,
-			self,
-			self.entity,
-			timing,
-			info
-		)
-	)
+	self:mark(Task.new(string.format("RPUE_%s_%i", timing.name, info.index), function()
+		return timing:rsd() - info.irdelay - self.sdelay()
+	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	if not target then
 		return Logger.warn("Skipping RPUE '%s' because the target is not valid.", timing.name)
@@ -359,17 +348,20 @@ Defender.notify = LPH_NO_VIRTUALIZE(function(self, timing, str, ...)
 	Logger.notify("[%s] (%s) %s", timing.name, self.__type, string.format(str, ...))
 end)
 
+---@note: Perhaps one day, we can get better approximations for these.
+--- These used to rely on GetNetworkPing which we assumed would be sending or atleast receiving delay.
+--- That is incorrect, it is RakNet ping thereby being RTT.
+
 ---Get receiving delay.
----@todo: Replace this average with the real RakNet receiving delay when we can do more reversing.
 ---@return number
 function Defender.rdelay()
-	return players.LocalPlayer:GetNetworkPing()
+	return math.max(Defender.rtt() / 2, 0.0)
 end
 
 ---Get sending delay.
 ---@return number
 function Defender.sdelay()
-	return math.max(Defender.rtt() - Defender.rdelay(), 0.0)
+	return math.max(Defender.rtt() / 2, 0.0)
 end
 
 ---Get data ping.
@@ -541,7 +533,7 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	-- We'll assume that we're in the parry state. There's no other type.
 	InputClient.block(true)
 
-	task.wait(Configuration.expectOptionValue("ParryHoldTime") - self.rtt())
+	task.wait(Configuration.expectOptionValue("ParryHoldTime"))
 
 	InputClient.block(false)
 end)
@@ -656,16 +648,22 @@ end)
 ---@param timing Timing
 ---@param action Action
 Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
-	-- Get ping.
-	local ping = self.rtt()
+	-- Get initial receive delay.
+	local rdelay = self.rdelay()
 
 	-- Add action.
-	self:mark(
-		Task.new(action._type, action:when() - ping, timing.punishable, timing.after, self.handle, self, timing, action)
-	)
+	self:mark(Task.new(action._type, function()
+		return action:when() - rdelay - self.sdelay()
+	end, timing.punishable, timing.after, self.handle, self, timing, action))
 
 	-- Log.
-	self:notify(timing, "Added action '%s' (%.2fs) with ping '%.2f' subtracted.", action.name, action:when(), ping)
+	self:notify(
+		timing,
+		"Added action '%s' (%.2fs) with ping '%.2f' (changing) subtracted.",
+		action.name,
+		action:when(),
+		self.rtt()
+	)
 end)
 
 ---Add actions from timing to defender object.
