@@ -111,6 +111,22 @@ function AnimationBuilderSection:extra(tab)
 			timing.ieae = value
 		end),
 	})
+
+	local depBoxEnd = tab:AddDependencyBox()
+
+	self.maxAnimationTimeout = depBoxEnd:AddInput(nil, {
+		Text = "Max Animation Timeout",
+		Tooltip = "The maximum time (in milliseconds) that the animation is allowed to run with no end check.",
+		Numeric = true,
+		Callback = self:tnc(function(timing, value)
+			timing.mat = value
+		end),
+	})
+
+	depBoxEnd:SetupDependencies({
+		{ self.ignoreAnimationEnd, true },
+		{ self.ignoreEarlyAnimationEnd, true },
+	})
 end
 
 ---Initialize action tab.

@@ -9,6 +9,7 @@ local Timing = require("Game/Timings/Timing")
 ---@param ha boolean Flag to see whether or not this timing can be cancelled by a hit.
 ---@param iae boolean Flag to see whether or not this timing should ignore animation end.
 ---@param ieae boolean Flag to see whether or not this timing should ignore early animation end.
+---@param mat number Max animation timeout in milliseconds.
 local AnimationTiming = setmetatable({}, { __index = Timing })
 AnimationTiming.__index = AnimationTiming
 
@@ -70,6 +71,10 @@ function AnimationTiming:load(values)
 	if typeof(values.ieae) == "boolean" then
 		self.ieae = values.ieae
 	end
+
+	if typeof(values.mat) == "number" then
+		self.mat = values.mat
+	end
 end
 
 ---Clone timing.
@@ -84,6 +89,7 @@ function AnimationTiming:clone()
 	clone.ha = self.ha
 	clone.iae = self.iae
 	clone.ieae = self.ieae
+	clone.mat = self.mat
 
 	return clone
 end
@@ -100,6 +106,7 @@ function AnimationTiming:serialize()
 	serializable.ha = self.ha
 	serializable.iae = self.iae
 	serializable.ieae = self.ieae
+	serializable.mat = self.mat
 
 	return serializable
 end
@@ -117,6 +124,7 @@ function AnimationTiming.new(values)
 	self.ha = false
 	self.iae = false
 	self.ieae = false
+	self.mat = 0
 
 	if values then
 		self:load(values)
