@@ -133,11 +133,6 @@ function GameTab.initDebuggingSection(groupbox)
 		Text = "Show Debug Information",
 		Default = false,
 	})
-
-	groupbox:AddToggle("StopGameLogging", {
-		Text = "Stop Game Logging",
-		Default = false,
-	})
 end
 
 ---Initialize tab.
