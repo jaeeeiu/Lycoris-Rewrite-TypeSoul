@@ -119,7 +119,7 @@ function AnimationBuilderSection:extra(tab)
 		Tooltip = "The maximum time (in milliseconds) that the animation is allowed to run with no end check.",
 		Numeric = true,
 		Callback = self:tnc(function(timing, value)
-			timing.mat = value
+			timing.mat = tonumber(value)
 		end),
 	})
 
