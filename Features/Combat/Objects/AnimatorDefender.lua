@@ -79,7 +79,7 @@ AnimatorDefender.rc = LPH_NO_VIRTUALIZE(function(self, info)
 		return false
 	end
 
-	if info.timing.iae and info.timing.ieae and os.clock() - info.start >= info.timing.mat then
+	if info.timing.iae and info.timing.ieae and os.clock() - info.start >= (info.timing.mat or MAX_REPEAT_TIME) then
 		return self:notify(info.timing, "Max animation timeout exceeded.")
 	end
 
