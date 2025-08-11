@@ -119,6 +119,10 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return self:notify(timing, "No character found.")
 	end
 
+	if character:GetAttribute("CurrentState") == "Attacking" or character:GetAttribute("CurrentState") == "Skill" then
+		return self:notify(timing, "Currently attacking.")
+	end
+
 	if self:stopped(self.track, timing) then
 		return false
 	end

@@ -2,8 +2,10 @@
 local GameTab = {}
 
 -- Services.
-local contextActionService = game:GetService("ContextActionService")
 local players = game:GetService("Players")
+
+---@module Utility.Logger
+local Logger = require("Utility/Logger")
 
 ---Initialize local character section.
 ---@param groupbox table
@@ -96,6 +98,57 @@ function GameTab.initLocalCharacterSection(groupbox)
 	flyDepBox:SetupDependencies({
 		{ Toggles.Fly, true },
 	})
+
+	groupbox:AddButton("Redeem Codes", function()
+		local codes = {
+			"superduperfunsecretcode",
+			"wowshutdowncodeyeah",
+			"yesterdayshutdown",
+			"thanksfor900k",
+			"setrona1vertagzeu0",
+			"excaliburfool",
+			"higuyscode",
+			"thisiswhywetestthosewhoknow",
+			"goplayranked",
+			"somebugsfixes",
+			"800kcodeyeah",
+			"thanksforpatience",
+			"raidsfixed",
+			"compensationforinconvenientrelease",
+			"sorryforthebankbugs",
+			"mythoughtsonthislater",
+			"3daysthosewhoknow",
+			"rerererelease",
+			"privateservercompensation",
+			"promiseddecembercode",
+			"codeforshutdownisuppose",
+		}
+
+		local localPlayer = players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local characterHandler = character:WaitForChild("CharacterHandler")
+		local remotes = characterHandler:WaitForChild("Remotes")
+		local codesRemote = remotes:WaitForChild("Codes")
+
+		for _, code in next, codes do
+			local success, result = nil, nil
+
+			repeat
+				-- Invoke.
+				success, result = codesRemote:InvokeServer(code)
+
+				-- Wait.
+				task.wait(0.5)
+			until result ~= nil
+
+			Logger.notify(
+				"(%s, %s) Code '%s' has been attempted to be redeemed.",
+				tostring(success),
+				tostring(result),
+				code
+			)
+		end
+	end)
 end
 
 ---Debugging section.
