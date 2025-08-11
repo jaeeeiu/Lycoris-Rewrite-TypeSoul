@@ -13,23 +13,22 @@ local players = game:GetService("Players")
 -- Attribute maid.
 local attributeMaid = Maid.new()
 
--- Player maids.
-local playerMaids = {}
-
 ---On character added.
 ---@param character Model
----@param maid Maid
-local function onCharacterAdded(character, maid)
+local function onCharacterAdded(character)
 	local attributeChangedSignal = Signal.new(character:GetAttributeChangedSignal("CurrentState"))
 
-	maid["CurrentStateAttributeChanged"] = attributeChangedSignal:connect(
+	attributeMaid["CurrentStateAttributeChanged"] = attributeChangedSignal:connect(
 		"AttributeListener_OnAttributeChanged",
-		function(newValue)
-			if newValue == "Parrying" then
+		function()
+			if character:GetAttribute("CurrentState") == "Parrying" then
 				AttributeListener.lastParry = tick()
 			end
 
-			if newValue == "Flashstep" or newValue == "Dashing" then
+			if
+				character:GetAttribute("CurrentState") == "Flashstep"
+				or character:GetAttribute("CurrentState") == "Dashing"
+			then
 				AttributeListener.lastDash = tick()
 			end
 		end
@@ -38,45 +37,10 @@ end
 
 ---On character removing.
 ---@param character Model
----@param maid Maid
-local function onCharacterRemoving(character, maid)
-	maid["CurrentStateAttributeChanged"] = nil
+local function onCharacterRemoving(character)
+	attributeMaid["CurrentStateAttributeChanged"] = nil
 	AttributeListener.lastParry = nil
 	AttributeListener.lastDash = nil
-end
-
----On player added.
----@param player Player
-local function onPlayerAdded(player)
-	local characterAddedSignal = Signal.new(player.CharacterAdded)
-	local characterRemovingSignal = Signal.new(player.CharacterRemoving)
-	local playerMaid = playerMaids[player] or Maid.new()
-
-	playerMaids[player] = playerMaid
-
-	playerMaid:add(characterAddedSignal:connect("AttributeListener_OnCharacterAdded", function(character)
-		onCharacterAdded(character, playerMaid)
-	end))
-
-	playerMaid:add(characterRemovingSignal:connect("AttributeListener_OnCharacterRemoving", function(character)
-		onCharacterRemoving(character, playerMaid)
-	end))
-
-	if player.Character then
-		onCharacterAdded(player.Character)
-	end
-end
-
----On player removing.
----@param player Player
-local function onPlayerRemoving(player)
-	local playerMaid = playerMaids[player]
-	if not playerMaid then
-		return
-	end
-
-	playerMaid:clean()
-	playerMaids[player] = nil
 end
 
 ---Can we parry?
@@ -106,20 +70,34 @@ end
 
 ---Initialize AttributeListener module.
 function AttributeListener.init()
-	local playerAddedSignal = Signal.new(players.PlayerAdded)
-	local playerRemovingSignal = Signal.new(players.PlayerRemoving)
+	local localPlayer = players.LocalPlayer
+	local characterAddedSignal = Signal.new(localPlayer.CharacterAdded)
+	local characterRemovingSignal = Signal.new(localPlayer.CharacterRemoving)
 
-	attributeMaid:add(playerAddedSignal:connect("AttributeListener_OnPlayerAdded", onPlayerAdded))
-	attributeMaid:add(playerRemovingSignal:connect("AttributeListener_OnPlayerRemoving", onPlayerRemoving))
+	attributeMaid:add(characterAddedSignal:connect("AttributeListener_OnCharacterAdded", function(character)
+		onCharacterAdded(character)
+	end))
+
+	attributeMaid:add(characterRemovingSignal:connect("AttributeListener_OnCharacterRemoving", function(character)
+		onCharacterRemoving(character)
+	end))
+
+	if localPlayer.Character then
+		onCharacterAdded(localPlayer.Character)
+	end
+
+	task.spawn(function()
+		while task.wait() do
+			print(AttributeListener.cdash(), AttributeListener.cparry())
+			print(AttributeListener.lastDash)
+			print(AttributeListener.lastParry)
+		end
+	end)
 end
 
 ---Detach AttributeListener module.
 function AttributeListener.detach()
 	attributeMaid:clean()
-
-	for _, playerMaid in next, playerMaids do
-		playerMaid:clean()
-	end
 end
 
 -- Return AttributeListener module.
