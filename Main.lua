@@ -4,7 +4,7 @@ if not shared then
 end
 
 -- Initialize Luraph globals if they do not exist.
-getgenv().LPH_NO_VIRTUALIZE = function(...)
+getfenv().LPH_NO_VIRTUALIZE = function(...)
 	return ...
 end
 

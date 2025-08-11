@@ -1,6 +1,10 @@
 -- GameTab module.
 local GameTab = {}
 
+-- Services.
+local contextActionService = game:GetService("ContextActionService")
+local players = game:GetService("Players")
+
 ---Initialize local character section.
 ---@param groupbox table
 function GameTab.initLocalCharacterSection(groupbox)
