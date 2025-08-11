@@ -217,6 +217,7 @@ function VisualsTab.init(window)
 	VisualsTab.initESPOptimizations(tab:AddDynamicGroupbox("ESP Optimizations"))
 	VisualsTab.addPlayerESP(VisualsTab.initBaseESPSection("Player", tab:AddDynamicGroupbox("Player ESP")))
 	VisualsTab.initBaseESPSection("Mob", tab:AddDynamicGroupbox("Mob ESP"))
+	VisualsTab.initBaseESPSection("MissionBoard", tab:AddDynamicGroupbox("Mission Board ESP"))
 end
 
 -- Return VisualsTab module.

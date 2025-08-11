@@ -130,6 +130,18 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = false,
 	})
 
+	autoDefenseDepBox:AddToggle("DashOnParryCD", {
+		Text = "Dash On Parry Cooldown",
+		Default = false,
+		Tooltip = "If enabled, the auto defense will fallback to a dash if the parry action is not available.",
+	})
+
+	autoDefenseDepBox:AddToggle("DeflectBlockFallback", {
+		Text = "Deflect Block Fallback",
+		Default = false,
+		Tooltip = "If enabled, the auto defense will fallback to block frames if parry action and/or fallback is not available.",
+	})
+
 	autoDefenseDepBox:AddDropdown("AutoDefenseFilters", {
 		Text = "Auto Defense Filters",
 		Values = {
@@ -145,8 +157,8 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = {},
 	})
 
-	autoDefenseDepBox:AddSlider("ParryHoldTime", {
-		Text = "Parry Hold Time",
+	autoDefenseDepBox:AddSlider("DeflectHoldTime", {
+		Text = "Deflect Hold Time",
 		Min = 0,
 		Max = 500,
 		Default = 0,

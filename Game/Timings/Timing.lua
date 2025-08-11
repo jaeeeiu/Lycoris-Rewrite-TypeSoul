@@ -17,7 +17,7 @@ local ActionContainer = require("Game/Timings/ActionContainer")
 ---@field smod string Selected module string.
 ---@field aatk boolean Allow attacking.
 ---@field fhb boolean Hitbox facing offset.
----@field ndfb boolean No dodge fallback.
+---@field ndfb boolean No dash fallback.
 local Timing = {}
 Timing.__index = Timing
 

@@ -790,9 +790,9 @@ function BuilderSection:builder()
 		end),
 	})
 
-	self.noDodgeFallback = tab:AddToggle(nil, {
-		Text = "No Dodge Fallback",
-		Tooltip = "If enabled, the timing will not fallback to a dodge if the parry action is not available.",
+	self.noDashFallback = tab:AddToggle(nil, {
+		Text = "No Dash Fallback",
+		Tooltip = "If enabled, the timing will not fallback to a dash if the parry action is not available.",
 		Default = false,
 		Callback = self:tnc(function(timing, value)
 			timing.ndfb = value

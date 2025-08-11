@@ -58,7 +58,8 @@
         "firesignal",
         "should_queue_on_teleport",
         "no_queue_on_teleport",
-        "Entitites"
+        "Entitites",
+        "getsenv"
     ],
     "robloxLsp.suggestedImports.importIgnore": [
         "**/_Index/**",

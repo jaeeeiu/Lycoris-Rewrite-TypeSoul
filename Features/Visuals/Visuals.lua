@@ -59,6 +59,14 @@ local emplaceObject = LPH_NO_VIRTUALIZE(function(instance, object)
 	groups[object.identifier] = group
 end)
 
+---On Mission NPCs ChildAdded.
+---@param child Instance
+local onMissionNPCsChildAdded = LPH_NO_VIRTUALIZE(function(child)
+	if child.Name == "MissionBoard" then
+		return emplaceObject(child, ModelESP.new("MissionBoard", child, "Mission Board"))
+	end
+end)
+
 ---On Entities ChildAdded.
 ---@param child Instance
 local onEntitiesChildAdded = LPH_NO_VIRTUALIZE(function(child)
@@ -146,7 +154,10 @@ end)
 ---Initialize Visuals.
 function Visuals.init()
 	local ents = workspace:WaitForChild("Entities")
+	local npcs = workspace:WaitForChild("NPCs")
+	local missionNpcs = npcs:WaitForChild("MissionNPC")
 
+	createChildrenListener(missionNpcs, "MissionNPCs", onMissionNPCsChildAdded, onInstanceRemoving)
 	createChildrenListener(ents, "Entities", onEntitiesChildAdded, onInstanceRemoving)
 	createChildrenListener(players, "Players", onPlayerAdded, onInstanceRemoving)
 

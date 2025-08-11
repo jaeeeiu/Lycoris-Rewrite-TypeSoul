@@ -5,6 +5,18 @@ local InputClient = {}
 local players = game:GetService("Players")
 local userInputService = game:GetService("UserInputService")
 
+---@module Utility.Configuration
+local Configuration = require("Utility/Configuration")
+
+---Deflect. This is called this way because it can either give parry or block frames depending on whether or not parry is on cooldown.
+function InputClient.deflect()
+	InputClient.block(true)
+
+	task.wait(Configuration.expectOptionValue("DeflectHoldTime") / 1000)
+
+	InputClient.block(false)
+end
+
 ---Block.
 ---@param state boolean
 function InputClient.block(state)

@@ -4,9 +4,6 @@ local Lycoris = { queued = false }
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
 
----@module Game.Hooking
-local Hooking = require("Game/Hooking")
-
 ---@module Menu
 local Menu = require("Menu")
 
@@ -18,9 +15,6 @@ local ControlModule = require("Utility/ControlModule")
 
 ---@module Game.Timings.SaveManager
 local SaveManager = require("Game/Timings/SaveManager")
-
----@module Utility.PersistentData
-local PersistentData = require("Utility/PersistentData")
 
 ---@module Utility.Maid
 local Maid = require("Utility/Maid")
@@ -42,6 +36,7 @@ local LOBBY_PLACE_ID = 14067600077
 
 -- Services.
 local playersService = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Timestamp.
 local startTimestamp = os.clock()
@@ -58,17 +53,20 @@ function Lycoris.init()
 		localPlayer = playersService.LocalPlayer
 	until localPlayer ~= nil
 
-	if game.PlaceId ~= LOBBY_PLACE_ID then
-		Hooking.init()
-	end
-
-	CoreGuiManager.set()
-
-	PersistentData.init()
-
 	if game.PlaceId == LOBBY_PLACE_ID then
 		return Logger.warn("Script has initialized in the lobby.")
 	end
+
+	local remotes = replicatedStorage:WaitForChild("Remotes")
+	local vastoVfx = remotes:FindFirstChild("VastoVfx")
+
+	if vastoVfx then
+		vastoVfx:Destroy()
+	end
+
+	Logger.warn("Anticheat has been successfully penetrated.")
+
+	CoreGuiManager.set()
 
 	SaveManager.init()
 
@@ -81,10 +79,6 @@ function Lycoris.init()
 	Menu.init()
 
 	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
-
-	if not PersistentData.get("fli") then
-		PersistentData.set("fli", os.time())
-	end
 
 	local playerRemovingSignal = lycorisMaid:mark(Signal.new(playersService.PlayerRemoving))
 
@@ -127,8 +121,6 @@ function Lycoris.detach()
 	Features.detach()
 
 	CoreGuiManager.clear()
-
-	Hooking.detach()
 
 	Logger.warn("Script has been detached.")
 end

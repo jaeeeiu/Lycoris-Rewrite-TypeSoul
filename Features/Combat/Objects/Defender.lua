@@ -31,6 +31,9 @@ local HitboxOptions = require("Features/Combat/Objects/HitboxOptions")
 ---@module Game.InputClient
 local InputClient = require("Game/InputClient")
 
+---@module Features.Combat.AttributeListener
+local AttributeListener = require("Features/Combat/AttributeListener")
+
 ---@class Defender
 ---@field tasks Task[]
 ---@field tmaid Maid Cleaned up every clean cycle.
@@ -531,11 +534,39 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
 
 	-- Parry if possible.
 	-- We'll assume that we're in the parry state. There's no other type.
-	InputClient.block(true)
+	if AttributeListener.cparry() then
+		return InputClient.deflect()
+	end
 
-	task.wait(Configuration.expectOptionValue("ParryHoldTime"))
+	---Block fallback function. Returns whether the fallback was successful.
+	---@return boolean
+	local function blockFallback()
+		if not Configuration.expectToggleValue("DeflectBlockFallback") then
+			return false
+		end
 
-	InputClient.block(false)
+		Defender:notify(timing, "Action fallback 'Parry' is using block frames.")
+		InputClient.deflect()
+
+		return true
+	end
+
+	-- Dodge fallback.
+	if not Configuration.expectToggleValue("DashOnParryCooldown") then
+		return blockFallback()
+	end
+
+	if timing.ndfb then
+		return self:notify(timing, "Action fallback 'Dodge' is disabled for this timing.")
+	end
+
+	if AttributeListener.cdash() then
+		return blockFallback() or self:notify(timing, "Action fallback 'Dodge' blocked because we are unable to dash.")
+	end
+
+	self:notify(timing, "Action type 'Parry' overrided to 'Dash' type.")
+
+	return InputClient.dash()
 end)
 
 ---Check if we have input blocking tasks.
