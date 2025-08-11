@@ -130,7 +130,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = false,
 	})
 
-	autoDefenseDepBox:AddToggle("DashOnParryCD", {
+	autoDefenseDepBox:AddToggle("DashOnParryCooldown", {
 		Text = "Dash On Parry Cooldown",
 		Default = false,
 		Tooltip = "If enabled, the auto defense will fallback to a dash if the parry action is not available.",
