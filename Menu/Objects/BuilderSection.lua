@@ -83,7 +83,7 @@ function BuilderSection:reset()
 	self.skipModuleNotification:SetRawValue(false)
 	self.selectedModule:SetRawValue("")
 	self.skipRepeatNotification:SetRawValue(false)
-	self.noDodgeFallback:SetRawValue(false)
+	self.noDashFallback:SetRawValue(false)
 	self.hitboxFacingOffset:SetRawValue(true)
 
 	-- Reset action list.
@@ -508,7 +508,7 @@ function BuilderSection:timing()
 			self.selectedModule:SetRawValue(found.smod)
 			self.skipRepeatNotification:SetRawValue(found.srpn)
 			self.hitboxFacingOffset:SetRawValue(found.fhb)
-			self.noDodgeFallback:SetRawValue(found.ndfb)
+			self.noDashFallback:SetRawValue(found.ndfb)
 
 			-- Load extra elements.
 			self:exload(found)
