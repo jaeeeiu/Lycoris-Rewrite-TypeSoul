@@ -85,14 +85,6 @@ function AttributeListener.init()
 	if localPlayer.Character then
 		onCharacterAdded(localPlayer.Character)
 	end
-
-	task.spawn(function()
-		while task.wait() do
-			print(AttributeListener.cdash(), AttributeListener.cparry())
-			print(AttributeListener.lastDash)
-			print(AttributeListener.lastParry)
-		end
-	end)
 end
 
 ---Detach AttributeListener module.
