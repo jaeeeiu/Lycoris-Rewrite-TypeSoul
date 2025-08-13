@@ -6,12 +6,13 @@ local Action = getfenv().Action
 ---@param timing AnimationTiming
 return function(self, timing)
 	local distance = self:distance(self.entity)
-
 	local action = Action.new()
-	action._when = math.min(720 + distance * 5.5, 1200)
+	action._when = 470
+	if distance >= 13 then
+		action._when = math.min(240 + distance * 20, 5000)
+	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(70, 30, 100)
-	action.name = string.format("(%.2f) Dynamic Delayed Death Timing", distance)
-
+	action.hitbox = Vector3.new(33, 20, 80)
+	action.name = string.format("(%.2f) Dynamic Ethereal Timing", distance)
 	return self:action(timing, action)
 end
