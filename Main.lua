@@ -1,12 +1,15 @@
+-- Check role.
+if LRM_UserNote and LRM_UserNote ~= "tester" then
+	return warn("You are not a tester.")
+end
+
 -- Check for table that is shared between executions.
 if not shared then
 	return warn("No shared, no script.")
 end
 
 -- Initialize Luraph globals if they do not exist.
-getfenv().LPH_NO_VIRTUALIZE = function(...)
-	return ...
-end
+loadstring("getfenv().LPH_NO_VIRTUALIZE = function(...) return ... end")()
 
 getfenv().PP_SCRAMBLE_NUM = function(...)
 	return ...

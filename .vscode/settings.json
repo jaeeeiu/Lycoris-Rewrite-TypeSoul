@@ -62,7 +62,9 @@
         "getsenv",
         "PP_SCRAMBLE_STR",
         "PP_SCRAMBLE_NUM",
-        "PP_SCRAMBLE_RE_NUM"
+        "PP_SCRAMBLE_RE_NUM",
+        "LRM_UserNote",
+        "script_key"
     ],
     "robloxLsp.suggestedImports.importIgnore": [
         "**/_Index/**",
