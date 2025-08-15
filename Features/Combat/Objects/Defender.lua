@@ -127,15 +127,18 @@ end)
 Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 	local distance = self:distance(entity)
 	if not distance then
-		return Logger.warn("Stopping RPUE '%s' because the distance is not valid.", timing.name)
+		return Logger.warn("Stopping RPUE '%s' because the distance is not valid.", PP_SCRAMBLE_STR(timing.name))
 	end
 
-	if timing and (distance < timing.imdd or distance > timing.imxd) then
+	if timing and (distance < PP_SCRAMBLE_NUM(timing.imdd) or distance > PP_SCRAMBLE_NUM(timing.imxd)) then
 		return self:notify(timing, "Distance is out of range.")
 	end
 
 	if not self:rc(info) then
-		return Logger.warn("Stopping RPUE '%s' because the repeat condition is not valid.", timing.name)
+		return Logger.warn(
+			"Stopping RPUE '%s' because the repeat condition is not valid.",
+			PP_SCRAMBLE_STR(timing.name)
+		)
 	end
 
 	local target = self:target(entity)
@@ -149,16 +152,16 @@ Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 
 	info.index = info.index + 1
 
-	self:mark(Task.new(string.format("RPUE_%s_%i", timing.name, info.index), function()
+	self:mark(Task.new(string.format("RPUE_%s_%i", PP_SCRAMBLE_STR(timing.name), info.index), function()
 		return timing:rpd() - info.irdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	if not target then
-		return Logger.warn("Skipping RPUE '%s' because the target is not valid.", timing.name)
+		return Logger.warn("Skipping RPUE '%s' because the target is not valid.", PP_SCRAMBLE_STR(timing.name))
 	end
 
 	if not success then
-		return Logger.warn("Skipping RPUE '%s' because we are not in the hitbox.", timing.name)
+		return Logger.warn("Skipping RPUE '%s' because we are not in the hitbox.", PP_SCRAMBLE_STR(timing.name))
 	end
 
 	self:notify(timing, "(%i) Action 'RPUE Parry' is being executed.", info.index)
@@ -324,7 +327,7 @@ Defender.initial = LPH_NO_VIRTUALIZE(function(self, from, pair, name, key)
 	end
 
 	-- Check for distance; if we have a timing.
-	if timing and (distance < timing.imdd or distance > timing.imxd) then
+	if timing and (distance < PP_SCRAMBLE_NUM(timing.imdd) or distance > PP_SCRAMBLE_NUM(timing.imxd)) then
 		return nil
 	end
 
@@ -348,7 +351,7 @@ Defender.notify = LPH_NO_VIRTUALIZE(function(self, timing, str, ...)
 		return
 	end
 
-	Logger.notify("[%s] (%s) %s", timing.name, self.__type, string.format(str, ...))
+	Logger.notify("[%s] (%s) %s", PP_SCRAMBLE_STR(timing.name), self.__type, string.format(str, ...))
 end)
 
 ---@note: Perhaps one day, we can get better approximations for these.
@@ -442,11 +445,13 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	local hitbox = action and action.hitbox or timing.hitbox
 
+	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
+
 	if timing.duih then
 		hitbox = timing.hitbox
 	end
 
-	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, timing.name)
+	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
 
 	if result then
 		return result
@@ -475,7 +480,7 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	root.CFrame = closest
 
-	result = self:hitbox(options:extrapolate(), timing.fhb, hitbox, options.filter, timing.name)
+	result = self:hitbox(options:extrapolate(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
 
 	root.CFrame = oldCFrame
 
@@ -518,17 +523,17 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return
 	end
 
-	self:notify(timing, "Action type '%s' is being executed.", action._type)
+	self:notify(timing, "Action type '%s' is being executed.", PP_SCRAMBLE_STR(action._type))
 
-	if action._type == "Start Block" then
+	if PP_SCRAMBLE_STR(action._type) == "Start Block" then
 		return InputClient.block(true)
 	end
 
-	if action._type == "End Block" then
+	if PP_SCRAMBLE_STR(action._type) == "End Block" then
 		return self:bend()
 	end
 
-	if action._type == "Dash" then
+	if PP_SCRAMBLE_STR(action._type) == "Dash" then
 		return InputClient.dash()
 	end
 
@@ -657,17 +662,17 @@ end)
 ---@varargs any
 Defender.module = LPH_NO_VIRTUALIZE(function(self, timing, ...)
 	-- Get loaded function.
-	local lf = ModuleManager.modules[timing.smod]
+	local lf = ModuleManager.modules[PP_SCRAMBLE_STR(timing.smod)]
 	if not lf then
-		return self:notify(timing, "No module '%s' found.", timing.smod)
+		return self:notify(timing, "No module '%s' found.", PP_SCRAMBLE_STR(timing.smod))
 	end
 
 	-- Create identifier.
-	local identifier = string.format("Defender_RunModule_%s", timing.smod)
+	local identifier = string.format("Defender_RunModule_%s", PP_SCRAMBLE_STR(timing.smod))
 
 	-- Notify.
 	if not timing.smn then
-		self:notify(timing, "Running module '%s' on timing.", timing.smod)
+		self:notify(timing, "Running module '%s' on timing.", PP_SCRAMBLE_STR(timing.smod))
 	end
 
 	-- Run module.
@@ -679,11 +684,22 @@ end)
 ---@param timing Timing
 ---@param action Action
 Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
+	if timing.umoa then
+		action["_type"] = PP_SCRAMBLE_STR(action["_type"])
+		action["name"] = PP_SCRAMBLE_STR(action["name"])
+		action["_when"] = PP_SCRAMBLE_RE_NUM(action["_when"])
+		action["hitbox"] = Vector3.new(
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].X),
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].Y),
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].Z)
+		)
+	end
+
 	-- Get initial receive delay.
 	local rdelay = self.rdelay()
 
 	-- Add action.
-	self:mark(Task.new(action._type, function()
+	self:mark(Task.new(PP_SCRAMBLE_STR(action._type), function()
 		return action:when() - rdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.handle, self, timing, action))
 
@@ -691,7 +707,7 @@ Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	self:notify(
 		timing,
 		"Added action '%s' (%.2fs) with ping '%.2f' (changing) subtracted.",
-		action.name,
+		PP_SCRAMBLE_STR(action.name),
 		action:when(),
 		self.rtt()
 	)
