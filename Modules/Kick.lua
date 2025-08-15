@@ -10,7 +10,7 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = math.min(1250 + distance * 1.8, 1700)
 	action._type = "Parry"
-	action.hitbox = Vector3.new(100, 100, 100)
+	action.hitbox = Vector3.new(100, 120, 100)
 	action.name = string.format("(%.2f) Dynamic Bomb Kick Timing", distance)
 
 	return self:action(timing, action)
