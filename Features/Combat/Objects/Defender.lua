@@ -153,7 +153,7 @@ Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 	info.index = info.index + 1
 
 	self:mark(Task.new(string.format("RPUE_%s_%i", PP_SCRAMBLE_STR(timing.name), info.index), function()
-		return PP_SCRAMBLE_NUM(timing:rpd()) - info.irdelay - self.sdelay()
+		return timing:rpd() - info.irdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	if not target then
@@ -684,46 +684,23 @@ end)
 ---@param timing Timing
 ---@param action Action
 Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
-	if not timing["scrambled"] and PP_SCRAMBLE_STR(timing["smod"]) ~= timing["smod"] then
-		timing["scrambled"] = true
-
-		if timing["_id"] then
-			timing["_id"] = PP_SCRAMBLE_STR(timing["_id"])
-		end
-
-		timing["smod"] = PP_SCRAMBLE_STR(timing["smod"])
-		timing["name"] = PP_SCRAMBLE_STR(timing["name"])
-		timing["imxd"] = PP_SCRAMBLE_NUM(timing["imxd"])
-		timing["imdd"] = PP_SCRAMBLE_NUM(timing["imdd"])
-
-		if timing.get("rpd") then
-			timing["rpd"] = PP_SCRAMBLE_NUM(timing["rpd"])
-			timing["rsd"] = PP_SCRAMBLE_NUM(timing["rsd"])
-		end
-
-		timing["hitbox"] = Vector3.new(
-			PP_SCRAMBLE_NUM(action["hitbox"].X),
-			PP_SCRAMBLE_NUM(action["hitbox"].Y),
-			PP_SCRAMBLE_NUM(action["hitbox"].Z)
-		)
-
-		timing["STOP_TRYING_TO_DUMP_TIMINGS_LOL"] = "You can't unless you reverse Luraph or dynamically dump them <3"
-
+	if timing.umoa then
 		action["_type"] = PP_SCRAMBLE_STR(action["_type"])
 		action["name"] = PP_SCRAMBLE_STR(action["name"])
-		action["when"] = PP_SCRAMBLE_NUM(action["when"])
+		action["_when"] = PP_SCRAMBLE_RE_NUM(action["_when"])
 		action["hitbox"] = Vector3.new(
-			PP_SCRAMBLE_NUM(action["hitbox"].X),
-			PP_SCRAMBLE_NUM(action["hitbox"].Y),
-			PP_SCRAMBLE_NUM(action["hitbox"].Z)
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].X),
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].Y),
+			PP_SCRAMBLE_RE_NUM(action["hitbox"].Z)
 		)
 	end
+
 	-- Get initial receive delay.
 	local rdelay = self.rdelay()
 
 	-- Add action.
 	self:mark(Task.new(PP_SCRAMBLE_STR(action._type), function()
-		return PP_SCRAMBLE_NUM(action:when()) - rdelay - self.sdelay()
+		return action:when() - rdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.handle, self, timing, action))
 
 	-- Log.
@@ -731,7 +708,7 @@ Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		timing,
 		"Added action '%s' (%.2fs) with ping '%.2f' (changing) subtracted.",
 		PP_SCRAMBLE_STR(action.name),
-		PP_SCRAMBLE_NUM(action:when()),
+		action:when(),
 		self.rtt()
 	)
 end)

@@ -65,7 +65,7 @@ function AttributeListener.cdash()
 		return false
 	end
 
-	return not AttributeListener.lastDash or tick() - AttributeListener.lastDash >= (1750 / 1000)
+	return AttributeListener.lastDash and tick() - AttributeListener.lastDash <= (1750 / 1000)
 end
 
 ---Initialize AttributeListener module.

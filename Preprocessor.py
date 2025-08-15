@@ -301,11 +301,28 @@ class LuaPreprocessor:
         return None
 
     def _escape_lua_string(self, s: str) -> str:
-        # Minimal Lua string escaper using double quotes
-        s = s.replace('\\', r'\\')
-        s = s.replace('"', r'\"')
-        s = s.replace('\n', r'\n').replace('\r', r'\r').replace('\t', r'\t')
-        return f'"{s}"'
+        """Encode Python string as a Lua byte string literal.
+
+        Notes:
+        - For Lua 5.1 compatibility we avoid ``\\xHH`` style escapes (unsupported).
+        - Keep printable ASCII (32-126) except backslash and double quote as-is.
+        - Escape backslash and double quote with a preceding backslash.
+        - Encode all other bytes using decimal escape sequences ``\\ddd`` (zero-padded to 3 digits) so they are unambiguous.
+        This guarantees round-trip for any scrambled / binary content produced by XOR.
+        """
+        out_chars: list[str] = []
+        for ch in s:
+            o = ord(ch)
+            if 32 <= o <= 126 and ch not in ('\\', '"'):
+                out_chars.append(ch)
+            elif ch == '"':
+                out_chars.append('\\"')
+            elif ch == '\\':
+                out_chars.append('\\\\')
+            else:
+                # Decimal escape; pad to 3 to avoid ambiguity with following digits
+                out_chars.append(f"\\{o:03d}")
+        return '"' + ''.join(out_chars) + '"'
 
     def _to_lua(self, value: Any, base_indent: str = "", inline: bool = False) -> str:
         # Convert Python values (from msgpack/json) to Lua literal
@@ -360,15 +377,63 @@ class LuaPreprocessor:
         return self._escape_lua_string(str(value))
 
     def _inline_internal_load(self, src: str, var_name: str, array_values: list[Any]) -> tuple[str, int]:
-        # Replace 'var_name:load({})' with 'var_name:load({ ... })' keeping indentation
+        """Inline var_name:load({}) with a key/value table keyed by each entry's _id.
+
+        Example produced structure:
+            var_name:load({
+                ["someId"] = { ... },
+                ["otherId"] = { ... },
+            })
+        Falls back to synthetic keys if _id missing.
+        """
         pattern = re.compile(rf"^(?P<indent>[ \t]*){re.escape(var_name)}:load\s*\(\s*\{{\s*\}}\s*\)", re.MULTILINE)
         count = 0
+
+        def build_kv_table(indent: str) -> str:
+            inner_indent = indent + "    "
+            lines: list[str] = ["{"]
+            total = len(array_values)
+            for idx, entry in enumerate(array_values):
+                if not isinstance(entry, dict):
+                    key = f"idx_{idx+1}"
+                else:
+                    key = entry.get("_id") or f"idx_{idx+1}"
+                key_lua = self._escape_lua_string(str(key))
+                # Generate Lua for entry with deeper indent
+                entry_lua = self._to_lua(entry, base_indent=inner_indent + "    ")
+                entry_lines = entry_lua.splitlines()
+                if not entry_lines:
+                    entry_lines = ["{}"]
+                # First line with key
+                lines.append(f"{inner_indent}[{key_lua}] = {entry_lines[0]}")
+                # Middle lines (if any)
+                for mid in entry_lines[1:-1]:
+                    lines.append(f"{inner_indent}{mid}")
+                # Last line gets comma if not last entry
+                if len(entry_lines) > 1:
+                    last_line = entry_lines[-1]
+                else:
+                    last_line = entry_lines[0]  # single-line already handled
+                if idx < total - 1:
+                    last_line = last_line + ","
+                lines[-1] = lines[-1] if len(entry_lines) == 1 else lines[-1]  # keep previous lines
+                if len(entry_lines) > 1:
+                    # Replace last appended line (the previous last line without comma) with itself (no-op), then append closing with comma
+                    lines.append(f"{inner_indent}{last_line}")
+                else:
+                    # Adjust single-line entry to include comma if needed
+                    if idx < total - 1:
+                        lines[-1] = lines[-1] + ","
+            lines.append(indent + "}")
+            return "\n".join(lines)
+
         def repl(m: re.Match) -> str:
             nonlocal count
             indent = m.group("indent")
-            table_str = self._to_lua(array_values, base_indent=indent + "    ")
+            table_str = build_kv_table(indent)
             count += 1
             return f"{indent}{var_name}:load(\n{table_str}\n{indent})"
+
         new_src, n = pattern.subn(repl, src)
         return new_src, n
 
@@ -377,7 +442,7 @@ class LuaPreprocessor:
         return encrypted
 
     def scramble_num(self, n):
-        return ((n + 69) * 12) - 5
+        return ((n + 5) / 12) - 69
 
     def scramble_hitbox(self, hitbox: dict[str, Any]) -> dict[str, Any]:
         return {
@@ -429,7 +494,10 @@ class LuaPreprocessor:
             return ''.join(out)
 
         def build_num(expr: str) -> str:
-            return f"((({expr}) + 69) * 12) - 5"
+            return f"(((({expr}) + 69) * 12) - 5)"
+
+        def build_re_num(expr: str) -> str:
+            return f"(((({expr}) + 5) / 12) - 69)"
 
         def build_str(expr: str) -> str:
             return (
@@ -440,6 +508,7 @@ class LuaPreprocessor:
 
         src = expand_one("PP_SCRAMBLE_NUM", build_num)
         src = expand_one("PP_SCRAMBLE_STR", build_str)
+        src = expand_one("PP_SCRAMBLE_RE_NUM", build_re_num)
         return src
 
     
@@ -481,7 +550,6 @@ class LuaPreprocessor:
 
                 timing["hitbox"] = self.scramble_hitbox(timing["hitbox"])
                 timing["STOP_TRYING_TO_DUMP_TIMINGS_LOL"] = "You can't unless you reverse Luraph or dynamically dump them <3"
-                timing["scrambled"] = True
             
                 # Scramble actions
                 action_list = timing.get("actions") or []

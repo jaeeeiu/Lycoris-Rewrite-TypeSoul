@@ -22,13 +22,13 @@ end
 ---Getter for repeat start delay in seconds
 ---@return number
 function AnimationTiming:rsd()
-	return self._rsd / 1000
+	return PP_SCRAMBLE_NUM(self._rsd) / 1000
 end
 
 ---Getter for repeat parry delay in seconds.
 ---@return number
 function AnimationTiming:rpd()
-	return self._rpd / 1000
+	return PP_SCRAMBLE_NUM(self._rpd) / 1000
 end
 
 ---Load from partial values.

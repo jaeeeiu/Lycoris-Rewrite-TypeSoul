@@ -236,7 +236,7 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	info.track = track
 
 	self:mark(Task.new(string.format("RPUE_%s_%i", timing.name, 0), function()
-		return PP_SCRAMBLE_NUM(timing:rsd()) - info.irdelay - self.sdelay()
+		return timing:rsd() - info.irdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	-- Notify.
@@ -244,8 +244,8 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 		timing,
 		"Added RPUE '%s' (%.2fs, then every %.2fs) with ping '%.2f' (changing) subtracted.",
 		PP_SCRAMBLE_STR(timing.name),
-		PP_SCRAMBLE_NUM(timing:rsd()),
-		PP_SCRAMBLE_NUM(timing:rpd()),
+		timing:rsd(),
+		timing:rpd(),
 		self.rtt()
 	)
 end)

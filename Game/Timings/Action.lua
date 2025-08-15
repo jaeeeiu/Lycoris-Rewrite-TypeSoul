@@ -10,7 +10,7 @@ Action.__index = Action
 ---Getter for when in seconds.
 ---@return number
 function Action:when()
-	return self._when / 1000
+	return PP_SCRAMBLE_NUM(self._when) / 1000
 end
 
 ---Load from partial values.

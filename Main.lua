@@ -16,6 +16,10 @@ getfenv().PP_SCRAMBLE_STR = function(...)
 	return ...
 end
 
+getfenv().PP_SCRAMBLE_RE_NUM = function(...)
+	return ...
+end
+
 ---@module Utility.Profiler
 local Profiler = require("Utility/Profiler")
 
