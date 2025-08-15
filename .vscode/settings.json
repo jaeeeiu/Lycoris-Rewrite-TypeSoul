@@ -59,7 +59,9 @@
         "should_queue_on_teleport",
         "no_queue_on_teleport",
         "Entitites",
-        "getsenv"
+        "getsenv",
+        "PP_SCRAMBLE_STR",
+        "PP_SCRAMBLE_NUM"
     ],
     "robloxLsp.suggestedImports.importIgnore": [
         "**/_Index/**",

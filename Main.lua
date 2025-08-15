@@ -8,6 +8,14 @@ getfenv().LPH_NO_VIRTUALIZE = function(...)
 	return ...
 end
 
+getfenv().PP_SCRAMBLE_NUM = function(...)
+	return ...
+end
+
+getfenv().PP_SCRAMBLE_STR = function(...)
+	return ...
+end
+
 ---@module Utility.Profiler
 local Profiler = require("Utility/Profiler")
 

@@ -71,7 +71,7 @@ AnimatorDefender.rc = LPH_NO_VIRTUALIZE(function(self, info)
 	if not info.track then
 		return Logger.warn(
 			"(%s) Did you forget to pass the track? Or perhaps you forgot to place a hook before using this function.",
-			info.timing.name
+			PP_SCRAMBLE_STR(info.timing.name)
 		)
 	end
 
@@ -236,16 +236,16 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	info.track = track
 
 	self:mark(Task.new(string.format("RPUE_%s_%i", timing.name, 0), function()
-		return timing:rsd() - info.irdelay - self.sdelay()
+		return PP_SCRAMBLE_NUM(timing:rsd()) - info.irdelay - self.sdelay()
 	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	-- Notify.
 	self:notify(
 		timing,
 		"Added RPUE '%s' (%.2fs, then every %.2fs) with ping '%.2f' (changing) subtracted.",
-		timing.name,
-		timing:rsd(),
-		timing:rpd(),
+		PP_SCRAMBLE_STR(timing.name),
+		PP_SCRAMBLE_NUM(timing:rsd()),
+		PP_SCRAMBLE_NUM(timing:rpd()),
 		self.rtt()
 	)
 end)

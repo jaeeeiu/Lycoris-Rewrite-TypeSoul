@@ -312,7 +312,6 @@ function SaveManager.init()
 	local internalPartContainer = TimingContainer.new(PartTiming.new())
 	local internalSoundContainer = TimingContainer.new(SoundTiming.new())
 
-	---@todo: Load internal timings from server.
 	internalAnimationContainer:load({})
 	internalPartContainer:load({})
 	internalSoundContainer:load({})
