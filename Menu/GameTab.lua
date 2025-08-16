@@ -101,6 +101,8 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	groupbox:AddButton("Redeem Codes", function()
 		local codes = {
+			"codelolhaha",
+			"codeofdoom",
 			"600MVisits",
 			"300KLikes",
 			"serverlistfixed",
