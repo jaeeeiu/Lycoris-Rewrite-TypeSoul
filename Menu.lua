@@ -49,7 +49,12 @@ local renderStepped = Signal.new(runService.RenderStepped)
 local menuMaid = Maid.new()
 
 -- Constants.
-local MENU_TITLE = LRM_UserNote and "(Commit 4b4c52) Linoria V2 | Type Soul Test" or "Linoria V2 | Type Soul"
+local MENU_TITLE = LRM_UserNote
+		and string.format(
+			"(Commit %s) Linoria V2 | Type Soul Test",
+			string.sub("eb612a7737c1daaa404832edbffa7d1b3909658b", 1, 6)
+		)
+	or "Linoria V2 | Type Soul"
 
 ---Initialize menu.
 function Menu.init()
