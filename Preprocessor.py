@@ -575,6 +575,8 @@ class LuaPreprocessor:
                     return True
                 return a == b
 
+            full_len = 0
+        
             for key in containers:
                 prev_map = index_by_id(prev_snapshot.get(key)) if isinstance(prev_snapshot, dict) else {}
                 curr_map = index_by_id(original_data.get(key)) if isinstance(original_data, dict) else {}
@@ -584,29 +586,34 @@ class LuaPreprocessor:
                 removed = sorted(prev_ids - curr_ids)
                 common = prev_ids & curr_ids
                 modified_ids: list[str] = []
+    
                 for cid in common:
                     p = prev_map[cid]; c = curr_map[cid]
                     if not _deep_equal(p, c):
                         modified_ids.append(cid)
+                        
+                full_len += len(added) + len(removed) + len(modified_ids)
+            
                 if added or removed or modified_ids:
                     added_total += len(added); removed_total += len(removed); modified_total += len(modified_ids)
                     per_container_msgs.append(f"{key}: +{len(added)}/-{len(removed)}/~{len(modified_ids)}")
                     # Emit limited detail
                     for cid in added:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"  [+] {key}:{cid}")
+                            detail_lines.append(f"[+] {key}:{cid}")
                     for cid in removed:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"  [-] {key}:{cid}")
+                            detail_lines.append(f"[-] {key}:{cid}")
                     for cid in modified_ids:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"  [~] {key}:{cid}")
+                            detail_lines.append(f"[~] {key}:{cid}")
+    
             if added_total or removed_total or modified_total:
                 summary = ', '.join(per_container_msgs) if per_container_msgs else 'no container changes'
                 print(f"Timing diff vs previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
                 if detail_lines:
                     if len(detail_lines) == detail_cap:
-                        detail_lines.append("  ... (truncated)")
+                        detail_lines.append(f"  ... (truncated output, only showing {len(detail_lines)} diff out of {full_len})")
                     for ln in detail_lines:
                         print(ln)
             else:
@@ -802,16 +809,17 @@ class LuaPreprocessor:
                 common = prev_names & curr_names
                 changed = [n for n in common if prev_mod_meta.get(n, {}).get("h") != curr_meta.get(n, {}).get("h")]
                 if added or removed or changed:
+                    all_len = len(added) + len(removed) + len(changed)
                     print(f"Module diff: +{len(added)}/-{len(removed)}/~{len(changed)} (added/removed/changed)")
                     detail_cap = 40
                     details: list[str] = []
                     for n in added:
-                        if len(details) < detail_cap: details.append(f"  [+] {n}")
+                        if len(details) < detail_cap: details.append(f"[+] {n}")
                     for n in removed:
-                        if len(details) < detail_cap: details.append(f"  [-] {n}")
+                        if len(details) < detail_cap: details.append(f"[-] {n}")
                     for n in changed:
-                        if len(details) < detail_cap: details.append(f"  [~] {n}")
-                    if len(details) == detail_cap: details.append("  ... (truncated)")
+                        if len(details) < detail_cap: details.append(f"[~] {n}")
+                    if len(details) == detail_cap: details.append(f"... (truncated output, only showing {len(details)} diff out of {all_len})")
                     for ln in details:
                         print(ln)
                 else:
