@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Optional, Iterable, Dict, Tuple, Any
 import re
 import json
+import hashlib
+import copy
 
 try:  # Optional dependency for MessagePack
     import msgpack  # type: ignore
@@ -37,6 +39,15 @@ class LuaPreprocessor:
         # Optional timing file (MessagePack preferred). Parsed lazily.
         self.timing_file = timing_file
         self._timing_data: Optional[dict[str, Any]] = None
+        # Where we persist the last (unscrambled) decoded timing data for diffing across runs
+        self._timing_snapshot_path: Optional[Path] = None
+        if self.timing_file:
+            try:
+                self._timing_snapshot_path = self.timing_file.with_suffix('.preprocessor.last.json')
+            except Exception:
+                self._timing_snapshot_path = None
+        # Snapshot for module content/name diffing
+        self._modules_snapshot_path = self.output_path.parent / "modules.preprocessor.last.json"
 
     def read(self) -> str:
         if not self.input_path.exists():
@@ -516,7 +527,98 @@ class LuaPreprocessor:
         data = self._timing_data or self._decode_timing_file()
         if not data:
             return src, 0
+        # Keep original (unscrambled) deep copy for snapshot & diff BEFORE we mutate in-place
+        original_data = copy.deepcopy(data)
         self._timing_data = data
+
+        # Load previous snapshot (also expected unscrambled) and compute diff summary
+        prev_snapshot: Optional[dict[str, Any]] = None
+        if getattr(self, '_timing_snapshot_path', None) and self._timing_snapshot_path and self._timing_snapshot_path.exists():
+            try:
+                prev_snapshot = json.loads(self._timing_snapshot_path.read_text(encoding='utf-8'))
+            except Exception as e:
+                print(f"Warning: failed to read previous timing snapshot: {e}")
+
+        if prev_snapshot:
+            def index_by_id(arr: Any) -> Dict[str, Any]:
+                out: Dict[str, Any] = {}
+                if isinstance(arr, list):
+                    for idx, item in enumerate(arr):
+                        if isinstance(item, dict):
+                            k = item.get('_id') or f'__idx_{idx}'
+                            out[str(k)] = item
+                return out
+
+            containers = ['animation', 'part', 'sound']
+            added_total = removed_total = modified_total = 0
+            per_container_msgs: list[str] = []
+            detail_lines: list[str] = []
+            detail_cap = 40  # limit noisy output
+            def _deep_equal(a: Any, b: Any) -> bool:
+                if a is b:
+                    return True
+                if type(a) is not type(b):
+                    return False
+                if isinstance(a, dict):
+                    if set(a.keys()) != set(b.keys()):
+                        return False
+                    for k in a.keys():
+                        if not _deep_equal(a[k], b[k]):
+                            return False
+                    return True
+                if isinstance(a, list):
+                    if len(a) != len(b):
+                        return False
+                    for ia, ib in zip(a, b):
+                        if not _deep_equal(ia, ib):
+                            return False
+                    return True
+                return a == b
+
+            for key in containers:
+                prev_map = index_by_id(prev_snapshot.get(key)) if isinstance(prev_snapshot, dict) else {}
+                curr_map = index_by_id(original_data.get(key)) if isinstance(original_data, dict) else {}
+                prev_ids = set(prev_map.keys())
+                curr_ids = set(curr_map.keys())
+                added = sorted(curr_ids - prev_ids)
+                removed = sorted(prev_ids - curr_ids)
+                common = prev_ids & curr_ids
+                modified_ids: list[str] = []
+                for cid in common:
+                    p = prev_map[cid]; c = curr_map[cid]
+                    if not _deep_equal(p, c):
+                        modified_ids.append(cid)
+                if added or removed or modified_ids:
+                    added_total += len(added); removed_total += len(removed); modified_total += len(modified_ids)
+                    per_container_msgs.append(f"{key}: +{len(added)}/-{len(removed)}/~{len(modified_ids)}")
+                    # Emit limited detail
+                    for cid in added:
+                        if len(detail_lines) < detail_cap:
+                            detail_lines.append(f"  [+] {key}:{cid}")
+                    for cid in removed:
+                        if len(detail_lines) < detail_cap:
+                            detail_lines.append(f"  [-] {key}:{cid}")
+                    for cid in modified_ids:
+                        if len(detail_lines) < detail_cap:
+                            detail_lines.append(f"  [~] {key}:{cid}")
+            if added_total or removed_total or modified_total:
+                summary = ', '.join(per_container_msgs) if per_container_msgs else 'no container changes'
+                print(f"Timing diff vs previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
+                if detail_lines:
+                    if len(detail_lines) == detail_cap:
+                        detail_lines.append("  ... (truncated)")
+                    for ln in detail_lines:
+                        print(ln)
+            else:
+                print("Timing diff vs previous snapshot: no changes detected.")
+
+        # Persist new snapshot (unscrambled original)
+        if getattr(self, '_timing_snapshot_path', None) and self._timing_snapshot_path:
+            try:
+                self._timing_snapshot_path.write_text(json.dumps(original_data, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+            except Exception as e:
+                print(f"Warning: failed to write timing snapshot: {e}")
+            
         replaced = 0
         # Expect keys: animation, part, sound
         arrays = {
@@ -679,6 +781,49 @@ class LuaPreprocessor:
         glob_entries: Dict[str, str] = {k: (globals_dir / f"{k}.lua").read_text(encoding='utf-8-sig', errors='replace') for k in sorted(glob_files.keys())}
         modules_tbl = self._build_lua_table(mod_entries, base_indent='')
         globals_tbl = self._build_lua_table(glob_entries, base_indent='')
+        # Module diffing (names + content stripped of whitespace)
+        try:
+            prev_mod_meta: dict[str, Any] = {}
+            if self._modules_snapshot_path.exists():
+                try:
+                    prev_mod_meta = json.loads(self._modules_snapshot_path.read_text(encoding='utf-8')) or {}
+                except Exception as e:
+                    print(f"Warning: failed reading previous module snapshot: {e}")
+            def norm(s: str) -> str:
+                return ''.join(ch for ch in s if not ch.isspace())
+            def stable_hash(text: str) -> str:
+                return hashlib.sha256(text.encode('utf-8', 'replace')).hexdigest()
+            curr_meta = {k: {"h": stable_hash(norm(v)), "len": len(v)} for k, v in mod_entries.items()}
+            if prev_mod_meta:
+                prev_names = set(prev_mod_meta.keys())
+                curr_names = set(curr_meta.keys())
+                added = sorted(curr_names - prev_names)
+                removed = sorted(prev_names - curr_names)
+                common = prev_names & curr_names
+                changed = [n for n in common if prev_mod_meta.get(n, {}).get("h") != curr_meta.get(n, {}).get("h")]
+                if added or removed or changed:
+                    print(f"Module diff: +{len(added)}/-{len(removed)}/~{len(changed)} (added/removed/changed)")
+                    detail_cap = 40
+                    details: list[str] = []
+                    for n in added:
+                        if len(details) < detail_cap: details.append(f"  [+] {n}")
+                    for n in removed:
+                        if len(details) < detail_cap: details.append(f"  [-] {n}")
+                    for n in changed:
+                        if len(details) < detail_cap: details.append(f"  [~] {n}")
+                    if len(details) == detail_cap: details.append("  ... (truncated)")
+                    for ln in details:
+                        print(ln)
+                else:
+                    print("Module diff: no changes detected.")
+            else:
+                print("Module diff: initial snapshot created.")
+            try:
+                self._modules_snapshot_path.write_text(json.dumps(curr_meta, separators=(',', ':'), ensure_ascii=False), encoding='utf-8')
+            except Exception as e:
+                print(f"Warning: failed writing module snapshot: {e}")
+        except Exception as e:
+            print(f"Warning: module diffing failed: {e}")
         src2, rmods, rglobs = self._inject_internal_tables(src2, modules_tbl, globals_tbl)
         # 5) Inline timings
         src2, inlined = self._inline_timings(src2)
