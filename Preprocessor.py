@@ -545,7 +545,7 @@ class LuaPreprocessor:
                 if isinstance(arr, list):
                     for idx, item in enumerate(arr):
                         if isinstance(item, dict):
-                            k = item.get('_id') or f'__idx_{idx}'
+                            k = item.get('name')
                             out[str(k)] = item
                 return out
 
@@ -597,16 +597,26 @@ class LuaPreprocessor:
                 if added or removed or modified_ids:
                     added_total += len(added); removed_total += len(removed); modified_total += len(modified_ids)
                     per_container_msgs.append(f"{key}: +{len(added)}/-{len(removed)}/~{len(modified_ids)}")
+                    
+                    if key == "animation":
+                        key = "Animation"
+                        
+                    if key == "part":
+                        key = "Part"
+                    
+                    if key == "sound":
+                        key = "Sound"
+                    
                     # Emit limited detail
                     for cid in added:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"[+] {key}:{cid}")
+                            detail_lines.append(f"+ (added) {key} : {cid}")
                     for cid in removed:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"[-] {key}:{cid}")
+                            detail_lines.append(f"- (removed) {key} : {cid}")
                     for cid in modified_ids:
                         if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"[~] {key}:{cid}")
+                            detail_lines.append(f"+ (changed) {key} : {cid}")
     
             if added_total or removed_total or modified_total:
                 summary = ', '.join(per_container_msgs) if per_container_msgs else 'no container changes'
@@ -814,11 +824,11 @@ class LuaPreprocessor:
                     detail_cap = 40
                     details: list[str] = []
                     for n in added:
-                        if len(details) < detail_cap: details.append(f"[+] {n}")
+                        if len(details) < detail_cap: details.append(f"+ (added) {n}")
                     for n in removed:
-                        if len(details) < detail_cap: details.append(f"[-] {n}")
+                        if len(details) < detail_cap: details.append(f"- (removed) {n}")
                     for n in changed:
-                        if len(details) < detail_cap: details.append(f"[~] {n}")
+                        if len(details) < detail_cap: details.append(f"+ (changed) {n}")
                     if len(details) == detail_cap: details.append(f"... (truncated output, only showing {len(details)} diff out of {all_len})")
                     for ln in details:
                         print(ln)
