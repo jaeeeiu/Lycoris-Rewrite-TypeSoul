@@ -122,7 +122,7 @@ end)
 ---Repeat until parry end.
 ---@param self Defender
 ---@param entity Model
----@param timing Timing
+---@param timing AnimationTiming
 ---@param info RepeatInfo
 Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 	local distance = self:distance(entity)
@@ -164,7 +164,9 @@ Defender.rpue = LPH_NO_VIRTUALIZE(function(self, entity, timing, info)
 		return Logger.warn("Skipping RPUE '%s' because we are not in the hitbox.", PP_SCRAMBLE_STR(timing.name))
 	end
 
-	self:notify(timing, "(%i) Action 'RPUE Parry' is being executed.", info.index)
+	if not timing.srpn then
+		self:notify(timing, "(%i) Action 'RPUE Parry' is being executed.", info.index)
+	end
 
 	InputClient.block(true)
 	InputClient.block(false)

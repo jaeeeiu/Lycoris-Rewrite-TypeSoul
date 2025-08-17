@@ -1,30 +1,25 @@
----@type Action
-local Action = getfenv().Action
+---@module Features.Combat.Objects.RepeatInfo
+local RepeatInfo = getfenv().RepeatInfo
 
 ---Module function.
 ---@param self AnimatorDefender
 ---@param timing AnimationTiming
 return function(self, timing)
-	local timings = {
-		[1] = 950,
-	}
+	timing.rpue = true
+	timing._rpd = 150
+	timing._rsd = 1200
+	timing.hitbox = Vector3.new(300, 300, 300)
 
-	local humanoid = self.entity:FindFirstChildOfClass("Humanoid")
-	if not humanoid then
-		return
+	if self.track.Speed >= 0.94 and self.track.Speed <= 0.96 then
+		timing._rsd = 1150
 	end
 
-	for idx = 1, 1 do
-		local action = Action.new()
-		action._when = timings[idx] or 0
-		action._type = "Parry"
-		action.hitbox = Vector3.new(80, 250, 80)
-		action.name = string.format("(%.2f) Dynamic Ring Timing", self.track.Speed)
-
-		if humanoid.Health <= (humanoid.MaxHealth / 2) then
-			action._when /= 1.50
-		end
-
-		self:action(timing, action)
+	if self.track.Speed >= 1.45 and self.track.Speed <= 1.55 then
+		timing._rsd = 0
 	end
+
+	local info = RepeatInfo.new(timing)
+	info.track = self.track
+	info.irdelay = self.rdelay()
+	self:rpue(self.entity, timing, info)
 end
