@@ -43,7 +43,9 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 	local playerNameType = Configuration.idOptionValue(identifier, "PlayerNameType")
 	local playerName = "Unknown Player"
 
-	if playerNameType == "Roblox Display Name" then
+	if playerNameType == "Character Name" then
+		playerName = player:GetAttribute("CharacterName") or "Unknown Character Name"
+	elseif playerNameType == "Roblox Display Name" then
 		playerName = player.DisplayName
 	elseif playerNameType == "Roblox Username" then
 		playerName = player.Name

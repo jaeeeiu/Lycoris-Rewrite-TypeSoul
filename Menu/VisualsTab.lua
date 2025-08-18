@@ -131,7 +131,7 @@ function VisualsTab.addPlayerESP(identifier, depbox)
 	depbox:AddDropdown(Configuration.identify(identifier, "PlayerNameType"), {
 		Text = "Player Name Type",
 		Default = 1,
-		Values = { "Roblox Display Name", "Roblox Username" },
+		Values = { "Character Name", "Roblox Display Name", "Roblox Username" },
 	})
 end
 
@@ -206,6 +206,30 @@ function VisualsTab.addFilterESP(identifier, depbox)
 	})
 end
 
+---Initialize World Visuals section.
+---@param groupbox table
+function VisualsTab.initWorldVisualsSection(groupbox)
+	groupbox:AddToggle("ModifyFieldOfView", {
+		Text = "Modify Field Of View",
+		Default = true,
+	})
+
+	local fovDepBox = groupbox:AddDependencyBox()
+
+	fovDepBox:AddSlider("FieldOfView", {
+		Text = "Field Of View Slider",
+		Default = 90,
+		Min = 0,
+		Max = 120,
+		Suffix = "°",
+		Rounding = 0,
+	})
+
+	fovDepBox:SetupDependencies({
+		{ Toggles.ModifyFieldOfView, true },
+	})
+end
+
 ---Initialize tab.
 ---@param window table
 function VisualsTab.init(window)
@@ -215,6 +239,7 @@ function VisualsTab.init(window)
 	-- Initialize sections.
 	VisualsTab.initESPCustomization(tab:AddDynamicGroupbox("ESP Customization"))
 	VisualsTab.initESPOptimizations(tab:AddDynamicGroupbox("ESP Optimizations"))
+	VisualsTab.initWorldVisualsSection(tab:AddDynamicGroupbox("World Visuals"))
 	VisualsTab.addPlayerESP(VisualsTab.initBaseESPSection("Player", tab:AddDynamicGroupbox("Player ESP")))
 	VisualsTab.initBaseESPSection("Mob", tab:AddDynamicGroupbox("Mob ESP"))
 	VisualsTab.initBaseESPSection("MissionBoard", tab:AddDynamicGroupbox("Mission Board ESP"))
