@@ -408,7 +408,7 @@ class LuaPreprocessor:
                 if not isinstance(entry, dict):
                     key = f"idx_{idx+1}"
                 else:
-                    key = entry.get("_id") or f"idx_{idx+1}"
+                    key = entry.get("_id") or entry.get("pname")
                 key_lua = self._escape_lua_string(str(key))
                 # Generate Lua for entry with deeper indent
                 entry_lua = self._to_lua(entry, base_indent=inner_indent + "    ")
@@ -620,14 +620,14 @@ class LuaPreprocessor:
     
             if added_total or removed_total or modified_total:
                 summary = ', '.join(per_container_msgs) if per_container_msgs else 'no container changes'
-                print(f"Timing diff vs previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
+                print(f"Timing diff vs. previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
                 if detail_lines:
                     if len(detail_lines) == detail_cap:
                         detail_lines.append(f"  ... (truncated output, only showing {len(detail_lines)} diff out of {full_len})")
                     for ln in detail_lines:
                         print(ln)
             else:
-                print("Timing diff vs previous snapshot: no changes detected.")
+                print("Timing diff vs. previous snapshot: no changes detected.")
 
         # Persist new snapshot (unscrambled original)
         if getattr(self, '_timing_snapshot_path', None) and self._timing_snapshot_path:
@@ -657,6 +657,9 @@ class LuaPreprocessor:
                 # Scramble important properties
                 if timing.get("_id"):
                     timing["_id"] = self.scramble_str(timing["_id"])
+                
+                if timing.get("pname"):
+                    timing["pname"] = self.scramble_str(timing["pname"])
                 
                 timing["smod"] = self.scramble_str(timing["smod"])
                 timing["name"] = self.scramble_str(timing["name"])
@@ -820,7 +823,7 @@ class LuaPreprocessor:
                 changed = [n for n in common if prev_mod_meta.get(n, {}).get("h") != curr_meta.get(n, {}).get("h")]
                 if added or removed or changed:
                     all_len = len(added) + len(removed) + len(changed)
-                    print(f"Module diff: +{len(added)}/-{len(removed)}/~{len(changed)} (added/removed/changed)")
+                    print(f"Module diff vs. previous snapshot: +{len(added)}/-{len(removed)}/~{len(changed)} (added/removed/changed)")
                     detail_cap = 40
                     details: list[str] = []
                     for n in added:
@@ -833,9 +836,9 @@ class LuaPreprocessor:
                     for ln in details:
                         print(ln)
                 else:
-                    print("Module diff: no changes detected.")
+                    print("Module diff vs. previous snapshot: no changes detected.")
             else:
-                print("Module diff: initial snapshot created.")
+                print("Module diff vs. previous snapshot: initial snapshot created.")
             try:
                 self._modules_snapshot_path.write_text(json.dumps(curr_meta, separators=(',', ':'), ensure_ascii=False), encoding='utf-8')
             except Exception as e:
@@ -916,7 +919,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument(
         "-S", "--strip-text",
         action="append",
-        default=["BuilderTab.init(window)"],
+        default=["BuilderTab.init(window)", "SaveManager.load(result)", "ModuleManager.load(gfs, true)", "ModuleManager.load(fs, false)"],
         help="Arbitrary text to remove (whitespace-insensitive). Repeatable. Example: -S 'BuilderTab.init(window)'",
     )
     parser.add_argument(

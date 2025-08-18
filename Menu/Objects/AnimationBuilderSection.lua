@@ -60,8 +60,9 @@ function AnimationBuilderSection:check()
 		return Logger.longNotify("Please enter a valid animation ID.")
 	end
 
-	if self.pair:index(self.animationId.Value) then
-		return Logger.longNotify("The timing ID '%s' is already in the list.", self.animationId.Value)
+	local timing = self.pair:index(self.animationId.Value)
+	if timing then
+		return Logger.longNotify("The timing ID '%s' (%s) is already in the list.", self.animationId.Value, timing.name)
 	end
 
 	return true
@@ -103,15 +104,6 @@ function AnimationBuilderSection:extra(tab)
 		end),
 	})
 
-	self.ignoreEarlyAnimationEnd = tab:AddToggle(nil, {
-		Text = "Ignore Early Animation End",
-		Tooltip = "Should the timing ignore the early end of the animation?",
-		Default = false,
-		Callback = self:tnc(function(timing, value)
-			timing.ieae = value
-		end),
-	})
-
 	local depBoxEnd = tab:AddDependencyBox()
 
 	self.maxAnimationTimeout = depBoxEnd:AddInput(nil, {
@@ -125,7 +117,15 @@ function AnimationBuilderSection:extra(tab)
 
 	depBoxEnd:SetupDependencies({
 		{ self.ignoreAnimationEnd, true },
-		{ self.ignoreEarlyAnimationEnd, true },
+	})
+
+	self.ignoreEarlyAnimationEnd = tab:AddToggle(nil, {
+		Text = "Ignore Early Animation End",
+		Tooltip = "Should the timing ignore the early end of the animation?",
+		Default = false,
+		Callback = self:tnc(function(timing, value)
+			timing.ieae = value
+		end),
 	})
 end
 
