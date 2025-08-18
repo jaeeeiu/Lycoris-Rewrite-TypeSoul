@@ -19,9 +19,13 @@ local AnimationVisualizer = require("Features/Game/AnimationVisualizer")
 ---@modules Features.Combat.AttributeListener
 local AttributeListener = require("Features/Combat/AttributeListener")
 
+---@module Features.Game.Monitoring
+local Monitoring = require("Features/Game/Monitoring")
+
 ---Initialize features.
 ---@note: Careful with features that have entire return LPH_NO_VIRTUALIZE(function() blocks. We assume that we don't care about what's placed in there.
 function Features.init()
+	Monitoring.init()
 	AttributeListener.init()
 	Defense.init()
 	Visuals.init()
@@ -42,6 +46,7 @@ function Features.detach()
 		AnimationVisualizer.detach()
 	end
 
+	Monitoring.detach()
 	AttributeListener.detach()
 	Defense.detach()
 	Movement.detach()

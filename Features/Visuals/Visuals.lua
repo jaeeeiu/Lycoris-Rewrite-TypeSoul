@@ -7,20 +7,26 @@ local Signal = require("Utility/Signal")
 ---@module Features.Visuals.Objects.ModelESP
 local ModelESP = require("Features/Visuals/Objects/ModelESP")
 
----@module Features.Visuals.Objects.PartESP
-local PartESP = require("Features/Visuals/Objects/PartESP")
-
 ---@module Features.Visuals.Objects.MobESP
 local MobESP = require("Features/Visuals/Objects/MobESP")
 
 ---@module Features.Visuals.Objects.PlayerESP
 local PlayerESP = require("Features/Visuals/Objects/PlayerESP")
 
+---@module Utility.OriginalStoreManager
+local OriginalStoreManager = require("Utility/OriginalStoreManager")
+
 ---@module Features.Visuals.Group
 local Group = require("Features/Visuals/Group")
 
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
+
+---@module Utility.OriginalStore
+local OriginalStore = require("Utility/OriginalStore")
+
+---@module Utility.Configuration
+local Configuration = require("Utility/Configuration")
 
 ---@module Utility.Profiler
 local Profiler = require("Utility/Profiler")
@@ -31,6 +37,7 @@ local Visuals = { currentBuilderData = nil }
 -- Services.
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
+local textChatService = game:GetService("TextChatService")
 
 -- Signals.
 local renderStepped = Signal.new(runService.RenderStepped)
@@ -38,13 +45,81 @@ local renderStepped = Signal.new(runService.RenderStepped)
 -- Maids.
 local visualsMaid = Maid.new()
 
+-- Last visuals update.
+local lastVisualsUpdate = os.clock()
+
+-- Original stores.
+local fieldOfView = visualsMaid:mark(OriginalStore.new())
+
+-- Original store managers.
+local showRobloxChatMap = visualsMaid:mark(OriginalStoreManager.new())
+
 -- Groups.
 local groups = {}
+
+---Update show roblox chat.
+local updateShowRobloxChat = LPH_NO_VIRTUALIZE(function()
+	local localPlayer = players.LocalPlayer
+	if not localPlayer then
+		return
+	end
+
+	local playerGui = localPlayer.PlayerGui
+	if not playerGui then
+		return
+	end
+
+	local chatWindowConfiguration = textChatService:FindFirstChild("ChatWindowConfiguration")
+	if not chatWindowConfiguration then
+		return
+	end
+
+	showRobloxChatMap:add(chatWindowConfiguration, "Enabled", true)
+
+	---@note: Probably set a proper restore for this?
+	--- But, in Deepwoken, users cannot realisitically access the Roblox chat anyway.
+	textChatService.OnIncomingMessage = function(message)
+		local source = message.TextSource
+		if not source then
+			return
+		end
+
+		local player = players:GetPlayerByUserId(source.UserId)
+		if not player then
+			return
+		end
+
+		message.PrefixText = string.gsub(message.PrefixText, player.DisplayName, player.Name)
+		message.PrefixText = string.format(
+			"(%s) %s",
+			player:GetAttribute("CharacterName") or "Unknown Character Name",
+			message.PrefixText
+		)
+	end
+end)
 
 ---Update visuals.
 local updateVisuals = LPH_NO_VIRTUALIZE(function()
 	for _, group in next, groups do
 		group:update()
+	end
+
+	if os.clock() - lastVisualsUpdate <= 1.0 then
+		return
+	end
+
+	lastVisualsUpdate = os.clock()
+
+	if Configuration.expectToggleValue("ModifyFieldOfView") then
+		fieldOfView:set(workspace.CurrentCamera, "FieldOfView", Configuration.expectOptionValue("FieldOfView"))
+	else
+		fieldOfView:restore()
+	end
+
+	if Configuration.expectToggleValue("ShowRobloxChat") then
+		updateShowRobloxChat()
+	else
+		showRobloxChatMap:restore()
 	end
 end)
 

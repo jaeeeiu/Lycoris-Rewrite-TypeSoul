@@ -12,7 +12,6 @@ local movementMaid = Maid.new()
 
 -- Services.
 local players = game:GetService("Players")
-local replicatedStorage = game:GetService("ReplicatedStorage")
 
 return LPH_NO_VIRTUALIZE(function()
 	-- Movement related stuff is handled here.
@@ -32,6 +31,9 @@ return LPH_NO_VIRTUALIZE(function()
 
 	---@module Utility.Logger
 	local Logger = require("Utility/Logger")
+
+	---@module Utility.Entitites
+	local Entitites = require("Utility/Entitites")
 
 	-- Services.
 	local runService = game:GetService("RunService")
@@ -145,6 +147,28 @@ return LPH_NO_VIRTUALIZE(function()
 		agilitySpoofer:set(agility, "Value", agilitySpoofValue)
 	end
 
+	---Update attach to back.
+	---@param rootPart BasePart
+	local function updateAttachToBack(rootPart)
+		local attachTarget = Entitites.findNearestEntity(200)
+		if not attachTarget then
+			return
+		end
+
+		local attachTargetHrp = attachTarget:FindFirstChild("HumanoidRootPart")
+		if not attachTargetHrp then
+			return
+		end
+
+		local offsetCFrame = CFrame.new(
+			0.0,
+			Configuration.expectOptionValue("HeightOffset"),
+			Configuration.expectOptionValue("BackOffset")
+		)
+
+		rootPart.CFrame = rootPart.CFrame:Lerp(attachTargetHrp.CFrame * offsetCFrame, 0.3)
+	end
+
 	---Update movement.
 	local function updateMovement()
 		local localPlayer = players.LocalPlayer
@@ -161,6 +185,10 @@ return LPH_NO_VIRTUALIZE(function()
 		local humanoid = character:FindFirstChild("Humanoid")
 		if not humanoid then
 			return
+		end
+
+		if Configuration.expectToggleValue("AttachToBack") then
+			updateAttachToBack(rootPart)
 		end
 
 		if Configuration.expectToggleValue("Fly") then

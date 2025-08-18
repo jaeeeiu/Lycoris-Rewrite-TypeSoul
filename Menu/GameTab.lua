@@ -87,6 +87,38 @@ function GameTab.initLocalCharacterSection(groupbox)
 		Rounding = 0,
 	})
 
+	local atbToggle = groupbox:AddToggle("AttachToBack", {
+		Text = "Attach To Back",
+		Tooltip = "Start following the nearest entity based on a distance and height offset.",
+		Default = false,
+	})
+
+	atbToggle:AddKeyPicker("AttachToBackKeybind", { Default = "N/A", SyncToggleState = true, Text = "Attach To Back" })
+
+	local atbDepBox = groupbox:AddDependencyBox()
+
+	atbDepBox:AddSlider("BackOffset", {
+		Text = "Distance To Entity",
+		Default = 5,
+		Min = -30,
+		Max = 30,
+		Suffix = "studs",
+		Rounding = 0,
+	})
+
+	atbDepBox:AddSlider("HeightOffset", {
+		Text = "Height Offset",
+		Default = 0,
+		Min = -30,
+		Max = 30,
+		Suffix = "studs",
+		Rounding = 0,
+	})
+
+	atbDepBox:SetupDependencies({
+		{ Toggles.AttachToBack, true },
+	})
+
 	infiniteJumpDepBox:SetupDependencies({
 		{ Toggles.InfiniteJump, true },
 	})
@@ -158,6 +190,62 @@ function GameTab.initLocalCharacterSection(groupbox)
 	end)
 end
 
+---Initialize player monitoring section.
+---@param groupbox table
+function GameTab.initPlayerMonitoringSection(groupbox)
+	groupbox:AddToggle("ShowRobloxChat", {
+		Text = "Show Roblox Chat",
+		Default = true,
+	})
+
+	groupbox:AddToggle("ShowOwnership", {
+		Text = "Show Network Ownership",
+		Default = false,
+	})
+
+	groupbox:AddToggle("PlayerProximity", {
+		Text = "Player Proximity Notifications",
+		Tooltip = "When other players are within specified distance, notify the user.",
+		Default = false,
+	})
+
+	local ppDepBox = groupbox:AddDependencyBox()
+
+	ppDepBox:AddSlider("PlayerProximityRange", {
+		Text = "Player Proximity Distance",
+		Default = 1000,
+		Min = 50,
+		Max = 2500,
+		Suffix = "studs",
+		Rounding = 0,
+	})
+
+	ppDepBox:AddToggle("PlayerProximityBeep", {
+		Text = "Play Beep Sound",
+		Tooltip = "Use a beep sound along with the proximity notification.",
+		Default = false,
+	})
+
+	local ppbDepBox = ppDepBox:AddDependencyBox()
+
+	ppbDepBox:AddSlider("PlayerProximityBeepVolume", {
+		Text = "Beep Sound Volume",
+		Default = 0.1,
+		Min = 0,
+		Max = 10,
+		Suffix = "v",
+		Rounding = 2,
+	})
+
+	ppbDepBox:SetupDependencies({
+		{ Toggles.PlayerProximityBeep, true },
+	})
+
+	ppDepBox:SetupDependencies({
+		{ Toggles.PlayerProximity, true },
+	})
+end
+
 ---Debugging section.
 ---@param groupbox table
 function GameTab.initDebuggingSection(groupbox)
@@ -174,6 +262,7 @@ function GameTab.init(window)
 
 	-- Initialize sections.
 	GameTab.initDebuggingSection(tab:AddDynamicGroupbox("Debugging"))
+	GameTab.initPlayerMonitoringSection(tab:AddDynamicGroupbox("Player Monitoring"))
 	GameTab.initLocalCharacterSection(tab:AddDynamicGroupbox("Local Character"))
 end
 
