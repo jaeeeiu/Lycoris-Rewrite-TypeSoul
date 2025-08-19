@@ -553,7 +553,7 @@ class LuaPreprocessor:
             added_total = removed_total = modified_total = 0
             per_container_msgs: list[str] = []
             detail_lines: list[str] = []
-            detail_cap = 40  # limit noisy output
+            detail_cap = 100  # limit noisy output
             def _deep_equal(a: Any, b: Any) -> bool:
                 if a is b:
                     return True
@@ -623,7 +623,7 @@ class LuaPreprocessor:
                 print(f"Timing diff vs. previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
                 if detail_lines:
                     if len(detail_lines) == detail_cap:
-                        detail_lines.append(f"  ... (truncated output, only showing {len(detail_lines)} diff out of {full_len})")
+                        detail_lines.append(f"... (truncated output, only showing {len(detail_lines)} diff out of {full_len})")
                     for ln in detail_lines:
                         print(ln)
             else:
@@ -824,7 +824,7 @@ class LuaPreprocessor:
                 if added or removed or changed:
                     all_len = len(added) + len(removed) + len(changed)
                     print(f"Module diff vs. previous snapshot: +{len(added)}/-{len(removed)}/~{len(changed)} (added/removed/changed)")
-                    detail_cap = 40
+                    detail_cap = 100
                     details: list[str] = []
                     for n in added:
                         if len(details) < detail_cap: details.append(f"+ (added) {n}")
