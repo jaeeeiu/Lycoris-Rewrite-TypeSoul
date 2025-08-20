@@ -240,14 +240,14 @@ function BuilderTab.init(window)
 	BuilderTab.initLoggerSection(tab:AddDynamicGroupbox("Logger"))
 
 	-- Create builder sections.
+	BuilderTab.pbs = PartBuilderSection.new("Part", tab:AddDynamicTabbox(), SaveManager.ps, PartTiming.new())
 	BuilderTab.abs =
 		AnimationBuilderSection.new("Animation", tab:AddDynamicTabbox(), SaveManager.as, AnimationTiming.new())
-	BuilderTab.pbs = PartBuilderSection.new("Part", tab:AddDynamicTabbox(), SaveManager.ps, PartTiming.new())
 	BuilderTab.sbs = SoundBuilderSection.new("Sound", tab:AddDynamicTabbox(), SaveManager.ss, SoundTiming.new())
 
 	-- Initialize builder sections.
-	BuilderTab.abs:init()
 	BuilderTab.pbs:init()
+	BuilderTab.abs:init()
 	BuilderTab.sbs:init()
 end
 
