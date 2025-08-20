@@ -221,11 +221,11 @@ Defender.vupdate = LPH_NO_VIRTUALIZE(function(self)
 
 	-- Set transparency.
 	if self.vpart then
-		self.vpart.Transparency = showVisualizations and 0.85 or 1.0
+		self.vpart.Transparency = showVisualizations and 0.2 or 1.0
 	end
 
 	if self.ppart then
-		self.ppart.Transparency = showVisualizations and 0.85 or 1.0
+		self.ppart.Transparency = showVisualizations and 0.2 or 1.0
 	end
 end)
 
@@ -273,7 +273,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		vpart.Parent = workspace
 		vpart.Anchored = true
 		vpart.CanCollide = false
-		vpart.Material = Enum.Material.SmoothPlastic
+		vpart.Material = Enum.Material.ForceField
 
 		-- Set part.
 		self.vpart = vpart
@@ -286,7 +286,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		ppart.Parent = workspace
 		ppart.Anchored = true
 		ppart.CanCollide = false
-		ppart.Material = Enum.Material.Plastic
+		ppart.Material = Enum.Material.ForceField
 
 		-- Set part.
 		self.ppart = ppart
