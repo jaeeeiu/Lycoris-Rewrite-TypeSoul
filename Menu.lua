@@ -55,7 +55,7 @@ local menuMaid = Maid.new()
 local MENU_TITLE = LRM_UserNote
 		and string.format(
 			"(Commit %s) Linoria V2 | Type Soul Test",
-			string.sub("c88cee1b356c4e9b5a7729c1ad6ae995ca988703", 1, 6)
+			string.sub("d5eff43430275302150506e948ab78244aa312e2", 1, 6)
 		)
 	or "Linoria V2 | Type Soul"
 
