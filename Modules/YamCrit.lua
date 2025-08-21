@@ -9,7 +9,7 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 490
 	if distance >= 13 then
-		action._when = math.min(610 + distance * 3.5, 1000)
+		action._when = math.min(630 + distance * 3.5, 1000)
 	end
 	if distance >= 19 then
 		action._when = math.min(700 + distance * 2, 1400)

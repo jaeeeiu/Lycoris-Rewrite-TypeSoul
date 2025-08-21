@@ -9,10 +9,10 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 400
 	if distance >= 9 then
-		action._when = math.min(540 + distance * 9, 1000)
+		action._when = math.min(540 + distance * 13, 1200)
 	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(14, 15, 17)
+	action.hitbox = Vector3.new(14, 15, 20)
 	action.name = string.format("(%.2f) Dynamic Confliction Timing", distance)
 	return self:action(timing, action)
 end
