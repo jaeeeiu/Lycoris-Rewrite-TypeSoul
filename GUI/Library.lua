@@ -3345,7 +3345,7 @@ return LPH_NO_VIRTUALIZE(function()
 			"Animation",
 			"Part",
 			"Sound",
-			"Effect",
+			"Extra",
 		}
 		Library.InfoLoggerData = {
 			MissingDataEntries = {},
