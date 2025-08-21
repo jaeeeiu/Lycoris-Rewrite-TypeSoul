@@ -119,6 +119,8 @@ Maid.clean = LPH_NO_VIRTUALIZE(function(self)
 				_task:Pause()
 				_task:Cancel()
 				_task:Destroy()
+			elseif typeof(_task) == "Instance" and _task:IsA("AnimationTrack") then
+				_task:Stop()
 			elseif _task.Destroy then
 				_task:Destroy()
 			elseif _task.detach then
