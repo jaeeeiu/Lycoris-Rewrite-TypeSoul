@@ -16,6 +16,12 @@ local Configuration = require("Utility/Configuration")
 ---@module Game.Timings.PlaybackData
 local PlaybackData = require("Game/Timings/PlaybackData")
 
+---@module GUI.Library
+local Library = require("GUI/Library")
+
+---@module Utility.Maid
+local Maid = require("Utility/Maid")
+
 ---@module Features.Combat.Objects.RepeatInfo
 local RepeatInfo = require("Features/Combat/Objects/RepeatInfo")
 
@@ -25,11 +31,16 @@ local HitboxOptions = require("Features/Combat/Objects/HitboxOptions")
 ---@module Features.Combat.Objects.Task
 local Task = require("Features/Combat/Objects/Task")
 
+---@module Utility.TaskSpawner
+local TaskSpawner = require("Utility/TaskSpawner")
+
 ---@class AnimatorDefender: Defender
 ---@field animator Animator
 ---@field entity Model
+---@field kfmaid Maid
 ---@field heffects Instance[]
 ---@field keyframes Action[]
+---@field offset number?
 ---@field timing AnimationTiming?
 ---@field pbdata table<AnimationTrack, PlaybackData> Playback data to be recorded.
 ---@field rpbdata table<string, PlaybackData> Recorded playback data. Optimization so we don't have to constantly reiterate over recorded data.
@@ -142,7 +153,52 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	return true
 end)
 
----Update keyframe handling.
+---Add a new Keyframe action.
+---@param self AnimatorDefender
+---@param action Action
+---@param tp number
+function AnimatorDefender:akeyframe(action, tp)
+	-- Set time position.
+	action.tp = tp
+
+	-- Insert in list.
+	table.insert(self.keyframes, action)
+end
+
+---Get time position of current track.
+---@return number?
+function AnimatorDefender:tp()
+	if not self.track or self.offset == nil then
+		return nil
+	end
+
+	---@note: Compensate for ping. Convert seconds to time position by adjusting for speed.
+	return self.track.TimePosition + ((self.offset + self.sdelay()) * self.track.Speed)
+end
+
+---Get latest keyframe action that we've exceeded.
+---@return Action?
+AnimatorDefender.latest = LPH_NO_VIRTUALIZE(function(self)
+	local latestKeyframe = nil
+	local latestTimePosition = nil
+
+	for _, keyframe in next, self.keyframes do
+		if (self:tp() or 0.0) <= keyframe.tp then
+			continue
+		end
+
+		if latestTimePosition and keyframe.tp <= latestTimePosition then
+			continue
+		end
+
+		latestTimePosition = keyframe.tp
+		latestKeyframe = keyframe
+	end
+
+	return latestKeyframe
+end)
+
+---Update handling.
 ---@param self AnimatorDefender
 AnimatorDefender.update = LPH_NO_VIRTUALIZE(function(self)
 	for track, data in next, self.pbdata do
@@ -165,6 +221,53 @@ AnimatorDefender.update = LPH_NO_VIRTUALIZE(function(self)
 		-- Start tracking the animation's speed.
 		data:astrack(track.Speed)
 	end
+
+	-- Run on validated track & timing.
+	if not self.track or not self.timing then
+		return
+	end
+
+	if not self.track.IsPlaying then
+		return
+	end
+
+	-- Find the latest keyframe that we have exceeded, if there is even any.
+	local latest = self:latest()
+	if not latest then
+		return
+	end
+
+	-- Clear the keyframes that we have exceeded.
+	local tp = self:tp() or 0.0
+
+	for idx, keyframe in next, self.keyframes do
+		if tp <= keyframe.tp then
+			continue
+		end
+
+		self.keyframes[idx] = nil
+	end
+
+	-- Log.
+	self:notify(
+		self.timing,
+		"(%.2f) (really %.2f) Keyframe action type '%s' is being executed.",
+		tp,
+		self.track.TimePosition,
+		latest._type
+	)
+
+	-- Ok, run action of this keyframe.
+	self.maid:mark(
+		TaskSpawner.spawn(
+			string.format("KeyframeAction_%s", latest._type),
+			self.handle,
+			self,
+			self.timing,
+			latest,
+			false
+		)
+	)
 end)
 
 ---Virtualized processing checks.
@@ -191,6 +294,9 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 		return
 	end
 
+	-- Clean up Keyframe maid.
+	self.kfmaid:clean()
+
 	-- Add to playback data list.
 	if Configuration.expectToggleValue("ShowAnimationVisualizer") then
 		self.pbdata[track] = PlaybackData.new(self.entity)
@@ -198,6 +304,25 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 
 	-- Animation ID.
 	local aid = tostring(track.Animation.AnimationId)
+
+	-- Keyframe logging.
+	local keyframeReached = Signal.new(track.KeyframeReached)
+
+	self.kfmaid:add(keyframeReached:connect("AnimationDefender_OnKeyFrameReached", function(kfname)
+		local distance = self:distance(self.entity)
+		if not distance then
+			return
+		end
+
+		if
+			distance < (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
+			or distance > (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
+		then
+			return
+		end
+
+		Library:AddKeyFrameEntry(distance, aid, kfname, track.TimePosition)
+	end))
 
 	---@type AnimationTiming?
 	local timing = self:initial(self.entity, SaveManager.as, self.entity.Name, aid)
@@ -220,6 +345,7 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	-- Set current data.
 	self.timing = timing
 	self.track = track
+	self.offset = self.rdelay()
 
 	-- Use module over actions.
 	if timing.umoa then
@@ -256,6 +382,9 @@ function AnimatorDefender:clean()
 	self.keyframes = {}
 	self.heffects = {}
 
+	-- Empty Keyframe maid.
+	self.kfmaid:clean()
+
 	-- Clean through base method.
 	Defender.clean(self)
 end
@@ -274,9 +403,11 @@ function AnimatorDefender.new(animator)
 
 	self.animator = animator
 	self.entity = entity
+	self.kfmaid = Maid.new()
 
 	self.track = nil
 	self.timing = nil
+	self.rdelay = nil
 
 	self.heffects = {}
 	self.keyframes = {}

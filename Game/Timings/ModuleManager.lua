@@ -57,6 +57,7 @@ local tdetach = {}
 function ModuleManager.execute(lf, id, file, global)
 	---@module Features.Combat.Defense
 	---@note: For some reason, it broke lol. Returned nil.
+	-- Has to do with loadingPlaceholder issue. A very wide cyclic dependency where depdendencies rely on each other can break the bundler.
 	local Defense = require("Features/Combat/Defense")
 
 	-- Set function environment to allow for internal modules.

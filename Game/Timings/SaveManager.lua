@@ -28,9 +28,6 @@ local SaveManager = {
 ---@module Utility.Filesystem
 local Filesystem = require("Utility/Filesystem")
 
----@module Utility.Logger
-local Logger = require("Utility/Logger")
-
 ---@module Utility.Deserializer
 local Deserializer = require("Utility/Deserializer")
 
@@ -39,6 +36,9 @@ local String = require("Utility/String")
 
 ---@module Utility.Serializer
 local Serializer = require("Utility/Serializer")
+
+---@module Utility.Logger
+local Logger = require("Utility/Logger")
 
 -- Manager filesystem.
 local fs = Filesystem.new("Lycoris-Rewrite-TypeSoul-Timings")

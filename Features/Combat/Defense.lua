@@ -22,6 +22,12 @@ local PositionHistory = require("Features/Combat/PositionHistory")
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
 
+---@module GUI.Library
+local Library = require("GUI/Library")
+
+---@module Utility.TaskSpawner
+local TaskSpawner = require("Utility/TaskSpawner")
+
 -- Handle all defense related functions.
 local Defense = {}
 
@@ -64,6 +70,55 @@ local addSoundDefender = LPH_NO_VIRTUALIZE(function(sound)
 	defenderObjects[sound] = SoundDefender.new(sound, part)
 end)
 
+---Add parry log.
+local addParryLog = LPH_NO_VIRTUALIZE(function(descendant)
+	local localPlayer = players.LocalPlayer
+	local character = localPlayer and localPlayer.Character
+	if not character then
+		return
+	end
+
+	local effectFolder = descendant:FindFirstAncestorWhichIsA("Folder")
+	if not effectFolder then
+		return
+	end
+
+	if effectFolder.Name ~= character.Name then
+		return
+	end
+
+	Library:AddTelemetryEntry("(%s) Instance '%s' created in effect folder.", effectFolder.Name, descendant.Name)
+end)
+
+--- Add damage logger.
+---@param player Player
+local addDamageLogger = LPH_NO_VIRTUALIZE(function(player)
+	local character = player.Character or player.CharacterAdded:Wait()
+
+	---@type Humanoid
+	local humanoid = character:WaitForChild("Humanoid")
+	if not humanoid then
+		return
+	end
+
+	local healthChanged = Signal.new(humanoid.HealthChanged)
+
+	defenseMaid:add(healthChanged:connect("Defense_HumanoidHealthChange", function(_)
+		Library:AddTelemetryEntry(
+			string.format("(%.2f/%.2f) Humanoid health change detected.", humanoid.Health, humanoid.MaxHealth)
+		)
+	end))
+end)
+
+---On player added.
+local onPlayerAdded = LPH_NO_VIRTUALIZE(function(player)
+	if player ~= players.LocalPlayer then
+		return
+	end
+
+	defenseMaid:add(TaskSpawner.spawn("Defense_AddDamageLogger", addDamageLogger, player))
+end)
+
 ---On game descendant added.
 ---@param descendant Instance
 local onGameDescendantAdded = LPH_NO_VIRTUALIZE(function(descendant)
@@ -76,7 +131,7 @@ local onGameDescendantAdded = LPH_NO_VIRTUALIZE(function(descendant)
 	end
 
 	if descendant:IsA("BasePart") then
-		return Defense.cdpo(descendant)
+		return descendant.Name == "ParryEffect" and addParryLog(descendant) or Defense.cdpo(descendant)
 	end
 end)
 
@@ -212,12 +267,18 @@ function Defense.init()
 	local gameDescendantRemoved = Signal.new(game.DescendantRemoving)
 	local renderStepped = Signal.new(runService.RenderStepped)
 	local postSimulation = Signal.new(runService.PostSimulation)
+	local playersAdded = Signal.new(players.PlayerAdded)
 
 	defenseMaid:mark(gameDescendantAdded:connect("Defense_OnDescendantAdded", onGameDescendantAdded))
 	defenseMaid:mark(gameDescendantRemoved:connect("Defense_OnDescendantRemoved", onGameDescendantRemoved))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateVisualizations", updateVisualizations))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateHistory", updateHistory))
 	defenseMaid:mark(postSimulation:connect("Defense_UpdateDefenders", updateDefenders))
+	defenseMaid:mark(playersAdded:connect("Defense_OnPlayerAdded", onPlayerAdded))
+
+	if players.LocalPlayer then
+		onPlayerAdded(players.LocalPlayer)
+	end
 
 	for _, descendant in next, game:GetDescendants() do
 		onGameDescendantAdded(descendant)

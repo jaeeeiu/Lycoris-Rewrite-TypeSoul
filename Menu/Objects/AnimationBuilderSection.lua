@@ -34,6 +34,7 @@ function AnimationBuilderSection:exload(timing)
 	self.hyperarmor:SetRawValue(timing.ha)
 	self.ignoreAnimationEnd:SetRawValue(timing.iae)
 	self.ignoreEarlyAnimationEnd:SetRawValue(timing.ieae)
+	self.maxAnimationTimeout:SetRawValue(timing.mat)
 end
 
 ---Reset the elements. Extend me.
@@ -47,6 +48,7 @@ function AnimationBuilderSection:reset()
 	self.hitboxFacingOffset:SetRawValue(true)
 	self.ignoreAnimationEnd:SetRawValue(false)
 	self.ignoreEarlyAnimationEnd:SetRawValue(false)
+	self.maxAnimationTimeout:SetRawValue(2000)
 end
 
 ---Check before creating new timing. Override me.
@@ -109,6 +111,7 @@ function AnimationBuilderSection:extra(tab)
 	self.maxAnimationTimeout = depBoxEnd:AddInput(nil, {
 		Text = "Max Animation Timeout",
 		Tooltip = "The maximum time (in milliseconds) that the animation is allowed to run with no end check.",
+		Default = 2000,
 		Numeric = true,
 		Callback = self:tnc(function(timing, value)
 			timing.mat = tonumber(value)

@@ -124,7 +124,7 @@ function AnimationTiming.new(values)
 	self.ha = false
 	self.iae = false
 	self.ieae = false
-	self.mat = 0
+	self.mat = 2000
 
 	if values then
 		self:load(values)

@@ -225,6 +225,179 @@ return LPH_NO_VIRTUALIZE(function()
 		Library.InfoLoggerFrame.Size = UDim2.new(0, math.clamp(XSize, 210, 800), 0, math.clamp(YSize, 24, 180))
 	end
 
+	function Library:AddTelemetryEntry(str, ...)
+		local type = "Telemetry"
+		local lolll = string.format(str, ...)
+
+		local ifd = Library.InfoLoggerData
+		local mde = ifd.MissingDataEntries
+
+		table.insert(Entries, 1, function()
+			debug.profilebegin("Library:AddTelemetryEntry")
+
+			local function getEntriesForThisType()
+				local entries = {}
+
+				for Idx, Entry in next, mde do
+					if Entry.Type == type then
+						table.insert(entries, { [1] = Entry, [2] = Idx })
+					end
+				end
+
+				return entries
+			end
+
+			-- Pop the last element if we're under 30 entries for this type.
+			-- Max of 30 entries per type; in total - 120 for all types.
+
+			local entries = getEntriesForThisType()
+			local last = entries[#entries]
+
+			if #entries > 30 and last then
+				last[1].Label:Destroy()
+
+				table.remove(mde, last[2])
+			end
+
+			-- Create a new label.
+			---@type TextLabel
+			local label = Library:CreateLabel({
+				Text = lolll,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Size = UDim2.new(1, 0, 0, 14),
+				LayoutOrder = 1,
+				TextSize = 12,
+				Visible = true,
+				ZIndex = 306,
+				Parent = nil,
+			}, true)
+
+			Library:AddToRegistry(label, {
+				TextColor3 = "FontColor",
+			}, true)
+
+			-- entry
+			local entry = { Timestamp = os.clock(), Label = label, Key = tostring(math.random()), Type = type }
+
+			-- Copy & blacklist.
+			label.InputBegan:Connect(function(Input)
+				if Input.KeyCode == Enum.KeyCode.T then
+					setclipboard(tostring(entry.Timestamp))
+					Library:Notify("Copied timestamp to clipboard.")
+				end
+			end)
+
+			-- Create a new entry for later destroying.
+			table.insert(mde, 1, entry)
+
+			-- Refresh.
+			Library:RefreshInfoLogger()
+
+			debug.profileend()
+		end)
+	end
+
+	function Library:AddKeyFrameEntry(distance, key, name, position)
+		local ifd = Library.InfoLoggerData
+		local mde = ifd.MissingDataEntries
+		local bl = ifd.KeyBlacklistList
+
+		if bl[key] then
+			return
+		end
+
+		local type = "Keyframe"
+
+		table.insert(Entries, 1, function()
+			debug.profilebegin("Library:AddKeyFrameEntry")
+
+			local function getEntriesForThisType()
+				local entries = {}
+
+				for Idx, Entry in next, mde do
+					if Entry.Type == type then
+						table.insert(entries, { [1] = Entry, [2] = Idx })
+					end
+				end
+
+				return entries
+			end
+
+			-- Pop the last element if we're under 30 entries for this type.
+			-- Max of 30 entries per type; in total - 120 for all types.
+
+			local entries = getEntriesForThisType()
+			local last = entries[#entries]
+
+			if #entries > 30 and last then
+				last[1].Label:Destroy()
+
+				table.remove(mde, last[2])
+			end
+
+			local SaveManager = require("Game/Timings/SaveManager")
+			local asdf = SaveManager.as:index(key)
+			-- Create a new label.
+			---@type TextLabel
+			local label = Library:CreateLabel({
+				-- (52.4m away) (HitStart) Animation 'rbxassetid://124453535' reached keyframe at position 0.69.
+				Text = string.format(
+					"(%.2fm away) %s '%s' reached '%s' at '%.3f' time position.",
+					distance,
+					asdf and "Timing" or "Animation",
+					asdf and asdf.name or key,
+					name,
+					position
+				),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Size = UDim2.new(1, 0, 0, 14),
+				LayoutOrder = 1,
+				TextSize = 12,
+				Visible = true,
+				ZIndex = 306,
+				Parent = nil,
+			}, true)
+
+			Library:AddToRegistry(label, {
+				TextColor3 = "FontColor",
+			}, true)
+
+			-- entry
+			local entry = { Timestamp = os.clock(), Label = label, Key = key, Type = type }
+
+			-- Copy & blacklist.
+			label.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+					setclipboard(key)
+					Library:Notify(string.format("Copied key '%s' to clipboard.", key))
+				end
+
+				if Input.KeyCode == Enum.KeyCode.T then
+					setclipboard(tostring(entry.Timestamp))
+					Library:Notify(string.format("Copied timestamp for '%s' to clipboard.", key))
+				end
+
+				if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+					ifd.KeyBlacklistList[key] = true
+					ifd.KeyBlacklistHistory[#ifd.KeyBlacklistHistory + 1] = key
+					Library:RefreshInfoLogger()
+					if Options and Options.BlacklistedKeys then
+						Options.BlacklistedKeys:SetValues(Library:KeyBlacklists())
+					end
+					Library:Notify(string.format("Blacklisted key '%s' from list.", key))
+				end
+			end)
+
+			-- Create a new entry for later destroying.
+			table.insert(mde, 1, entry)
+
+			-- Refresh.
+			Library:RefreshInfoLogger()
+
+			debug.profileend()
+		end)
+	end
+
 	function Library:AddMissEntry(type, key, name, distance, parent)
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
@@ -299,13 +472,18 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			-- entry
-			local entry = { Label = label, Key = key, Type = type }
+			local entry = { Timestamp = os.clock(), Label = label, Key = key, Type = type }
 
 			-- Copy & blacklist.
 			label.InputBegan:Connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 					setclipboard(key)
 					Library:Notify(string.format("Copied key '%s' to clipboard.", key))
+				end
+
+				if Input.KeyCode == Enum.KeyCode.T then
+					setclipboard(tostring(entry.Timestamp))
+					Library:Notify(string.format("Copied timestamp for '%s' to clipboard.", key))
 				end
 
 				if Input.UserInputType == Enum.UserInputType.MouseButton2 then
@@ -3343,9 +3521,10 @@ return LPH_NO_VIRTUALIZE(function()
 		Library.InfoLoggerCycle = 1
 		Library.InfoLoggerCycles = {
 			"Animation",
+			"Keyframe",
+			"Telemetry",
 			"Part",
 			"Sound",
-			"Extra",
 		}
 		Library.InfoLoggerData = {
 			MissingDataEntries = {},

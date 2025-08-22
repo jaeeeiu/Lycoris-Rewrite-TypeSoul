@@ -4,6 +4,7 @@
 ---@field hitbox Vector3 The hitbox of the action.
 ---@field ihbc boolean Ignore hitbox check.
 ---@field name string The name of the action.
+---@field tp number Time position. Never accessible unless inside of a module or inside of real code. This is never serialized.
 local Action = {}
 Action.__index = Action
 
@@ -78,6 +79,7 @@ function Action.new(values)
 	self.name = ""
 	self.hitbox = Vector3.zero
 	self.ihbc = false
+	self.tp = 0
 
 	if values then
 		self:load(values)
