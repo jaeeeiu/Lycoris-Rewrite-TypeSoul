@@ -9,10 +9,17 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 690
 	if distance >= 15 then
-		action._when = math.min(520 + distance * 12, 1400)
+		action._when = math.min(630 + distance * 6.3, 1200)
 	end
-	action._type = "Parry"
-	action.hitbox = Vector3.new(25, 30, 60)
+	action._type = "Start Block"
+	action.hitbox = Vector3.new(60, 30, 37)
 	action.name = string.format("(%.2f) Dynamic Evisorate Timing", distance)
-	return self:action(timing, action)
+	self:action(timing, action)
+
+	local action2 = Action.new()
+	action2._when = 1325
+	action2._type = "End Block"
+	action2.hitbox = Vector3.new(100, 100, 100)
+	action2.name = string.format("(2) (%.2f) Dynamic Evisorate Timing", distance)
+	self:action(timing, action2)
 end
