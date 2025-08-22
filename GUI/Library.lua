@@ -339,6 +339,11 @@ return LPH_NO_VIRTUALIZE(function()
 
 			local SaveManager = require("Game/Timings/SaveManager")
 			local asdf = SaveManager.as:index(key)
+
+			if asdf and (distance < PP_SCRAMBLE_NUM(asdf.imdd) or distance > PP_SCRAMBLE_NUM(asdf.imxd)) then
+				return
+			end
+
 			-- Create a new label.
 			---@type TextLabel
 			local label = Library:CreateLabel({
@@ -347,7 +352,7 @@ return LPH_NO_VIRTUALIZE(function()
 					"(%.2fm away) %s '%s' reached '%s' at '%.3f' time position.",
 					distance,
 					asdf and "Timing" or "Animation",
-					asdf and asdf.name or key,
+					asdf and PP_SCRAMBLE_STR(asdf.name) or key,
 					name,
 					position
 				),
