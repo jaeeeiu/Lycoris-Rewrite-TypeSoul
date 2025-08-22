@@ -305,19 +305,16 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	-- Animation ID.
 	local aid = tostring(track.Animation.AnimationId)
 
+	-- In logging range?
+	local distance = self:distance(self.entity)
+	local ilr = distance and distance < (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
+		or distance > (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
+
 	-- Keyframe logging.
 	local keyframeReached = Signal.new(track.KeyframeReached)
 
 	self.kfmaid:add(keyframeReached:connect("AnimationDefender_OnKeyFrameReached", function(kfname)
-		local distance = self:distance(self.entity)
-		if not distance then
-			return
-		end
-
-		if
-			distance < (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
-			or distance > (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
-		then
+		if not ilr then
 			return
 		end
 
@@ -328,6 +325,10 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	local timing = self:initial(self.entity, SaveManager.as, self.entity.Name, aid)
 	if not timing then
 		return
+	end
+
+	if ilr then
+		Library:AddExistAnimEntry(self.entity.Name, distance, timing)
 	end
 
 	if not Configuration.expectToggleValue("EnableAutoDefense") then

@@ -228,6 +228,7 @@ return LPH_NO_VIRTUALIZE(function()
 	function Library:AddTelemetryEntry(str, ...)
 		local type = "Telemetry"
 		local lolll = string.format(str, ...)
+		local ts = os.clock()
 
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
@@ -277,7 +278,7 @@ return LPH_NO_VIRTUALIZE(function()
 			}, true)
 
 			-- entry
-			local entry = { Timestamp = os.clock(), Label = label, Key = tostring(math.random()), Type = type }
+			local entry = { Timestamp = ts, Label = label, Key = tostring(math.random()), Type = type }
 
 			-- Copy & blacklist.
 			label.InputBegan:Connect(function(Input)
@@ -301,6 +302,7 @@ return LPH_NO_VIRTUALIZE(function()
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
+		local ts = os.clock()
 
 		if bl[key] then
 			return
@@ -363,7 +365,100 @@ return LPH_NO_VIRTUALIZE(function()
 			}, true)
 
 			-- entry
-			local entry = { Timestamp = os.clock(), Label = label, Key = key, Type = type }
+			local entry = { Timestamp = ts, Label = label, Key = key, Type = type }
+
+			-- Copy & blacklist.
+			label.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+					setclipboard(key)
+					Library:Notify(string.format("Copied key '%s' to clipboard.", key))
+				end
+
+				if Input.KeyCode == Enum.KeyCode.T then
+					setclipboard(tostring(entry.Timestamp))
+					Library:Notify(string.format("Copied timestamp for '%s' to clipboard.", key))
+				end
+
+				if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+					ifd.KeyBlacklistList[key] = true
+					ifd.KeyBlacklistHistory[#ifd.KeyBlacklistHistory + 1] = key
+					Library:RefreshInfoLogger()
+					if Options and Options.BlacklistedKeys then
+						Options.BlacklistedKeys:SetValues(Library:KeyBlacklists())
+					end
+					Library:Notify(string.format("Blacklisted key '%s' from list.", key))
+				end
+			end)
+
+			-- Create a new entry for later destroying.
+			table.insert(mde, 1, entry)
+
+			-- Refresh.
+			Library:RefreshInfoLogger()
+
+			debug.profileend()
+		end)
+	end
+
+	function Library:AddExistAnimEntry(name, distance, timing)
+		local ifd = Library.InfoLoggerData
+		local mde = ifd.MissingDataEntries
+		local bl = ifd.KeyBlacklistList
+		local ts = os.clock()
+		local key = timing.name
+
+		if bl[key] then
+			return
+		end
+
+		local type = "Existing Animation"
+
+		table.insert(Entries, 1, function()
+			debug.profilebegin("Library:AddExistAnimEntry")
+
+			local function getEntriesForThisType()
+				local entries = {}
+
+				for Idx, Entry in next, mde do
+					if Entry.Type == type then
+						table.insert(entries, { [1] = Entry, [2] = Idx })
+					end
+				end
+
+				return entries
+			end
+
+			-- Pop the last element if we're under 30 entries for this type.
+			-- Max of 30 entries per type; in total - 120 for all types.
+
+			local entries = getEntriesForThisType()
+			local last = entries[#entries]
+
+			if #entries > 30 and last then
+				last[1].Label:Destroy()
+
+				table.remove(mde, last[2])
+			end
+
+			-- Create a new label.
+			---@type TextLabel
+			local label = Library:CreateLabel({
+				Text = string.format("(%.2fm away) Animation timing '%s' from '%s' was played.", distance, key, name),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Size = UDim2.new(1, 0, 0, 14),
+				LayoutOrder = 1,
+				TextSize = 12,
+				Visible = true,
+				ZIndex = 306,
+				Parent = nil,
+			}, true)
+
+			Library:AddToRegistry(label, {
+				TextColor3 = "FontColor",
+			}, true)
+
+			-- entry
+			local entry = { Timestamp = ts, Label = label, Key = key, Type = type }
 
 			-- Copy & blacklist.
 			label.InputBegan:Connect(function(Input)
@@ -402,6 +497,7 @@ return LPH_NO_VIRTUALIZE(function()
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
+		local ts = os.clock()
 
 		if bl[key] then
 			return
@@ -472,7 +568,7 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			-- entry
-			local entry = { Timestamp = os.clock(), Label = label, Key = key, Type = type }
+			local entry = { Timestamp = ts, Label = label, Key = key, Type = type }
 
 			-- Copy & blacklist.
 			label.InputBegan:Connect(function(Input)
@@ -3521,6 +3617,7 @@ return LPH_NO_VIRTUALIZE(function()
 		Library.InfoLoggerCycle = 1
 		Library.InfoLoggerCycles = {
 			"Animation",
+			"Existing Animation",
 			"Keyframe",
 			"Telemetry",
 			"Part",
