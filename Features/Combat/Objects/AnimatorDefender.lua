@@ -307,8 +307,11 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 
 	-- In logging range?
 	local distance = self:distance(self.entity)
-	local ilr = distance and distance < (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
-		or distance > (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
+	local ilr = distance
+		and (
+			distance >= (Configuration.expectOptionValue("MinimumLoggerDistance") or 0)
+			and distance <= (Configuration.expectOptionValue("MaximumLoggerDistance") or 0)
+		)
 
 	-- Keyframe logging.
 	local keyframeReached = Signal.new(track.KeyframeReached)

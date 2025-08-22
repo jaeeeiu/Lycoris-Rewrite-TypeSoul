@@ -411,7 +411,7 @@ return LPH_NO_VIRTUALIZE(function()
 			return
 		end
 
-		local type = "Existing Animation"
+		local type = "Existing Anim"
 
 		table.insert(Entries, 1, function()
 			debug.profilebegin("Library:AddExistAnimEntry")
@@ -3617,7 +3617,7 @@ return LPH_NO_VIRTUALIZE(function()
 		Library.InfoLoggerCycle = 1
 		Library.InfoLoggerCycles = {
 			"Animation",
-			"Existing Animation",
+			"Existing Anim",
 			"Keyframe",
 			"Telemetry",
 			"Part",
