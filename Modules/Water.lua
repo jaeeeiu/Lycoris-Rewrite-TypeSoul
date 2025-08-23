@@ -8,7 +8,7 @@ return function(self, timing)
 	local distance = self:distance(self.entity)
 
 	local action = Action.new()
-	action._when = 400
+	action._when = 440
 	if distance >= 11 then
 		action._when = math.min(290 + distance * 22.5, 2000)
 	end

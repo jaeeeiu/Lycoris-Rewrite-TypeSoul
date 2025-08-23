@@ -9,10 +9,10 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 540
 	if distance >= 17 then
-		action._when = 590
+		action._when = 560
 	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(15, 20, 45)
+	action.hitbox = Vector3.new(20, 20, 45)
 	action.name = string.format("(%.2f) Dynamic Splitting Thunder Timing", distance)
 	return self:action(timing, action)
 end
