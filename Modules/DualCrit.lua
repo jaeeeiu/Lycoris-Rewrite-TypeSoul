@@ -27,7 +27,7 @@ return function(self, timing)
 		action._when = 760
 	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(18, 15, 27)
+	action.hitbox = Vector3.new(18, 15, 33)
 	action.name = string.format("(%.2f) Dynamic Dual Crit Timing", distance)
 	return self:action(timing, action)
 end

@@ -5,14 +5,9 @@ local Action = getfenv().Action
 ---@param self AnimatorDefender
 ---@param timing AnimationTiming
 return function(self, timing)
-	repeat
-		task.wait()
-	until self.track.TimePosition >= 1.38
-
 	local action = Action.new()
-	action._when = 0
 	action._type = "Parry"
-	action.hitbox = Vector3.new(20, 20, 150)
-	action.name = string.format("(%.2f) Dynamic Tri Cero Timing", self.track.Speed)
-	self:action(timing, action)
+	action.hitbox = Vector3.new(20, 25, 170)
+	action.name = "Keyframe Action"
+	return self:akeyframe(action, 1.38)
 end
