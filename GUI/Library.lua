@@ -303,7 +303,7 @@ return LPH_NO_VIRTUALIZE(function()
 		end)
 	end
 
-	function Library:AddKeyFrameEntry(distance, key, name, position)
+	function Library:AddKeyFrameEntry(distance, key, name, position, flag)
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
@@ -350,10 +350,11 @@ return LPH_NO_VIRTUALIZE(function()
 			local label = Library:CreateLabel({
 				-- (52.4m away) (HitStart) Animation 'rbxassetid://124453535' reached keyframe at position 0.69.
 				Text = string.format(
-					"(%.2fm away) %s '%s' reached '%s' at '%.3f' time position.",
+					"(%.2fm away) %s '%s' %s '%s' at '%.3f' time position.",
 					distance,
 					asdf and "Timing" or "Animation",
 					asdf and PP_SCRAMBLE_STR(asdf.name) or key,
+					flag and "will reach" or "reached",
 					name,
 					position
 				),
