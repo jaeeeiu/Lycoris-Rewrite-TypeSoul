@@ -173,7 +173,9 @@ function AnimatorDefender:tp()
 	end
 
 	---@note: Compensate for ping. Convert seconds to time position by adjusting for speed.
-	return self.track.TimePosition + ((self.offset + self.sdelay()) * self.track.Speed)
+	--- Higher speed means it will delay earlier.
+	--- Smaller speed means it will delay later.
+	return self.track.TimePosition + ((self.offset + self.sdelay()) / self.track.Speed)
 end
 
 ---Get latest keyframe action that we've exceeded.
