@@ -11,12 +11,12 @@ local HitboxOptions = {}
 HitboxOptions.__index = HitboxOptions
 
 -- Services.
-local collectionService = game:GetService("CollectionService")
 local players = game:GetService("Players")
 
 ---Get extrapolated position.
+---@param leniency number
 ---@return CFrame
-HitboxOptions.extrapolate = LPH_NO_VIRTUALIZE(function(self)
+HitboxOptions.extrapolate = LPH_NO_VIRTUALIZE(function(self, leniency)
 	if not self.part then
 		return error("HitboxOptions.extrapolate - unimplemented for CFrame")
 	end
@@ -27,14 +27,14 @@ HitboxOptions.extrapolate = LPH_NO_VIRTUALIZE(function(self)
 
 	-- Calculate send delay for the target entity.
 	local player = players:GetPlayerFromCharacter(self.entity)
-	local sd = (player and player:GetAttribute("AveragePing") or 0.0) / 2
+	local sd = (player and player:GetAttribute("AveragePing") or 10.0) / 2000
 
 	---@module Features.Combat.Objects.Defender
 	---@note: Another stupid bug. Don't know why this happens.
 	local Defender = require("Features/Combat/Objects/Defender")
 
 	-- Finally, calculate the final replication position delay by adding our receive delay onto their send delay.
-	local fsecs = sd + Defender.rdelay()
+	local fsecs = (sd + Defender.rdelay()) * leniency
 
 	-- Return the extrapolated position.
 	return self.part.CFrame + (self.part.AssemblyLinearVelocity * fsecs)
