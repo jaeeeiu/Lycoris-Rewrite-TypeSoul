@@ -57,6 +57,15 @@ local players = game:GetService("Players")
 -- Constants.
 local MAX_REPEAT_TIME = 5.0
 
+-- Memory table.
+local kfMemoryTable = {
+	["HitFrame"] = true,
+	["HitFrameStart"] = true,
+	["DeflectStart"] = true,
+	["DeflectEnd"] = true,
+	["AnimationEnd"] = true,
+}
+
 ---Is animation stopped? Made into a function for de-duplication.
 ---@param self AnimatorDefender
 ---@param track AnimationTrack
@@ -323,8 +332,26 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 			return
 		end
 
-		Library:AddKeyFrameEntry(distance, aid, kfname, track.TimePosition)
+		if kfMemoryTable[kfname] then
+			return
+		end
+
+		kfMemoryTable[kfname] = true
+
+		Library:AddKeyFrameEntry(distance, aid, kfname, track.TimePosition, false)
 	end))
+
+	for kfname, _ in next, kfMemoryTable do
+		local success, tp = pcall(function()
+			return track:GetTimeOfKeyframe(kfname)
+		end)
+
+		if not success then
+			continue
+		end
+
+		Library:AddKeyFrameEntry(distance, aid, kfname, tp, true)
+	end
 
 	---@type AnimationTiming?
 	local timing = self:initial(self.entity, SaveManager.as, self.entity.Name, aid)
