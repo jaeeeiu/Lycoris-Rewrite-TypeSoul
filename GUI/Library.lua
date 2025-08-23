@@ -2,16 +2,17 @@ local Profiler = require("Utility/Profiler")
 local CoreGuiManager = require("Utility/CoreGuiManager")
 
 return LPH_NO_VIRTUALIZE(function()
-	repeat
-		task.wait()
-	until Players.LocalPlayer
-
 	local InputService = game:GetService("UserInputService")
 	local TextService = game:GetService("TextService")
 	local Teams = game:GetService("Teams")
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
 	local TweenService = game:GetService("TweenService")
+
+	repeat
+		task.wait()
+	until Players.LocalPlayer
+
 	local RenderStepped = RunService.RenderStepped
 	local LocalPlayer = Players.LocalPlayer
 	local Mouse = LocalPlayer:GetMouse()
