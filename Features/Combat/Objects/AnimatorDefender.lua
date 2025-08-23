@@ -58,7 +58,13 @@ local players = game:GetService("Players")
 local MAX_REPEAT_TIME = 5.0
 
 -- Memory table.
-local kfMemoryTable = {}
+local kfMemoryTable = {
+	["HitFrame"] = true,
+	["HitFrameStart"] = true,
+	["DeflectStart"] = true,
+	["DeflectEnd"] = true,
+	["AnimationEnd"] = true,
+}
 
 ---Is animation stopped? Made into a function for de-duplication.
 ---@param self AnimatorDefender
