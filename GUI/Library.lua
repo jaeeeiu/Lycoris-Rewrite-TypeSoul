@@ -2,6 +2,10 @@ local Profiler = require("Utility/Profiler")
 local CoreGuiManager = require("Utility/CoreGuiManager")
 
 return LPH_NO_VIRTUALIZE(function()
+	repeat
+		task.wait()
+	until Players.LocalPlayer
+
 	local InputService = game:GetService("UserInputService")
 	local TextService = game:GetService("TextService")
 	local Teams = game:GetService("Teams")
@@ -339,10 +343,6 @@ return LPH_NO_VIRTUALIZE(function()
 
 			local SaveManager = require("Game/Timings/SaveManager")
 			local asdf = SaveManager.as:index(key)
-
-			if asdf and (distance < PP_SCRAMBLE_NUM(asdf.imdd) or distance > PP_SCRAMBLE_NUM(asdf.imxd)) then
-				return
-			end
 
 			-- Create a new label.
 			---@type TextLabel
