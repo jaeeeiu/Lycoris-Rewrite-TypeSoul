@@ -337,26 +337,8 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 			return
 		end
 
-		if kfMemoryTable[kfname] then
-			return
-		end
-
-		kfMemoryTable[kfname] = true
-
 		Library:AddKeyFrameEntry(distance, aid, kfname, track.TimePosition, false)
 	end))
-
-	for kfname, _ in next, kfMemoryTable do
-		local success, tp = pcall(function()
-			return track:GetTimeOfKeyframe(kfname)
-		end)
-
-		if not success then
-			continue
-		end
-
-		Library:AddKeyFrameEntry(distance, aid, kfname, tp, true)
-	end
 
 	---@type AnimationTiming?
 	local timing = self:initial(self.entity, SaveManager.as, self.entity.Name, aid)
