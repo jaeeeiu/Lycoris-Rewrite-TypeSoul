@@ -132,6 +132,11 @@ function VisualsTab.addPlayerESP(identifier, depbox)
 		Default = false,
 	})
 
+	depbox:AddToggle(Configuration.identify(identifier, "ShowUltimate"), {
+		Text = "Show Ultimate Percentage",
+		Default = false,
+	})
+
 	depbox:AddDropdown(Configuration.identify(identifier, "PlayerNameType"), {
 		Text = "Player Name Type",
 		Default = 1,

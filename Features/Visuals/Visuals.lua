@@ -137,7 +137,7 @@ end)
 ---On Mission NPCs ChildAdded.
 ---@param child Instance
 local onMissionNPCsChildAdded = LPH_NO_VIRTUALIZE(function(child)
-	if child.Name == "MissionBoard" then
+	if child.Name:match("MissionBoard") then
 		return emplaceObject(child, ModelESP.new("MissionBoard", child, "Mission Board"))
 	end
 end)

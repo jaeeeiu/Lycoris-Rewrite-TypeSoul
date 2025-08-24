@@ -22,6 +22,7 @@ local ESP_HEALTH = "[%i/%i]"
 local ESP_VIEW_ANGLE = "[%.2f view angle vs. %.2f]"
 local ESP_HEALTH_PERCENTAGE = "[%i%% health]"
 local ESP_HEALTH_BARS = "[%.1f bars]"
+local ESP_ULTIMATE = "[%i%% bankai/res/volt]"
 
 ---Update PlayerESP.
 ---@param self PlayerESP
@@ -83,6 +84,12 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 			currentCamera.CFrame.LookVector:Dot((rootPart.Position - usedPosition).Unit) * -1,
 			math.cos(math.rad((Configuration.expectOptionValue("FOVLimit"))))
 		)
+	end
+
+	if Configuration.idToggleValue(identifier, "ShowUltimate") then
+		local ultimate = player:GetAttribute("BankaiMeter")
+		local maxUltimate = player:GetAttribute("MaxThirdBankaiMeter")
+		tags[#tags + 1] = ESP_ULTIMATE:format(ultimate / maxUltimate * 100)
 	end
 
 	self.shadow.Position = usedPosition
