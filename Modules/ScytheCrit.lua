@@ -7,18 +7,15 @@ local Action = getfenv().Action
 return function(self, timing)
 	local distance = self:distance(self.entity)
 	local action = Action.new()
-	action._when = 500
+	action._when = 530
 	if distance >= 13 then
-		action._when = 790
+		action._when = math.min(450 + distance * 15.2, 1000)
 	end
-	if distance >= 17 then
-		action._when = 840
-	end
-	if distance >= 21 then
-		action._when = 900
+	if distance >= 31 then
+		action._when = math.min(950 + distance * 4, 1300)
 	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(20, 15, 25)
+	action.hitbox = Vector3.new(27, 15, 40)
 	action.name = string.format("(%.2f) Dynamic Scythe Crit Timing", distance)
 	return self:action(timing, action)
 end
