@@ -102,11 +102,20 @@ local addDamageLogger = LPH_NO_VIRTUALIZE(function(player)
 	end
 
 	local healthChanged = Signal.new(humanoid.HealthChanged)
+	local currentHealth = humanoid.Health
 
-	defenseMaid:add(healthChanged:connect("Defense_HumanoidHealthChange", function(_)
+	defenseMaid:add(healthChanged:connect("Defense_HumanoidHealthChange", function(health)
+		if currentHealth <= health then
+			return
+		end
+
+		local change = currentHealth - health
+
 		Library:AddTelemetryEntry(
-			string.format("(%.2f/%.2f) Humanoid health change detected.", humanoid.Health, humanoid.MaxHealth)
+			string.format("(%.2f/%.2f) (%.2f) Humanoid health change detected.", health, humanoid.MaxHealth, change)
 		)
+
+		currentHealth = health
 	end))
 end)
 
