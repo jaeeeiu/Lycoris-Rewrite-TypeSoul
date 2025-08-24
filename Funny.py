@@ -4,7 +4,7 @@ import msgpack  # pip install msgpack
 
 star_hub_path = Path("the_funny_1.json")
 zeke_hub_path = Path("the_funny_2.json")
-mp_path   = Path("Timings/Juanito/mainjuan_fixed_imported.txt")
+mp_path   = Path("Timings/Juanito/mainjuan_fixed.txt")
 
 def load_json(p: Path):
     if not p.exists() or p.stat().st_size == 0:
@@ -101,7 +101,6 @@ for key, timing in anim_table_3.items():
     try:
         int(key)
     except ValueError:
-        print(f"(Zeke Hub) Skipping key {key} because it is not an animation")
         continue
 
     timing = find_timing_from_timing_id("rbxassetid://" + key)
@@ -109,10 +108,9 @@ for key, timing in anim_table_3.items():
     if not timing:
         continue
 
-    if timing.smod.endswith(".lua"):
-        timing.smod = timing.smod[:-4]
-
-    print(f"(Zeke Hub) Fixed 'smod' for rbxassetid://{key}")
+    if timing.get("smod").endswith(".lua"):
+        timing["smod"] = timing["smod"][:-4]
+        print(f"(Zeke Hub) Fixed 'smod' for rbxassetid://{key}")
 
 for key, timing in anim_table_3.items():
     try:
