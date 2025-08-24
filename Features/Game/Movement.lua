@@ -198,7 +198,7 @@ return LPH_NO_VIRTUALIZE(function()
 
 		flashStepDebounce = true
 
-		humanoid.WalkSpeed = humanoid.WalkSpeed * Configuration.expectOptionValue("FlashStepSpeedBoostMulti")
+		humanoid.WalkSpeed = humanoid.WalkSpeed * (Configuration.expectOptionValue("FlashStepSpeedBoostMulti") or 1.0)
 	end
 
 	---Update movement.

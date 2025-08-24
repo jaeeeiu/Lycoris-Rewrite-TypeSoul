@@ -95,7 +95,7 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	local fssbDepBox = groupbox:AddDependencyBox()
 
-	fssbDepBox:AddSlider("FlashstepSpeedBoostMulti", {
+	fssbDepBox:AddSlider("FlashStepSpeedBoostMulti", {
 		Text = "Speed Boost Multiplier",
 		Default = 1,
 		Min = 0,
@@ -172,12 +172,13 @@ function GameTab.initLocalCharacterSection(groupbox)
 				return
 			end
 
-			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-			if not humanoidRootPart then
+			local humanoid = character:FindFirstChild("Humanoid")
+			if not humanoid then
 				return
 			end
 
-			character:PivotTo(humanoidRootPart.CFrame * CFrame.new(0, 10000000, 0))
+			humanoid:BreakJoints()
+			humanoid.Health = 0
 		end,
 	})
 
