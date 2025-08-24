@@ -28,6 +28,9 @@ local ModuleManager = require("Game/Timings/ModuleManager")
 ---@module Utility.CoreGuiManager
 local CoreGuiManager = require("Utility/CoreGuiManager")
 
+---@module Utility.PersistentData
+local PersistentData = require("Utility/PersistentData")
+
 -- Lycoris maid.
 local lycorisMaid = Maid.new()
 
@@ -53,9 +56,7 @@ function Lycoris.init()
 		localPlayer = playersService.LocalPlayer
 	until localPlayer ~= nil
 
-	if game.PlaceId == LOBBY_PLACE_ID then
-		return Logger.warn("Script has initialized in the lobby.")
-	end
+	PersistentData.init()
 
 	if script_key and queue_on_teleport and not Lycoris.queued and not no_queue_on_teleport then
 		-- String.
@@ -74,6 +75,22 @@ function Lycoris.init()
 	else
 		-- Fail.
 		Logger.warn("Script has failed to queue on teleport because Luarmor internals or the function do not exist.")
+	end
+
+	local tslot = PersistentData.get("tslot")
+	local tdestination = PersistentData.get("tdestination")
+
+	if game.PlaceId == LOBBY_PLACE_ID and tslot and tdestination then
+		local remotes = replicatedStorage:WaitForChild("Remotes")
+		local chooseSlotRemote = remotes:WaitForChild("ChooseSlot")
+		local teleportRemote = remotes:WaitForChild("Teleport")
+
+		chooseSlotRemote:InvokeServer(tslot, nil)
+		teleportRemote:InvokeServer({ teleportTo = tdestination })
+	end
+
+	if game.PlaceId == LOBBY_PLACE_ID then
+		return Logger.warn("Script has initialized in the lobby.")
 	end
 
 	local remotes = replicatedStorage:WaitForChild("Remotes")

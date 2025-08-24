@@ -38,6 +38,7 @@ local Visuals = { currentBuilderData = nil }
 local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local textChatService = game:GetService("TextChatService")
+local lighting = game:GetService("Lighting")
 
 -- Signals.
 local renderStepped = Signal.new(runService.RenderStepped)
@@ -53,6 +54,7 @@ local fieldOfView = visualsMaid:mark(OriginalStore.new())
 
 -- Original store managers.
 local showRobloxChatMap = visualsMaid:mark(OriginalStoreManager.new())
+local ambienceMap = visualsMaid:mark(OriginalStoreManager.new())
 
 -- Groups.
 local groups = {}
@@ -98,6 +100,33 @@ local updateShowRobloxChat = LPH_NO_VIRTUALIZE(function()
 	end
 end)
 
+---Modify ambience color.
+---@param value Color3
+local modifyAmbienceColor = LPH_NO_VIRTUALIZE(function(value)
+	local ambienceColor = Configuration.expectOptionValue("AmbienceColor")
+	local shouldUseOriginalAmbienceColor = Configuration.expectToggleValue("OriginalAmbienceColor")
+
+	if not shouldUseOriginalAmbienceColor and ambienceColor then
+		return ambienceColor
+	end
+
+	local brightness = Configuration.expectOptionValue("OriginalAmbienceColorBrightness") or 0.0
+	local red, green, blue = value.R, value.G, value.B
+
+	red = math.min(red + brightness, 255)
+	green = math.min(green + brightness, 255)
+	blue = math.min(blue + brightness, 255)
+
+	return Color3.fromRGB(red, green, blue)
+end)
+
+---Update ambience.
+local updateAmbience = LPH_NO_VIRTUALIZE(function()
+	local store = ambienceMap:get(lighting)
+	local value = store and store:get() or lighting.Ambient
+	ambienceMap:add(lighting, "Ambient", modifyAmbienceColor(value))
+end)
+
 ---Update visuals.
 local updateVisuals = LPH_NO_VIRTUALIZE(function()
 	for _, group in next, groups do
@@ -120,6 +149,12 @@ local updateVisuals = LPH_NO_VIRTUALIZE(function()
 		updateShowRobloxChat()
 	else
 		showRobloxChatMap:restore()
+	end
+
+	if Configuration.expectToggleValue("ModifyAmbience") then
+		updateAmbience()
+	else
+		ambienceMap:restore()
 	end
 end)
 

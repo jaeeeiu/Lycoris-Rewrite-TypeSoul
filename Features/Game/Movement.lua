@@ -48,6 +48,12 @@ return LPH_NO_VIRTUALIZE(function()
 	-- Signals.
 	local preSimulation = Signal.new(runService.PreSimulation)
 
+	-- Debounce.
+	local flashStepDebounce = false
+
+	-- State.
+	local lastPosition = nil
+
 	---Update noclip.
 	---@param character Model
 	---@param rootPart BasePart
@@ -169,6 +175,32 @@ return LPH_NO_VIRTUALIZE(function()
 		rootPart.CFrame = rootPart.CFrame:Lerp(attachTargetHrp.CFrame * offsetCFrame, 0.3)
 	end
 
+	---Update no slow.
+	---@param character Model
+	---@param humanoid Humanoid
+	local function updateNoSlow(character, humanoid)
+		if humanoid.WalkSpeed == 4 or humanoid.WalkSpeed == 0 then
+			humanoid.WalkSpeed = character:GetAttribute("BaseWalkspeed")
+		end
+
+		if humanoid.JumpHeight == 0 then
+			humanoid.JumpHeight = character:GetAttribute("BaseJumpheight")
+		end
+	end
+
+	---Update flash step.
+	---@param character Model
+	---@param humanoid Humanoid
+	local function updateFlashstepSpeedBoost(character, humanoid)
+		if flashStepDebounce then
+			return
+		end
+
+		flashStepDebounce = true
+
+		humanoid.WalkSpeed = humanoid.WalkSpeed * Configuration.expectOptionValue("FlashStepSpeedBoostMulti")
+	end
+
 	---Update movement.
 	local function updateMovement()
 		local localPlayer = players.LocalPlayer
@@ -185,6 +217,26 @@ return LPH_NO_VIRTUALIZE(function()
 		local humanoid = character:FindFirstChild("Humanoid")
 		if not humanoid then
 			return
+		end
+
+		if not character:GetAttribute("Flashstep") then
+			flashStepDebounce = false
+		end
+
+		if not Configuration.expectToggleValue("AnchorCharacter") then
+			lastPosition = rootPart.CFrame
+		end
+
+		if Configuration.expectToggleValue("AnchorCharacter") and lastPosition then
+			rootPart.CFrame = lastPosition
+		end
+
+		if Configuration.expectToggleValue("FlashstepSpeedBoost") then
+			updateFlashstepSpeedBoost(character, humanoid)
+		end
+
+		if Configuration.expectToggleValue("NoSlow") then
+			updateNoSlow(humanoid)
 		end
 
 		if Configuration.expectToggleValue("AttachToBack") then

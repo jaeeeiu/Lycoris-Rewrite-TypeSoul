@@ -87,6 +87,33 @@ function GameTab.initLocalCharacterSection(groupbox)
 		Rounding = 0,
 	})
 
+	local fssbToggle = groupbox:AddToggle("FlashstepSpeedBoost", {
+		Text = "Flashstep Speed Boost",
+		Tooltip = "Increase your character's speed while using flashstep.",
+		Default = false,
+	})
+
+	local fssbDepBox = groupbox:AddDependencyBox()
+
+	fssbDepBox:AddSlider("FlashstepSpeedBoostMulti", {
+		Text = "Speed Boost Multiplier",
+		Default = 1,
+		Min = 0,
+		Max = 10,
+		Suffix = "m",
+		Rounding = 2,
+	})
+
+	fssbDepBox:SetupDependencies({
+		{ fssbToggle, true },
+	})
+
+	fssbToggle:AddKeyPicker("FlashstepSpeedBoostKeybind", {
+		Default = "N/A",
+		SyncToggleState = true,
+		Text = "Flashstep Speed Boost",
+	})
+
 	local atbToggle = groupbox:AddToggle("AttachToBack", {
 		Text = "Attach To Back",
 		Tooltip = "Start following the nearest entity based on a distance and height offset.",
@@ -115,6 +142,11 @@ function GameTab.initLocalCharacterSection(groupbox)
 		Rounding = 0,
 	})
 
+	groupbox:AddToggle("AnchorCharacter", {
+		Text = "Anchor Character",
+		Default = false,
+	})
+
 	atbDepBox:SetupDependencies({
 		{ Toggles.AttachToBack, true },
 	})
@@ -129,6 +161,24 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	flyDepBox:SetupDependencies({
 		{ Toggles.Fly, true },
+	})
+
+	groupbox:AddButton({
+		Text = "Respawn Character",
+		DoubleClick = true,
+		Func = function()
+			local character = players.LocalPlayer.Character
+			if not character then
+				return
+			end
+
+			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+			if not humanoidRootPart then
+				return
+			end
+
+			character:PivotTo(humanoidRootPart.CFrame * CFrame.new(0, 10000000, 0))
+		end,
 	})
 
 	groupbox:AddButton("Redeem Codes", function()
@@ -249,6 +299,26 @@ function GameTab.initPlayerMonitoringSection(groupbox)
 	})
 end
 
+---Initialize effect removals section.
+---@param groupbox table
+function GameTab.initEffectRemovalsSection(groupbox)
+	groupbox:AddToggle("NoSlow", {
+		Text = "No Slowdown",
+		Tooltip = "Prevent the game from freezing your walkspeed or slowing you down.",
+		Default = false,
+	})
+end
+
+---Initialize instance removals.
+---@param groupbox table
+function GameTab.initInstanceRemovalsSection(groupbox)
+	groupbox:AddToggle("NoKillBricks", {
+		Text = "No Kill Bricks",
+		Tooltip = "Remove any 'Kill Brick' parts on the client.",
+		Default = false,
+	})
+end
+
 ---Debugging section.
 ---@param groupbox table
 function GameTab.initDebuggingSection(groupbox)
@@ -267,6 +337,8 @@ function GameTab.init(window)
 	GameTab.initDebuggingSection(tab:AddDynamicGroupbox("Debugging"))
 	GameTab.initPlayerMonitoringSection(tab:AddDynamicGroupbox("Player Monitoring"))
 	GameTab.initLocalCharacterSection(tab:AddDynamicGroupbox("Local Character"))
+	GameTab.initInstanceRemovalsSection(tab:AddDynamicGroupbox("Instance Removals"))
+	GameTab.initEffectRemovalsSection(tab:AddDynamicGroupbox("Effect Removals"))
 end
 
 -- Return GameTab module.

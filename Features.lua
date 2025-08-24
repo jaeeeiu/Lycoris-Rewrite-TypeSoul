@@ -28,6 +28,12 @@ local OwnershipWatcher = require("Features/Game/OwnershipWatcher")
 ---@module Features.Exploits.Exploits
 local Exploits = require("Features/Exploits/Exploits")
 
+---@module Features.Game.Removal
+local Removal = require("Features/Game/Removal")
+
+---@module Features.Automation.Input
+local Input = require("Features/Automation/Input")
+
 ---Initialize features.
 ---@note: Careful with features that have entire return LPH_NO_VIRTUALIZE(function() blocks. We assume that we don't care about what's placed in there.
 function Features.init()
@@ -38,6 +44,8 @@ function Features.init()
 	Movement.init()
 	OwnershipWatcher.init()
 	Exploits.init()
+	Removal.init()
+	Input.init()
 
 	-- Only initialize if we're a builder.
 	if not armorshield or armorshield.current_role == "builder" then
@@ -61,6 +69,8 @@ function Features.detach()
 	Visuals.detach()
 	OwnershipWatcher.detach()
 	Exploits.detach()
+	Removal.detach()
+	Input.detach()
 
 	Logger.warn("Features detached.")
 end

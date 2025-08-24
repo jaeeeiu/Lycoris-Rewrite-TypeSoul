@@ -215,6 +215,16 @@ function VisualsTab.addFilterESP(identifier, depbox)
 	})
 end
 
+---Initialize Visual Removals section.
+---@param groupbox table
+function VisualsTab.initVisualRemovalsSection(groupbox)
+	groupbox:AddToggle("NoFog", {
+		Text = "No Fog",
+		Tooltip = "Atmosphere and Fog effects are hidden.",
+		Default = false,
+	})
+end
+
 ---Initialize World Visuals section.
 ---@param groupbox table
 function VisualsTab.initWorldVisualsSection(groupbox)
@@ -237,6 +247,43 @@ function VisualsTab.initWorldVisualsSection(groupbox)
 	fovDepBox:SetupDependencies({
 		{ Toggles.ModifyFieldOfView, true },
 	})
+
+	local modifyAmbienceToggle = groupbox:AddToggle("ModifyAmbience", {
+		Text = "Modify Ambience",
+		Tooltip = "Modify the ambience of the game.",
+		Default = false,
+	})
+
+	modifyAmbienceToggle:AddColorPicker("AmbienceColor", {
+		Default = Color3.fromHex("FFFFFF"),
+	})
+
+	local oacDepBox = groupbox:AddDependencyBox()
+
+	oacDepBox:AddToggle("OriginalAmbienceColor", {
+		Text = "Original Ambience Color",
+		Tooltip = "Use the game's original ambience color instead of a custom one.",
+		Default = false,
+	})
+
+	local umacDepBox = oacDepBox:AddDependencyBox()
+
+	umacDepBox:AddSlider("OriginalAmbienceColorBrightness", {
+		Text = "Original Ambience Brightness",
+		Default = 0,
+		Min = 0,
+		Max = 255,
+		Suffix = "+",
+		Rounding = 0,
+	})
+
+	oacDepBox:SetupDependencies({
+		{ Toggles.ModifyAmbience, true },
+	})
+
+	umacDepBox:SetupDependencies({
+		{ Toggles.OriginalAmbienceColor, true },
+	})
 end
 
 ---Initialize tab.
@@ -249,6 +296,7 @@ function VisualsTab.init(window)
 	VisualsTab.initESPCustomization(tab:AddDynamicGroupbox("ESP Customization"))
 	VisualsTab.initESPOptimizations(tab:AddDynamicGroupbox("ESP Optimizations"))
 	VisualsTab.initWorldVisualsSection(tab:AddDynamicGroupbox("World Visuals"))
+	VisualsTab.initVisualRemovalsSection(tab:AddDynamicGroupbox("Visual Removals"))
 	VisualsTab.addPlayerESP(VisualsTab.initBaseESPSection("Player", tab:AddDynamicGroupbox("Player ESP")))
 	VisualsTab.initBaseESPSection("Mob", tab:AddDynamicGroupbox("Mob ESP"))
 	VisualsTab.initBaseESPSection("MissionBoard", tab:AddDynamicGroupbox("Mission Board ESP"))
