@@ -230,7 +230,33 @@ Defender.vupdate = LPH_NO_VIRTUALIZE(function(self)
 	if self.ppart then
 		self.ppart.Transparency = showVisualizations and 0.2 or 1.0
 	end
+
+	if self.ppart then
+		self.ppart.Transparency = showVisualizations and 0.2 or 1.0
+	end
+
+	if self.pvpart then
+		self.pvpart.Transparency = showVisualizations and 0.2 or 1.0
+	end
 end)
+
+---Check if any parts that are in our filter were hit.
+---@note: Solara fallback.
+local function checkParts(parts, filter)
+	for _, part in next, parts do
+		print(part)
+		for _, fpart in next, filter do
+			print(part, fpart)
+			if part ~= fpart and not part:IsDescendantOf(fpart) then
+				continue
+			end
+
+			return true
+		end
+	end
+
+	return false
+end
 
 ---Run hitbox check. Returns wheter if the hitbox is being touched.
 ---@todo: An issue is that the player's current look vector will not be the same as when they attack due to a parry timing being seperate from the attack causing this check to fail.
@@ -243,9 +269,12 @@ end)
 ---@param predicted boolean
 ---@return boolean
 Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier, predicted)
+	local isSolara = getexecutorname and getexecutorname():match("Solara")
+
+	---@note: Solara is very shit so we need to do the filtering ourselves
 	local overlapParams = OverlapParams.new()
-	overlapParams.FilterDescendantsInstances = filter
-	overlapParams.FilterType = Enum.RaycastFilterType.Include
+	overlapParams.FilterDescendantsInstances = isSolara and {} or filter
+	overlapParams.FilterType = isSolara and Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Include
 
 	local character = players.LocalPlayer.Character
 	if not character then
@@ -264,8 +293,11 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		usedCFrame = usedCFrame * CFrame.new(0, 0, -(size.Z / 2))
 	end
 
+	-- Parts in bounds.
+	local parts = workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams)
+	print(isSolara, #parts, #filter)
 	-- Detect hit.
-	local hit = #workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams) > 0
+	local hit = isSolara and checkParts(parts, filter) or #parts > 0
 
 	-- Visualize color.
 	local visColor = hit and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
@@ -286,6 +318,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		vpart.Anchored = true
 		vpart.CanCollide = false
 		vpart.Material = Enum.Material.ForceField
+		vpart.CastShadow = false
 
 		-- Set part.
 		self[vpartIndex] = vpart
@@ -299,6 +332,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		ppart.Anchored = true
 		ppart.CanCollide = false
 		ppart.Material = Enum.Material.ForceField
+		ppart.CastShadow = false
 
 		-- Set part.
 		self[ppartIndex] = ppart
