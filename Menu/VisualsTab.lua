@@ -55,10 +55,14 @@ function VisualsTab.initESPOptimizations(groupbox)
 		Text = "ESP Split Frames",
 		Tooltip = "How many frames we have to split the object pool into.",
 		Suffix = "f",
-		Default = 32,
+		Default = 64,
 		Min = 1,
 		Max = 64,
 		Rounding = 0,
+	})
+
+	esuDepBox:SetupDependencies({
+		{ Toggles.ESPSplitUpdates, true },
 	})
 
 	groupbox:AddToggle("NoPersisentESP", {

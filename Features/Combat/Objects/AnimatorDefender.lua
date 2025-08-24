@@ -63,6 +63,11 @@ local kfMemoryTable = {
 	["HitFrameStart"] = true,
 	["DeflectStart"] = true,
 	["DeflectEnd"] = true,
+	["StartFrame"] = true,
+	["TransformFrame"] = true,
+	["End"] = true,
+	["FeintEnd"] = true,
+	["FeintStart"] = true,
 	["AnimationEnd"] = true,
 }
 

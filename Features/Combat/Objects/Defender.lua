@@ -42,6 +42,8 @@ local AttributeListener = require("Features/Combat/AttributeListener")
 ---@field maid Maid
 ---@field vpart Part?
 ---@field ppart Part?
+---@field pvpart Part?
+---@field pppart Part?
 local Defender = {}
 Defender.__index = Defender
 Defender.__type = "Defender"
@@ -55,6 +57,7 @@ local textChatService = game:GetService("TextChatService")
 -- Constants.
 local MAX_VISUALIZATION_TIME = 5.0
 local MAX_REPEAT_WAIT = 10.0
+local PREDICTION_LENIENCY_MULTI = 5.0
 
 ---Log a miss to the UI library with distance check.
 ---@param type string
@@ -237,8 +240,9 @@ end)
 ---@param size Vector3
 ---@param filter Instance[]
 ---@param identifier string
+---@param predicted boolean
 ---@return boolean
-Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier)
+Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier, predicted)
 	local overlapParams = OverlapParams.new()
 	overlapParams.FilterDescendantsInstances = filter
 	overlapParams.FilterType = Enum.RaycastFilterType.Include
@@ -266,8 +270,16 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 	-- Visualize color.
 	local visColor = hit and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 
+	if predicted then
+		visColor = hit and Color3.fromRGB(255, 0, 255) or Color3.fromRGB(0, 0, 0)
+	end
+
+	-- Indexes.
+	local vpartIndex = predicted and "pvpart" or "vpart"
+	local ppartIndex = predicted and "pppart" or "ppart"
+
 	-- Create visualization part if it doesn't exist.
-	if not self.vpart then
+	if not self[vpartIndex] then
 		-- Create part.
 		local vpart = Instance.new("Part")
 		vpart.Parent = workspace
@@ -276,11 +288,11 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		vpart.Material = Enum.Material.ForceField
 
 		-- Set part.
-		self.vpart = vpart
+		self[vpartIndex] = vpart
 	end
 
 	-- Create player part if it doesn't exist.
-	if not self.ppart then
+	if not self[ppartIndex] then
 		-- Create part.
 		local ppart = Instance.new("Part")
 		ppart.Parent = workspace
@@ -289,20 +301,20 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		ppart.Material = Enum.Material.ForceField
 
 		-- Set part.
-		self.ppart = ppart
+		self[ppartIndex] = ppart
 	end
 
 	-- Visual part.
-	self.vpart.Size = size
-	self.vpart.CFrame = usedCFrame
-	self.vpart.Color = visColor
-	self.vpart.Name = string.format("VP_%s", identifier)
+	self[vpartIndex].Size = size
+	self[vpartIndex].CFrame = usedCFrame
+	self[vpartIndex].Color = visColor
+	self[vpartIndex].Name = string.format("VP_%s", identifier)
 
 	-- Player part.
-	self.ppart.Size = root.Size
-	self.ppart.CFrame = root.CFrame
-	self.ppart.Color = visColor
-	self.ppart.Name = string.format("PP_%s", identifier)
+	self[ppartIndex].Size = root.Size
+	self[ppartIndex].CFrame = root.CFrame
+	self[ppartIndex].Color = visColor
+	self[ppartIndex].Name = string.format("PP_%s", identifier)
 
 	-- Set timestamp.
 	self.lvisualization = os.clock()
@@ -473,7 +485,9 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 		return false
 	end
 
-	local closest = PositionHistory.closest(tick() - self.sdelay())
+	local leniency = timing.duih and 1.0 or PREDICTION_LENIENCY_MULTI
+
+	local closest = PositionHistory.closest(tick() - (self.sdelay() * leniency))
 	if not closest then
 		return false
 	end
@@ -482,16 +496,14 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	root.CFrame = closest
 
-	result = self:hitbox(options:extrapolate(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
+	result =
+		self:hitbox(options:extrapolate(leniency), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
 
 	root.CFrame = oldCFrame
 
 	if not result then
 		return false
 	end
-
-	self.vpart.Color = Color3.fromRGB(255, 0, 255)
-	self.ppart.Color = Color3.fromRGB(255, 0, 255)
 
 	return true
 end)
@@ -635,6 +647,14 @@ Defender.clean = LPH_NO_VIRTUALIZE(function(self)
 
 	if self.ppart then
 		self.ppart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
+	end
+
+	if self.pvpart then
+		self.pvpart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
+	end
+
+	if self.pppart then
+		self.pppart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
 	end
 
 	-- Was there a start block, end block, or parry?
