@@ -34,7 +34,7 @@ end
 
 ---Input detach.
 function Input.detach()
-	inputMaid:destroy()
+	inputMaid:clean()
 end
 
 -- Return Input module.
