@@ -177,7 +177,6 @@ function GameTab.initLocalCharacterSection(groupbox)
 				return
 			end
 
-			humanoid:BreakJoints()
 			humanoid.Health = 0
 		end,
 	})
