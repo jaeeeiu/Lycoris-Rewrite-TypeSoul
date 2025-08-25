@@ -52,17 +52,12 @@ local renderStepped = Signal.new(runService.RenderStepped)
 local menuMaid = Maid.new()
 
 -- Constants.
-local MENU_TITLE = LRM_UserNote
-		and string.format(
-			"(Commit %s) Linoria V2 | Type Soul",
-			string.sub("7972b553e7af2475922fef0e3a9405ae25f71d14", 1, 6)
-		)
-	or "Linoria V2 | Type Soul"
+local MENU_TITLE = "Linoria V2 | Type Soul"
 
 if LRM_UserNote == "tester" then
 	MENU_TITLE = string.format(
 		"(Commit %s) Linoria V2 | Type Soul First Release",
-		string.sub("7972b553e7af2475922fef0e3a9405ae25f71d14", 1, 6)
+		string.sub("0c4ce14777e1acb21286b8f08db74e9bd3d9e7a1", 1, 6)
 	)
 end
 
