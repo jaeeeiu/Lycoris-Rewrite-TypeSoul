@@ -236,7 +236,7 @@ return LPH_NO_VIRTUALIZE(function()
 		end
 
 		if Configuration.expectToggleValue("NoSlow") then
-			updateNoSlow(humanoid)
+			updateNoSlow(character, humanoid)
 		end
 
 		if Configuration.expectToggleValue("AttachToBack") then

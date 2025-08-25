@@ -7,6 +7,9 @@ local Signal = require("Utility/Signal")
 ---@module Features.Visuals.Objects.ModelESP
 local ModelESP = require("Features/Visuals/Objects/ModelESP")
 
+---@module Features.Visuals.Objects.PartESP
+local PartESP = require("Features/Visuals/Objects/PartESP")
+
 ---@module Features.Visuals.Objects.MobESP
 local MobESP = require("Features/Visuals/Objects/MobESP")
 
@@ -169,12 +172,57 @@ local emplaceObject = LPH_NO_VIRTUALIZE(function(instance, object)
 	groups[object.identifier] = group
 end)
 
----On Mission NPCs ChildAdded.
----@param child Instance
-local onMissionNPCsChildAdded = LPH_NO_VIRTUALIZE(function(child)
-	if child.Name:match("MissionBoard") then
-		return emplaceObject(child, ModelESP.new("MissionBoard", child, "Mission Board"))
+---On NPCs DescendantAdded.
+---@param descendant Instance
+local onNPCsDescendantAdded = LPH_NO_VIRTUALIZE(function(descendant)
+	local parent = descendant.Parent
+	if not parent then
+		return
 	end
+
+	if not descendant:IsA("Model") or not parent:IsA("Folder") then
+		return
+	end
+
+	if parent.Name == "Bounties" then
+		return emplaceObject(descendant, ModelESP.new("BountyBoard", descendant, "Bounty Board"))
+	end
+
+	if parent.Name == "MissionNPC" then
+		return emplaceObject(descendant, ModelESP.new("MissionBoard", descendant, "Mission Board"))
+	end
+
+	if parent.Name == "Trader" then
+		return emplaceObject(descendant, ModelESP.new("NPC", descendant, "Trader"))
+	end
+
+	if parent.Name == "Clothes" then
+		return emplaceObject(descendant, ModelESP.new("NPC", descendant, "Clothes"))
+	end
+
+	if parent.Name == "Titles" then
+		return emplaceObject(descendant, ModelESP.new("NPC", descendant, "Title Selector"))
+	end
+
+	if parent.Name == "AdvancedQuests" then
+		return emplaceObject(
+			descendant,
+			ModelESP.new("NPC", descendant, string.format("Advanced Quests (%s)", descendant.Name))
+		)
+	end
+
+	if parent.Name == "DivisionDuties" then
+		return emplaceObject(descendant, ModelESP.new("NPC", descendant, "Division Duties"))
+	end
+
+	if parent.Name == "Captains" then
+		return emplaceObject(descendant, ModelESP.new("NPC", descendant, "Captain"))
+	end
+
+	return emplaceObject(
+		descendant,
+		ModelESP.new("NPC", descendant, string.format("%s (%s)", parent.Name, descendant.Name))
+	)
 end)
 
 ---On Entities ChildAdded.
@@ -242,20 +290,28 @@ local onPlayerAdded = LPH_NO_VIRTUALIZE(function(player)
 	emplaceObject(player, PlayerESP.new("Player", player, character))
 end)
 
----Create children listener.
+---On Soul Crystal Spawn Child Added.
+---@param child Instance
+local onSoulCrystalSpawnChildAdded = LPH_NO_VIRTUALIZE(function(child)
+	return emplaceObject(child, PartESP.new("SoulCrystal", child, "Soul Crystal"))
+end)
+
+---Create listener.
 ---@param instance Instance
 ---@param identifier string
 ---@param addedCallback function
 ---@param removingCallback function
-local createChildrenListener = LPH_NO_VIRTUALIZE(function(instance, identifier, addedCallback, removingCallback)
-	local childAdded = Signal.new(instance.ChildAdded)
-	local childRemoved = Signal.new(instance.ChildRemoved)
+---@param childFlag boolean
+local createListener = LPH_NO_VIRTUALIZE(function(instance, identifier, addedCallback, removingCallback, childFlag)
+	local type = childFlag and "Child" or "Descendant"
+	local added = Signal.new(childFlag and instance.ChildAdded or instance.DescendantAdded)
+	local removed = Signal.new(childFlag and instance.ChildRemoved or instance.DescendantRemoving)
 
-	visualsMaid:add(childAdded:connect(string.format("Visuals_%sOnChildAdded", identifier), addedCallback))
-	visualsMaid:add(childRemoved:connect(string.format("Visuals_%sOnChildRemoved", identifier), removingCallback))
+	visualsMaid:add(added:connect(string.format("Visuals_%sOn%sAdded", identifier, type), addedCallback))
+	visualsMaid:add(removed:connect(string.format("Visuals_%sOn%sRemoved", identifier, type), removingCallback))
 
-	Profiler.run(string.format("Visuals_%sAddInitialChildren", identifier), function()
-		for _, child in next, instance:GetChildren() do
+	Profiler.run(string.format("Visuals_%sAddInitial", identifier), function()
+		for _, child in next, (childFlag and instance:GetChildren() or instance:GetDescendants()) do
 			addedCallback(child)
 		end
 	end)
@@ -265,11 +321,16 @@ end)
 function Visuals.init()
 	local ents = workspace:WaitForChild("Entities")
 	local npcs = workspace:WaitForChild("NPCs")
-	local missionNpcs = npcs:WaitForChild("MissionNPC")
 
-	createChildrenListener(missionNpcs, "MissionNPCs", onMissionNPCsChildAdded, onInstanceRemoving)
-	createChildrenListener(ents, "Entities", onEntitiesChildAdded, onInstanceRemoving)
-	createChildrenListener(players, "Players", onPlayerAdded, onInstanceRemoving)
+	createListener(npcs, "NPCs", onNPCsDescendantAdded, onInstanceRemoving, false)
+	createListener(ents, "Entities", onEntitiesChildAdded, onInstanceRemoving, true)
+	createListener(players, "Players", onPlayerAdded, onInstanceRemoving, true)
+
+	if game.PlaceId == 18214402201 then
+		local soulCrystalSpawns = workspace:WaitForChild("SoulCrystalSpawns")
+		local soulCrystalSpawned = soulCrystalSpawns:WaitForChild("Spawned")
+		createListener(soulCrystalSpawned, "SoulCrystalSpawned", onSoulCrystalSpawnChildAdded, onInstanceRemoving, true)
+	end
 
 	visualsMaid:add(renderStepped:connect("Visuals_RenderStepped", updateVisuals))
 

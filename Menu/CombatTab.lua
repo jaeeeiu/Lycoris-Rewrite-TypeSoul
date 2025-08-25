@@ -171,6 +171,30 @@ function CombatTab.initAutoDefenseSection(groupbox)
 	})
 end
 
+---Initialize combat assistance section.
+---@param groupbox table
+function CombatTab.initCombatAssistance(groupbox)
+	local alToggle = groupbox:AddToggle("AimLock", {
+		Text = "Aim Lock",
+		Default = false,
+		Tooltip = "Automatically lock on to the best target.",
+	})
+
+	alToggle:AddKeyPicker("AimLockKeybind", { Default = "N/A", SyncToggleState = true, Text = "Aim Lock" })
+
+	local alDepBox = groupbox:AddDependencyBox()
+
+	alDepBox:AddToggle("VerticalInfluence", {
+		Text = "Vertical Influence",
+		Default = false,
+		Tooltip = "Should we attempt to lock on vertically or just face them on the horizontal plane?",
+	})
+
+	alDepBox:SetupDependencies({
+		{ alToggle, true },
+	})
+end
+
 ---Initialize tab.
 ---@param window table
 function CombatTab.init(window)
@@ -179,9 +203,10 @@ function CombatTab.init(window)
 
 	-- Initialize sections.
 	CombatTab.initAutoDefenseSection(tab:AddDynamicGroupbox("Auto Defense"))
+	CombatTab.initCombatAssistance(tab:AddLeftGroupbox("Combat Assistance"))
 
 	-- Create targeting section tab box.
-	local tabbox = tab:AddDynamicTabbox()
+	local tabbox = tab:AddRightTabbox()
 	CombatTab.initCombatTargetingSection(tabbox:AddTab("Targeting"))
 	CombatTab.initCombatWhitelistSection(tabbox:AddTab("Whitelisting"))
 end

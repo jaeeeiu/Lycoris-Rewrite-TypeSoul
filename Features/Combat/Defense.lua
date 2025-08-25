@@ -10,6 +10,9 @@ local AnimatorDefender = require("Features/Combat/Objects/AnimatorDefender")
 ---@module Features.Combat.Objects.PartDefender
 local PartDefender = require("Features/Combat/Objects/PartDefender")
 
+---@module Features.Combat.Targeting
+local Targeting = require("Features/Combat/Targeting")
+
 ---@module Features.Combat.Objects.SoundDefender
 local SoundDefender = require("Features/Combat/Objects/SoundDefender")
 
@@ -183,6 +186,44 @@ local updateHistory = LPH_NO_VIRTUALIZE(function()
 	PositionHistory.add(humanoidRootPart.CFrame, tick())
 end)
 
+---Update assistance.
+local updateAssistance = LPH_NO_VIRTUALIZE(function()
+	local localPlayer = players.LocalPlayer
+	local character = localPlayer.Character
+	if not character then
+		return
+	end
+
+	local humanoid = character:FindFirstChild("Humanoid")
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoid or not humanoidRootPart then
+		return
+	end
+
+	humanoid.AutoRotate = true
+
+	if not Configuration.expectToggleValue("AimLock") then
+		return
+	end
+
+	local target = Targeting.best()[1]
+	if not target then
+		return
+	end
+
+	local targetPosition = target.root.Position
+
+	if not Configuration.expectToggleValue("VerticalInfluence") then
+		targetPosition = Vector3.new(targetPosition.X, humanoidRootPart.Position.Y, targetPosition.Z)
+	end
+
+	humanoid.AutoRotate = false
+	humanoidRootPart.CFrame = CFrame.lookAt(
+		humanoidRootPart.Position,
+		humanoidRootPart.Position + (targetPosition - humanoidRootPart.Position).Unit
+	)
+end)
+
 ---Update visualizations.
 local updateVisualizations = LPH_NO_VIRTUALIZE(function()
 	if os.clock() - lastVisualizationUpdate <= 1.0 then
@@ -282,6 +323,7 @@ function Defense.init()
 	defenseMaid:mark(gameDescendantRemoved:connect("Defense_OnDescendantRemoved", onGameDescendantRemoved))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateVisualizations", updateVisualizations))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateHistory", updateHistory))
+	defenseMaid:mark(renderStepped:connect("Defense_UpdateAssistance", updateAssistance))
 	defenseMaid:mark(postSimulation:connect("Defense_UpdateDefenders", updateDefenders))
 	defenseMaid:mark(playersAdded:connect("Defense_OnPlayerAdded", onPlayerAdded))
 
