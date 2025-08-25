@@ -5,8 +5,7 @@
 ✅ No Fog 
 ✅ No Stun  
 ✅ Pathfind Breaker  
-✅ Void Mobs  
-✅ Remove Kill Bricks  
+✅ Void Mobs 
 ✅ Invisibility  
 ✅ Anchor Character
 ✅ Cheese Hell Books

@@ -100,7 +100,7 @@ function GameTab.initLocalCharacterSection(groupbox)
 		Default = 1,
 		Min = 0,
 		Max = 10,
-		Suffix = "m",
+		Suffix = "x",
 		Rounding = 2,
 	})
 
@@ -350,12 +350,6 @@ end
 ---Initialize instance removals.
 ---@param groupbox table
 function GameTab.initInstanceRemovalsSection(groupbox)
-	groupbox:AddToggle("NoKillBricks", {
-		Text = "No Kill Bricks",
-		Tooltip = "Remove any 'Kill Brick' parts on the client.",
-		Default = false,
-	})
-
 	groupbox:AddToggle("NoRaidMusic", {
 		Text = "No Raid Music",
 		Tooltip = "Mute any 'Raid Music' sounds on the client.",
