@@ -9,6 +9,8 @@ The script is released.
 
 3. All exploits should be supported except for Externals without proper Lua State (e.g Matcha) on the script. Solara support was added but they are very, very laggy.
 
+4. If you open up the menu, you should see the name Linoria V2. This is not a rebrand of the script. I just like Linoria.
+
 # What Should I Do For Bad AP?
 **You must be a buyer and want to help out.**
 It's unreasonable to think that we have perfect Auto Parry. Currently, we thought it was good enough to release. But, it's a iterative process. 

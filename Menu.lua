@@ -54,10 +54,17 @@ local menuMaid = Maid.new()
 -- Constants.
 local MENU_TITLE = LRM_UserNote
 		and string.format(
-			"(Commit %s) Linoria V2 | Type Soul Test",
+			"(Commit %s) Linoria V2 | Type Soul",
 			string.sub("7972b553e7af2475922fef0e3a9405ae25f71d14", 1, 6)
 		)
 	or "Linoria V2 | Type Soul"
+
+if LRM_UserNote == "tester" then
+	MENU_TITLE = string.format(
+		"(Commit %s) Linoria V2 | Type Soul First Release",
+		string.sub("7972b553e7af2475922fef0e3a9405ae25f71d14", 1, 6)
+	)
+end
 
 ---Initialize menu.
 function Menu.init()

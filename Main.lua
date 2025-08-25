@@ -1,8 +1,3 @@
--- Check role.
-if LRM_UserNote and LRM_UserNote ~= "tester" then
-	return warn("You are not a tester.")
-end
-
 -- Check for table that is shared between executions.
 if not shared then
 	return warn("No shared, no script.")
