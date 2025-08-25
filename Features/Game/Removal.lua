@@ -28,6 +28,7 @@ return LPH_NO_VIRTUALIZE(function()
 	-- Original store managers.
 	local noFogMap = removalMaid:mark(OriginalStoreManager.new())
 	local killBricksMap = removalMaid:mark(OriginalStoreManager.new())
+	local noRaidMusicMap = removalMaid:mark(OriginalStoreManager.new())
 
 	-- Signals.
 	local renderStepped = Signal.new(runService.RenderStepped)
@@ -70,6 +71,22 @@ return LPH_NO_VIRTUALIZE(function()
 		noFogMap:add(atmosphere, "Density", 0)
 	end
 
+	---Update no raid music.
+	local function updateNoRaidMusic()
+		local playerRaid = workspace:FindFirstChild("PlayerRaid")
+		if not playerRaid then
+			return
+		end
+
+		for _, child in ipairs(playerRaid:GetChildren()) do
+			if not child:IsA("Sound") then
+				continue
+			end
+
+			noRaidMusicMap:add(child, "Volume", 0)
+		end
+	end
+
 	---Update removal.
 	local function updateRemoval()
 		if os.clock() - lastUpdate <= 2.0 then
@@ -87,6 +104,12 @@ return LPH_NO_VIRTUALIZE(function()
 			updateNoFog()
 		else
 			noFogMap:restore()
+		end
+
+		if Configuration.expectToggleValue("NoRaidMusic") then
+			updateNoRaidMusic()
+		else
+			noRaidMusicMap:restore()
 		end
 
 		if Configuration.expectToggleValue("NoKillBricks") then

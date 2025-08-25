@@ -192,7 +192,17 @@ return LPH_NO_VIRTUALIZE(function()
 	---@param character Model
 	---@param humanoid Humanoid
 	local function updateFlashstepSpeedBoost(character, humanoid)
+		local isFlashstep = character:GetAttribute("CurrentState") == "Flashstep"
+
+		if flashStepDebounce and not isFlashstep then
+			flashStepDebounce = false
+		end
+
 		if flashStepDebounce then
+			return
+		end
+
+		if not isFlashstep then
 			return
 		end
 
@@ -217,10 +227,6 @@ return LPH_NO_VIRTUALIZE(function()
 		local humanoid = character:FindFirstChild("Humanoid")
 		if not humanoid then
 			return
-		end
-
-		if not character:GetAttribute("Flashstep") then
-			flashStepDebounce = false
 		end
 
 		if not Configuration.expectToggleValue("AnchorCharacter") then

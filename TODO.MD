@@ -13,11 +13,10 @@
 ✅ TP Buttons (Hueco, Soul Society, KT, Hell)  
 ✅ Crystals ESP (crystals?)  
 ❌ Loot Orb ESP 
-❌ Bankai Sword ESP (how do I do this, what are those swords?)  
 ✅ Replace In-Game ESP And Add Extras (i.e NPC ESP)  
 ✅ Aim Lock  
-❌ Player Monitoring Port (i.e spectating)  
-❌ Force Music Off 
+✅ Player Monitoring Port (i.e spectating)  
+✅ No Raid Music
 ✅ Anti AFK 
 ✅ Port Unlock Roblox Chat  
 ✅ Respawn Character  

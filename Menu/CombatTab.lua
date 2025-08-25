@@ -52,6 +52,11 @@ function CombatTab.initCombatTargetingSection(tab)
 		Text = "Ignore Mobs",
 		Default = false,
 	})
+
+	tab:AddToggle("IgnoreAllies", {
+		Text = "Ignore Allies",
+		Default = false,
+	})
 end
 
 -- Initialize combat whitelist section.

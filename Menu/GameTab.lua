@@ -246,6 +246,44 @@ end
 ---Initialize player monitoring section.
 ---@param groupbox table
 function GameTab.initPlayerMonitoringSection(groupbox)
+	groupbox:AddToggle("NotifyMod", {
+		Text = "Mod Notifications",
+		Default = true,
+	})
+
+	local nmDepBox = groupbox:AddDependencyBox()
+
+	nmDepBox:AddToggle("NotifyModSound", {
+		Text = "Mod Notification Sound",
+		Tooltip = "Use a sound along with the mod notification.",
+		Default = false,
+	})
+
+	local nmbDepBox = nmDepBox:AddDependencyBox()
+
+	nmbDepBox:AddSlider("NotifyModSoundVolume", {
+		Text = "Sound Volume",
+		Default = 10,
+		Min = 0,
+		Max = 20,
+		Suffix = "v",
+		Rounding = 2,
+	})
+
+	nmbDepBox:SetupDependencies({
+		{ Toggles.NotifyModSound, true },
+	})
+
+	nmDepBox:SetupDependencies({
+		{ Toggles.NotifyMod, true },
+	})
+
+	groupbox:AddToggle("PlayerSpectating", {
+		Text = "Player List Spectating",
+		Tooltip = "Click on a player on the player list to spectate them.",
+		Default = false,
+	})
+
 	groupbox:AddToggle("ShowRobloxChat", {
 		Text = "Show Roblox Chat",
 		Default = true,
@@ -315,6 +353,12 @@ function GameTab.initInstanceRemovalsSection(groupbox)
 	groupbox:AddToggle("NoKillBricks", {
 		Text = "No Kill Bricks",
 		Tooltip = "Remove any 'Kill Brick' parts on the client.",
+		Default = false,
+	})
+
+	groupbox:AddToggle("NoRaidMusic", {
+		Text = "No Raid Music",
+		Tooltip = "Mute any 'Raid Music' sounds on the client.",
 		Default = false,
 	})
 end
