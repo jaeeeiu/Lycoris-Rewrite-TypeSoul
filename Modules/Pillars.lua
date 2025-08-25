@@ -6,13 +6,12 @@ local Action = getfenv().Action
 ---@param timing AnimationTiming
 return function(self, timing)
 	local distance = self:distance(self.entity)
+
 	local action = Action.new()
-	action._when = 750
-	if distance >= 15 then
-		action._when = math.min(800 + distance * 12.4, 2200)
-	end
+	action._when = math.min(500 + distance * 2.4, 800)
 	action._type = "Parry"
-	action.hitbox = Vector3.new(25, 20, 30)
-	action.name = string.format("(%.2f) Dynamic Flowing Passage Timing", distance)
+	action.hitbox = Vector3.new(150, 40, 150)
+	action.name = string.format("(%.2f) Dynamic Visionary Pillars Timing", distance)
+
 	return self:action(timing, action)
 end

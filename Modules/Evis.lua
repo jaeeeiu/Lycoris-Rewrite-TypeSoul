@@ -9,7 +9,7 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 690
 	if distance >= 15 then
-		action._when = math.min(630 + distance * 5.5, 1200)
+		action._when = math.min(640 + distance * 4, 1200)
 	end
 	action._type = "Start Block"
 	action.hitbox = Vector3.new(60, 30, 37)
