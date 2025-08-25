@@ -87,6 +87,9 @@ function Lycoris.init()
 
 		chooseSlotRemote:InvokeServer(tslot, nil)
 		teleportRemote:InvokeServer({ teleportTo = tdestination })
+
+		PersistentData.set("tslot", nil)
+		PersistentData.set("tdestination", nil)
 	end
 
 	if game.PlaceId == LOBBY_PLACE_ID then
