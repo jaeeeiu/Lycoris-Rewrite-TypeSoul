@@ -17,6 +17,11 @@ MobESP.update = LPH_NO_VIRTUALIZE(function(self)
 		return self:visible(false)
 	end
 
+	local humanoidRootPart = self.model:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then
+		return self:visible(false)
+	end
+
 	ModelESP.update(self, { ESP_HEALTH:format(humanoid.Health, humanoid.MaxHealth) })
 end)
 

@@ -5,6 +5,9 @@ local Targeting = {}
 ---@module Utility.Configuration
 local Configuration = require("Utility/Configuration")
 
+---@module Game.PlayerScanning
+local PlayerScanning = require("Game/PlayerScanning")
+
 ---@module Features.Combat.Objects.Target
 local Target = require("Features/Combat/Objects/Target")
 
@@ -90,6 +93,14 @@ Targeting.viable = LPH_NO_VIRTUALIZE(function()
 
 		local currentDistance = (rootPart.Position - localRootPart.Position).Magnitude
 		if currentDistance > Configuration.expectOptionValue("DistanceLimit") then
+			continue
+		end
+
+		if
+			playerFromCharacter
+			and PlayerScanning.isAlly(playerFromCharacter)
+			and Configuration.expectToggleValue("IgnoreAllies")
+		then
 			continue
 		end
 

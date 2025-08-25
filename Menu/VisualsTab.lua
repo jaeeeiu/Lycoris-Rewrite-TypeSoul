@@ -137,6 +137,16 @@ function VisualsTab.addPlayerESP(identifier, depbox)
 		Default = false,
 	})
 
+	depbox:AddToggle(Configuration.identify(identifier, "ShowRace"), {
+		Text = "Show Race",
+		Default = false,
+	})
+
+	depbox:AddToggle(Configuration.identify(identifier, "ShowElement"), {
+		Text = "Show Element",
+		Default = false,
+	})
+
 	depbox:AddDropdown(Configuration.identify(identifier, "PlayerNameType"), {
 		Text = "Player Name Type",
 		Default = 1,
@@ -299,6 +309,9 @@ function VisualsTab.init(window)
 	VisualsTab.initVisualRemovalsSection(tab:AddDynamicGroupbox("Visual Removals"))
 	VisualsTab.addPlayerESP(VisualsTab.initBaseESPSection("Player", tab:AddDynamicGroupbox("Player ESP")))
 	VisualsTab.initBaseESPSection("Mob", tab:AddDynamicGroupbox("Mob ESP"))
+	VisualsTab.initBaseESPSection("NPC", tab:AddDynamicGroupbox("NPC ESP"))
+	VisualsTab.initBaseESPSection("BountyBoard", tab:AddDynamicGroupbox("Bounty Board ESP"))
+	VisualsTab.initBaseESPSection("Crystal", tab:AddDynamicGroupbox("Crystal ESP"))
 	VisualsTab.initBaseESPSection("MissionBoard", tab:AddDynamicGroupbox("Mission Board ESP"))
 end
 

@@ -27,27 +27,13 @@ return LPH_NO_VIRTUALIZE(function()
 
 	-- Original store managers.
 	local noFogMap = removalMaid:mark(OriginalStoreManager.new())
-	local killBricksMap = removalMaid:mark(OriginalStoreManager.new())
+	local noRaidMusicMap = removalMaid:mark(OriginalStoreManager.new())
 
 	-- Signals.
 	local renderStepped = Signal.new(runService.RenderStepped)
-	local workspaceDescendantAdded = Signal.new(workspace.DescendantAdded)
-	local workspaceDescendantRemoving = Signal.new(workspace.DescendantRemoving)
 
 	-- Last update.
 	local lastUpdate = os.clock()
-
-	---Update no kill bricks.
-	local function updateNoKillBricks()
-		for _, store in next, killBricksMap:data() do
-			local data = store.data
-			if not data then
-				continue
-			end
-
-			store:set(store.data, "CFrame", CFrame.new(math.huge, math.huge, math.huge))
-		end
-	end
 
 	---Update no fog.
 	local function updateNoFog()
@@ -70,6 +56,22 @@ return LPH_NO_VIRTUALIZE(function()
 		noFogMap:add(atmosphere, "Density", 0)
 	end
 
+	---Update no raid music.
+	local function updateNoRaidMusic()
+		local playerRaid = workspace:FindFirstChild("PlayerRaid")
+		if not playerRaid then
+			return
+		end
+
+		for _, child in ipairs(playerRaid:GetChildren()) do
+			if not child:IsA("Sound") then
+				continue
+			end
+
+			noRaidMusicMap:add(child, "Volume", 0)
+		end
+	end
+
 	---Update removal.
 	local function updateRemoval()
 		if os.clock() - lastUpdate <= 2.0 then
@@ -89,44 +91,16 @@ return LPH_NO_VIRTUALIZE(function()
 			noFogMap:restore()
 		end
 
-		if Configuration.expectToggleValue("NoKillBricks") then
-			updateNoKillBricks()
+		if Configuration.expectToggleValue("NoRaidMusic") then
+			updateNoRaidMusic()
 		else
-			killBricksMap:restore()
+			noRaidMusicMap:restore()
 		end
-	end
-
-	---On workspace descendant added.
-	---@param descendant Instance
-	local function onWorkspaceDescendantAdded(descendant)
-		if descendant.Name ~= "LavaBrick" or not descendant:IsA("Part") then
-			return
-		end
-
-		killBricksMap:mark(descendant, "CFrame")
-	end
-
-	---On workspace descendant removing.
-	---@param descendant Instance
-	local function onWorkspaceDescendantRemoving(descendant)
-		killBricksMap:forget(descendant)
 	end
 
 	---Initalize removal.
 	function Removal.init()
-		removalMaid:add(
-			workspaceDescendantAdded:connect("Removal_WorkspaceDescendantAdded", onWorkspaceDescendantAdded)
-		)
-
-		removalMaid:add(
-			workspaceDescendantRemoving:connect("Removal_WorkspaceDescendantRemoving", onWorkspaceDescendantRemoving)
-		)
-
 		removalMaid:add(renderStepped:connect("Removal_RenderStepped", updateRemoval))
-
-		for _, descendant in pairs(workspace:GetDescendants()) do
-			onWorkspaceDescendantAdded(descendant)
-		end
 
 		-- Log.
 		Logger.warn("Removal initialized.")

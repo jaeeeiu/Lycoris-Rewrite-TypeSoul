@@ -23,6 +23,9 @@ local ESP_VIEW_ANGLE = "[%.2f view angle vs. %.2f]"
 local ESP_HEALTH_PERCENTAGE = "[%i%% health]"
 local ESP_HEALTH_BARS = "[%.1f bars]"
 local ESP_ULTIMATE = "[%i%% bankai/res/volt]"
+local ESP_GRADE = "[%s]"
+local ESP_ELEMENT = "[%s]"
+local ESP_RACE = "[%s]"
 
 ---Update PlayerESP.
 ---@param self PlayerESP
@@ -61,7 +64,52 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 	local health = humanoid.Health
 	local maxHealth = humanoid.MaxHealth
 
+	local localPlayer = players.LocalPlayer
+	local playerGui = localPlayer and localPlayer.PlayerGui
+	local leaderBoard = playerGui and playerGui:FindFirstChild("Leaderboard")
+	local list = leaderBoard and leaderBoard:FindFirstChild("List")
+	local container = list and list:FindFirstChild("Container")
+	local playerEntry = container and container:FindFirstChild(player.Name)
+	local characterNameEntry = playerEntry and playerEntry:FindFirstChild("CharacterName")
+
 	local tags = { ESP_HEALTH:format(health or -1, maxHealth or -1) }
+	local regex = {
+		"Grade (%d+)",
+		"Semi-Elite Grade",
+		"Semi-Grade (%d+)",
+		"Elite Grade",
+		"Trainee",
+		"Human",
+		"???",
+		"Special Grade",
+		"Special Grade (%d+)",
+	}
+
+	local grade = nil
+
+	for _, pattern in ipairs(regex) do
+		local match = characterNameEntry and characterNameEntry.Text:match(pattern)
+		if not match then
+			continue
+		end
+
+		grade = match
+		break
+	end
+
+	if grade then
+		tags[#tags + 1] = ESP_GRADE:format(grade == "???" and "Hidden Grade" or grade)
+	else
+		tags[#tags + 1] = ESP_GRADE:format("Unknown Grade")
+	end
+
+	if Configuration.idToggleValue(identifier, "ShowElement") then
+		tags[#tags + 1] = ESP_ELEMENT:format(model:GetAttribute("Element") or "Unknown Element")
+	end
+
+	if Configuration.idToggleValue(identifier, "ShowRace") then
+		tags[#tags + 1] = ESP_RACE:format(player:GetAttribute("Race") or "Unknown Race")
+	end
 
 	if Configuration.idToggleValue(identifier, "ShowHealthPercentage") then
 		local percentage = health / maxHealth * 100
@@ -87,8 +135,8 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 	end
 
 	if Configuration.idToggleValue(identifier, "ShowUltimate") then
-		local ultimate = player:GetAttribute("BankaiMeter")
-		local maxUltimate = player:GetAttribute("MaxThirdBankaiMeter")
+		local ultimate = model:GetAttribute("BankaiMeter") or 0.0
+		local maxUltimate = model:GetAttribute("MaxThirdBankaiMeter") or 0.0
 		tags[#tags + 1] = ESP_ULTIMATE:format(ultimate / maxUltimate * 100)
 	end
 

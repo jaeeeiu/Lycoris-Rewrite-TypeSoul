@@ -244,9 +244,7 @@ end)
 ---@note: Solara fallback.
 local function checkParts(parts, filter)
 	for _, part in next, parts do
-		print(part)
 		for _, fpart in next, filter do
-			print(part, fpart)
 			if part ~= fpart and not part:IsDescendantOf(fpart) then
 				continue
 			end
@@ -295,7 +293,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 
 	-- Parts in bounds.
 	local parts = workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams)
-	print(isSolara, #parts, #filter)
+
 	-- Detect hit.
 	local hit = isSolara and checkParts(parts, filter) or #parts > 0
 
@@ -823,6 +821,14 @@ function Defender:detach()
 
 	if self.ppart then
 		self.ppart:Destroy()
+	end
+
+	if self.ppart then
+		self.ppart:Destroy()
+	end
+
+	if self.pvpart then
+		self.pvpart:Destroy()
 	end
 
 	-- Set object nil.
