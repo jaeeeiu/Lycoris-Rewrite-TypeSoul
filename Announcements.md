@@ -3,13 +3,15 @@
 # Type Soul Rewrite!
 The script is released.
 
-1. Sales will be closed until the 8/26th and I will re-open them up.
+1. Sales will be closed until the 8/26th and I will re-open them up. We're still limited to ~200 users. So, during that time, I will get my Pro plan back.
 
 2. (https://discord.com/channels/1124587366582059078/1319021375712657459) Look at this channel to see the full list of features along with their caveats. I don't plan on selling a slop script or a cash grab. I also want you as a buyer to be fully aware of what you're getting into.
 
 3. All exploits should be supported except for Externals without proper Lua State (e.g Matcha) on the script. Solara support was added but they are very, very laggy.
 
 4. If you open up the menu, you should see the name Linoria V2. This is not a rebrand of the script. I just like Linoria.
+
+5. I'm not going to be awake for your issues and I'm not going to be able to fix them until 5pm PST.
 
 # What Should I Do For Bad AP?
 **You must be a buyer and want to help out.**
