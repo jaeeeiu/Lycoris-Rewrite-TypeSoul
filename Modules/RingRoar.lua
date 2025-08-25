@@ -15,7 +15,7 @@ return function(self, timing)
 	end
 
 	if self.track.Speed >= 1.45 and self.track.Speed <= 1.55 then
-		timing._rsd = 0
+		timing._rsd = 1200
 	end
 
 	local info = RepeatInfo.new(timing)
