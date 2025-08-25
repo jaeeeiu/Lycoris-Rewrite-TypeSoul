@@ -386,14 +386,23 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	end, timing.punishable, timing.after, self.rpue, self, self.entity, timing, info))
 
 	-- Notify.
-	self:notify(
-		timing,
-		"Added RPUE '%s' (%.2fs, then every %.2fs) with ping '%.2f' (changing) subtracted.",
-		PP_SCRAMBLE_STR(timing.name),
-		timing:rsd(),
-		timing:rpd(),
-		self.rtt()
-	)
+	if not LRM_UserNote or LRM_UserNote == "tester" then
+		self:notify(
+			timing,
+			"Added RPUE '%s' (%.2fs, then every %.2fs) with ping '%.2f' (changing) subtracted.",
+			PP_SCRAMBLE_STR(timing.name),
+			timing:rsd(),
+			timing:rpd(),
+			self.rtt()
+		)
+	else
+		self:notify(
+			timing,
+			"Added RPUE '%s' ([redacted], then every [redacted]) with ping '%.2f' (changing) subtracted.",
+			PP_SCRAMBLE_STR(timing.name),
+			self.rtt()
+		)
+	end
 end)
 
 ---Clean up the defender.

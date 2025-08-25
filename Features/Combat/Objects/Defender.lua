@@ -758,13 +758,22 @@ Defender.action = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	end, timing.punishable, timing.after, self.handle, self, timing, action))
 
 	-- Log.
-	self:notify(
-		timing,
-		"Added action '%s' (%.2fs) with ping '%.2f' (changing) subtracted.",
-		PP_SCRAMBLE_STR(action.name),
-		action:when(),
-		self.rtt()
-	)
+	if not LRM_UserNote or LRM_UserNote == "tester" then
+		self:notify(
+			timing,
+			"Added action '%s' (%.2fs) with ping '%.2f' (changing) subtracted.",
+			PP_SCRAMBLE_STR(action.name),
+			action:when(),
+			self.rtt()
+		)
+	else
+		self:notify(
+			timing,
+			"Added action '%s' ([redacted]) with ping '%.2f' (changing) subtracted.",
+			PP_SCRAMBLE_STR(action.name),
+			self.rtt()
+		)
+	end
 end)
 
 ---Add actions from timing to defender object.
