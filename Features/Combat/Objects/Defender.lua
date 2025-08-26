@@ -491,11 +491,11 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	local hitbox = action and action.hitbox or timing.hitbox
 
-	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
-
 	if timing.duih then
 		hitbox = timing.hitbox
 	end
+
+	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
 
 	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
 
