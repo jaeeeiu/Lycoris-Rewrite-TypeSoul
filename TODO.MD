@@ -11,7 +11,7 @@
 ✅ Cheese Hell Books
 ✅ TP Buttons (Hueco, Soul Society, KT, Hell)  
 ✅ Crystals ESP (crystals?)  
-❌ Loot Orb ESP 
+✅ Loot Orb ESP 
 ✅ Replace In-Game ESP And Add Extras (i.e NPC ESP)  
 ✅ Aim Lock  
 ✅ Player Monitoring Port (i.e spectating)  
@@ -21,6 +21,6 @@
 ✅ Respawn Character  
 ❌ Auto Fast Rerolls  
 ❌ Auto Accept Raid
-❌ Auto Loot Orb
+✅ Auto Loot Orb
 ❌ Auto Mission Board  
 ❌ Auto Mob Grind (i.e kill x mobs)  

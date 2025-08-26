@@ -25,6 +25,9 @@ local VisualsTab = require("Menu/VisualsTab")
 ---@module Menu.LycorisTab
 local LycorisTab = require("Menu/LycorisTab")
 
+---@module Menu.AutomationTab
+local AutomationTab = require("Menu/AutomationTab")
+
 ---@module Menu.ExploitTab
 local ExploitTab = require("Menu/ExploitTab")
 
@@ -93,6 +96,7 @@ function Menu.init()
 	GameTab.init(window)
 	VisualsTab.init(window)
 	ExploitTab.init(window)
+	AutomationTab.init(window)
 	LycorisTab.init(window)
 
 	-- Last update.

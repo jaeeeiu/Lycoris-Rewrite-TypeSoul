@@ -9,6 +9,12 @@ function AutomationTab.initInputAutomation(groupbox)
 		Tooltip = "Prevent the player from being kicked for being idle by sending periodic inputs for you.",
 		Default = false,
 	})
+
+	groupbox:AddToggle("AutoAcceptRaid", {
+		Text = "Auto Accept Raid",
+		Tooltip = "Automatically accept raid prompts.",
+		Default = false,
+	})
 end
 
 ---Initialize tab.

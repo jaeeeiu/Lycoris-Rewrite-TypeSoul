@@ -313,6 +313,7 @@ function VisualsTab.init(window)
 	VisualsTab.initBaseESPSection("BountyBoard", tab:AddDynamicGroupbox("Bounty Board ESP"))
 	VisualsTab.initBaseESPSection("Crystal", tab:AddDynamicGroupbox("Crystal ESP"))
 	VisualsTab.initBaseESPSection("MissionBoard", tab:AddDynamicGroupbox("Mission Board ESP"))
+	VisualsTab.initBaseESPSection("LootOrb", tab:AddDynamicGroupbox("Loot Orb ESP"))
 end
 
 -- Return VisualsTab module.
