@@ -293,7 +293,21 @@ end)
 ---On Soul Crystal Spawn Child Added.
 ---@param child Instance
 local onSoulCrystalSpawnChildAdded = LPH_NO_VIRTUALIZE(function(child)
-	return emplaceObject(child, PartESP.new("SoulCrystal", child, "Soul Crystal"))
+	return emplaceObject(
+		child,
+		child:IsA("Model") and ModelESP.new("SoulCrystal", child, "Soul Crystal")
+			or PartESP.new("SoulCrystal", child, "Soul Crystal")
+	)
+end)
+
+---On Misc Descendant Added.
+---@param child Instance
+local onMiscDescendantAdded = LPH_NO_VIRTUALIZE(function(child)
+	if child.Name ~= "lootorb" then
+		return
+	end
+
+	return emplaceObject(child, PartESP.new("LootOrb", child, "Loot Orb"))
 end)
 
 ---Create listener.
@@ -321,10 +335,15 @@ end)
 function Visuals.init()
 	local ents = workspace:WaitForChild("Entities")
 	local npcs = workspace:WaitForChild("NPCs")
+	local misc = workspace:WaitForChild("Misc", 2.0)
 
 	createListener(npcs, "NPCs", onNPCsDescendantAdded, onInstanceRemoving, false)
 	createListener(ents, "Entities", onEntitiesChildAdded, onInstanceRemoving, true)
 	createListener(players, "Players", onPlayerAdded, onInstanceRemoving, true)
+
+	if misc then
+		createListener(misc, "Misc", onMiscDescendantAdded, onInstanceRemoving, true)
+	end
 
 	if game.PlaceId == 18214402201 then
 		local soulCrystalSpawns = workspace:WaitForChild("SoulCrystalSpawns")

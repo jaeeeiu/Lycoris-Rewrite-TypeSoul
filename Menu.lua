@@ -25,6 +25,9 @@ local VisualsTab = require("Menu/VisualsTab")
 ---@module Menu.LycorisTab
 local LycorisTab = require("Menu/LycorisTab")
 
+---@module Menu.AutomationTab
+local AutomationTab = require("Menu/AutomationTab")
+
 ---@module Menu.ExploitTab
 local ExploitTab = require("Menu/ExploitTab")
 
@@ -57,7 +60,7 @@ local MENU_TITLE = "Linoria V2 | Type Soul"
 if LRM_UserNote then
 	MENU_TITLE = string.format(
 		"(Commit %s) Linoria V2 | Type Soul First Release",
-		string.sub("2987c8c7286e0f7dc232744a08f6020829bba5bf", 1, 6)
+		string.sub("83f067f180f2746aa9c8a9089ee83e8a082cca30", 1, 6)
 	)
 end
 
@@ -93,6 +96,7 @@ function Menu.init()
 	GameTab.init(window)
 	VisualsTab.init(window)
 	ExploitTab.init(window)
+	AutomationTab.init(window)
 	LycorisTab.init(window)
 
 	-- Last update.
