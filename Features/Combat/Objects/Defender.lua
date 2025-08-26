@@ -341,12 +341,14 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 	self[vpartIndex].CFrame = usedCFrame
 	self[vpartIndex].Color = visColor
 	self[vpartIndex].Name = string.format("VP_%s", identifier)
+	self[vpartIndex].Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
 
 	-- Player part.
 	self[ppartIndex].Size = root.Size
 	self[ppartIndex].CFrame = root.CFrame
 	self[ppartIndex].Color = visColor
 	self[ppartIndex].Name = string.format("PP_%s", identifier)
+	self[ppartIndex].Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
 
 	-- Set timestamp.
 	self.lvisualization = os.clock()
