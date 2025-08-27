@@ -20,7 +20,8 @@
 ✅ Port Unlock Roblox Chat  
 ✅ Respawn Character  
 ❌ Auto Fast Rerolls  
-❌ Auto Accept Raid
+✅ Auto Accept Raid
 ✅ Auto Loot Orb
 ❌ Auto Mission Board  
 ❌ Auto Mob Grind (i.e kill x mobs)  
+❌ Auto Save Config (with check delay)
