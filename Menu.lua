@@ -70,7 +70,7 @@ function Menu.init()
 	local window = Library:CreateWindow({
 		Title = MENU_TITLE,
 		Center = true,
-		AutoShow = true,
+		AutoShow = not shared.Lycoris.silent,
 		TabPadding = 8,
 		MenuFadeTime = 0.0,
 	})
