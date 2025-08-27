@@ -158,15 +158,18 @@ return LPH_NO_VIRTUALIZE(function()
 
 	---Update spectating.
 	local function updateSpectating()
-		local leaderboardMap = {}
-
 		local localPlayer = players.LocalPlayer
 		local playerGui = localPlayer and localPlayer.PlayerGui
 		local leaderBoard = playerGui and playerGui:FindFirstChild("Leaderboard")
 		local list = leaderBoard and leaderBoard:FindFirstChild("List")
 		local container = list and list:FindFirstChild("Container")
+		if not container then
+			return
+		end
 
-		for _, instance in next, container do
+		local leaderboardMap = {}
+
+		for _, instance in next, container:GetChildren() do
 			local player = players:FindFirstChild(instance.Name)
 			if not player then
 				continue

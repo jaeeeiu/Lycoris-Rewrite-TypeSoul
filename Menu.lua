@@ -60,7 +60,7 @@ local MENU_TITLE = "Linoria V2 | Type Soul"
 if LRM_UserNote then
 	MENU_TITLE = string.format(
 		"(Commit %s) Linoria V2 | Type Soul First Release",
-		string.sub("83f067f180f2746aa9c8a9089ee83e8a082cca30", 1, 6)
+		string.sub("1c694be8b272b507f3ed2575b7069f80c2eb7178", 1, 6)
 	)
 end
 
@@ -70,7 +70,7 @@ function Menu.init()
 	local window = Library:CreateWindow({
 		Title = MENU_TITLE,
 		Center = true,
-		AutoShow = true,
+		AutoShow = not shared.Lycoris.silent,
 		TabPadding = 8,
 		MenuFadeTime = 0.0,
 	})

@@ -25,6 +25,10 @@ local inputMaid = Maid.new()
 
 ---Handle raid accept.
 local function handleRaidAccept()
+	if not Configuration.expectToggleValue("AutoAcceptRaid") then
+		return
+	end
+
 	local playerGui = players.LocalPlayer:FindFirstChild("PlayerGui")
 	if not playerGui then
 		return
@@ -57,7 +61,9 @@ local function handleRaidAccept()
 
 	virtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
 
-	inputMaid:add(TaskSpawner.delay("Input_RaidAcceptClickRelease", 0.1, function()
+	inputMaid:add(TaskSpawner.delay("Input_RaidAcceptClickRelease", function()
+		return 0.1
+	end, function()
 		virtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
 	end))
 end

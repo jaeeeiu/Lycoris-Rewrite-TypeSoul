@@ -13,6 +13,22 @@ local Library = require("GUI/Library")
 ---Initialize Cheat Settings section.
 ---@param groupbox table
 function LycorisTab.initCheatSettingsSection(groupbox)
+	groupbox:AddButton("Toggle Silent Mode", function()
+		if not isfile or not delfile or not writefile then
+			return
+		end
+
+		shared.Lycoris.silent = not shared.Lycoris.silent
+
+		if isfile("smarker_ts.txt") then
+			delfile("smarker_ts.txt")
+		else
+			writefile(
+				"smarker_ts.txt",
+				"Hello, if you're reading this, that means you have Lycoris-Rewrite-TypeSoul silent mode turned on. Deleting this file will turn it off."
+			)
+		end
+	end)
 	groupbox:AddButton("Unload Cheat", function()
 		shared.Lycoris.detach()
 	end)
