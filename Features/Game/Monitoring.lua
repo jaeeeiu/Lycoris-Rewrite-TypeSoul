@@ -169,7 +169,7 @@ return LPH_NO_VIRTUALIZE(function()
 
 		local leaderboardMap = {}
 
-		for _, instance in next, container do
+		for _, instance in next, container:GetChildren() do
 			local player = players:FindFirstChild(instance.Name)
 			if not player then
 				continue
