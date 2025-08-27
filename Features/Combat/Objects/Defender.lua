@@ -192,7 +192,7 @@ Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return self:notify(timing, "User is typing in a text box.")
 	end
 
-	if selectedFilters["Disable When Window Not Active"] and not iswindowactive() then
+	if selectedFilters["Disable When Window Not Active"] and iswindowactive and not iswindowactive() then
 		return self:notify(timing, "Window is not active.")
 	end
 
@@ -566,12 +566,15 @@ end)
 ---@param self Defender
 ---@param timing Timing
 ---@param action Action
-Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action)
+---@param notify boolean
+Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action, notify)
 	if not self:valid(timing, action) then
 		return
 	end
 
-	self:notify(timing, "Action type '%s' is being executed.", PP_SCRAMBLE_STR(action._type))
+	if not notify then
+		self:notify(timing, "Action type '%s' is being executed.", PP_SCRAMBLE_STR(action._type))
+	end
 
 	if PP_SCRAMBLE_STR(action._type) == "Start Block" then
 		return InputClient.block(true)
