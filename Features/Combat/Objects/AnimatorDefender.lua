@@ -175,6 +175,15 @@ function AnimatorDefender:akeyframe(action, tp)
 	-- Set time position.
 	action.tp = tp
 
+	---@note: These have to be sent in by a module, so the hitbox and the name also have to get fixed.
+	action["_type"] = PP_SCRAMBLE_STR(action["_type"])
+	action["name"] = PP_SCRAMBLE_STR(action["name"])
+	action["hitbox"] = Vector3.new(
+		PP_SCRAMBLE_RE_NUM(action["hitbox"].X),
+		PP_SCRAMBLE_RE_NUM(action["hitbox"].Y),
+		PP_SCRAMBLE_RE_NUM(action["hitbox"].Z)
+	)
+
 	-- Insert in list.
 	table.insert(self.keyframes, action)
 end
@@ -267,16 +276,17 @@ AnimatorDefender.update = LPH_NO_VIRTUALIZE(function(self)
 	-- Log.
 	self:notify(
 		self.timing,
-		"(%.2f) (really %.2f) Keyframe action type '%s' is being executed.",
+		"(%.2f) (really %.2f) Keyframe action '%s' with type '%s' is being executed.",
 		tp,
 		self.track.TimePosition,
-		latest._type
+		PP_SCRAMBLE_STR(latest.name),
+		PP_SCRAMBLE_STR(latest._type)
 	)
 
 	-- Ok, run action of this keyframe.
 	self.maid:mark(
 		TaskSpawner.spawn(
-			string.format("KeyframeAction_%s", latest._type),
+			string.format("KeyframeAction_%s", PP_SCRAMBLE_STR(latest._type)),
 			self.handle,
 			self,
 			self.timing,
