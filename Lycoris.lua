@@ -31,6 +31,9 @@ local CoreGuiManager = require("Utility/CoreGuiManager")
 ---@module Utility.PersistentData
 local PersistentData = require("Utility/PersistentData")
 
+---@module Game.Keybinding
+local Keybinding = require("Game/Keybinding")
+
 -- Lycoris maid.
 local lycorisMaid = Maid.new()
 
@@ -91,10 +94,10 @@ function Lycoris.init()
 
 		chooseSlotRemote:InvokeServer(tslot, nil)
 		teleportRemote:InvokeServer({ teleportTo = tdestination })
-
-		PersistentData.set("tslot", nil)
-		PersistentData.set("tdestination", nil)
 	end
+
+	PersistentData.set("tslot", nil)
+	PersistentData.set("tdestination", nil)
 
 	if game.PlaceId == LOBBY_PLACE_ID then
 		return Logger.warn("Script has initialized in the lobby.")
@@ -108,6 +111,8 @@ function Lycoris.init()
 	end
 
 	Logger.warn("Anticheat has been successfully penetrated.")
+
+	Keybinding.init()
 
 	CoreGuiManager.set()
 
@@ -152,6 +157,8 @@ end
 ---Detach instance.
 function Lycoris.detach()
 	lycorisMaid:clean()
+
+	Keybinding.detach()
 
 	ModuleManager.detach()
 

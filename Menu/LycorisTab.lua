@@ -23,7 +23,9 @@ function LycorisTab.initCheatSettingsSection(groupbox)
 
 		shared.Lycoris.silent = not shared.Lycoris.silent
 
-		Logger.notify("Silent mode is now " .. (shared.Lycoris.silent and "enabled" or "disabled") .. ".")
+		if not shared.Lycoris.silent then
+			Logger.notify("Silent mode was disabled.")
+		end
 
 		if isfile("smarker_ts.txt") then
 			delfile("smarker_ts.txt")
@@ -34,6 +36,7 @@ function LycorisTab.initCheatSettingsSection(groupbox)
 			)
 		end
 	end)
+
 	groupbox:AddButton("Unload Cheat", function()
 		shared.Lycoris.detach()
 	end)
