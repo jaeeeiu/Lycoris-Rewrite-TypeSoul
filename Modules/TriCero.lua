@@ -7,7 +7,7 @@ local Action = getfenv().Action
 return function(self, timing)
 	local action = Action.new()
 	action._type = "Parry"
-	action.hitbox = Vector3.new(20, 25, 170)
+	action.hitbox = Vector3.new(30, 30, 170)
 	action.name = "Keyframe Action"
-	return self:akeyframe(action, 1.31)
+	return self:akeyframe(action, 1.28)
 end
