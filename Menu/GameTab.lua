@@ -183,6 +183,10 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	groupbox:AddButton("Redeem Codes", function()
 		local codes = {
+			"yayfirstweekly",
+			"baragganintorisingswallow",
+			"tmrfrthistimeonshredsylife",
+			"canyouletusbalance",
 			"vdekuglobalban",
 			"jambajuice1v1",
 			"butisitenough",
@@ -200,19 +204,9 @@ function GameTab.initLocalCharacterSection(groupbox)
 			"setrona1vertagzeu0",
 			"excaliburfool",
 			"higuyscode",
-			"thisiswhywetestthosewhoknow",
-			"goplayranked",
-			"somebugsfixes",
 			"800kcodeyeah",
-			"thanksforpatience",
-			"raidsfixed",
-			"compensationforinconvenientrelease",
-			"sorryforthebankbugs",
 			"mythoughtsonthislater",
-			"3daysthosewhoknow",
-			"rerererelease",
 			"privateservercompensation",
-			"promiseddecembercode",
 			"codeforshutdownisuppose",
 		}
 
