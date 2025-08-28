@@ -499,7 +499,7 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
 
-	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
+	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name), false)
 
 	if result then
 		return result
@@ -530,8 +530,14 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	root.CFrame = closest
 
-	result =
-		self:hitbox(options:extrapolate(leniency), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
+	result = self:hitbox(
+		options:extrapolate(leniency),
+		timing.fhb,
+		hitbox,
+		options.filter,
+		PP_SCRAMBLE_STR(timing.name),
+		true
+	)
 
 	root.CFrame = oldCFrame
 
