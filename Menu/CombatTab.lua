@@ -156,6 +156,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 			"Filter Out Undefined",
 			"Disable When Textbox Focused",
 			"Disable When Window Not Active",
+			"Disable When Holding Block",
 		},
 		Multi = true,
 		AllowNull = true,

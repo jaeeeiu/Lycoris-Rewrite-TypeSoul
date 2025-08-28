@@ -10,6 +10,9 @@ local SaveManager = require("GUI/SaveManager")
 ---@module GUI.Library
 local Library = require("GUI/Library")
 
+---@module Utility.Logger
+local Logger = require("Utility/Logger")
+
 ---Initialize Cheat Settings section.
 ---@param groupbox table
 function LycorisTab.initCheatSettingsSection(groupbox)
@@ -20,6 +23,10 @@ function LycorisTab.initCheatSettingsSection(groupbox)
 
 		shared.Lycoris.silent = not shared.Lycoris.silent
 
+		if not shared.Lycoris.silent then
+			Logger.notify("Silent mode was disabled.")
+		end
+
 		if isfile("smarker_ts.txt") then
 			delfile("smarker_ts.txt")
 		else
@@ -29,6 +36,7 @@ function LycorisTab.initCheatSettingsSection(groupbox)
 			)
 		end
 	end)
+
 	groupbox:AddButton("Unload Cheat", function()
 		shared.Lycoris.detach()
 	end)

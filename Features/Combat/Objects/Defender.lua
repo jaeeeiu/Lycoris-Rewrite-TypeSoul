@@ -34,6 +34,9 @@ local InputClient = require("Game/InputClient")
 ---@module Features.Combat.AttributeListener
 local AttributeListener = require("Features/Combat/AttributeListener")
 
+---@module Game.Keybinding
+local Keybinding = require("Game/Keybinding")
+
 ---@class Defender
 ---@field tasks Task[]
 ---@field tmaid Maid Cleaned up every clean cycle.
@@ -194,6 +197,13 @@ Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 
 	if selectedFilters["Disable When Window Not Active"] and iswindowactive and not iswindowactive() then
 		return self:notify(timing, "Window is not active.")
+	end
+
+	if
+		selectedFilters["Disable When Holding Block"]
+		and userInputService:IsKeyDown(Keybinding.info["Block / Parry"] or Enum.KeyCode.F)
+	then
+		return self:notify(timing, "User is holding block.")
 	end
 
 	if timing.tag == "M1" and selectedFilters["Filter Out M1s"] then
@@ -499,7 +509,7 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
 
-	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
+	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name), false)
 
 	if result then
 		return result
@@ -530,8 +540,14 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	root.CFrame = closest
 
-	result =
-		self:hitbox(options:extrapolate(leniency), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name))
+	result = self:hitbox(
+		options:extrapolate(leniency),
+		timing.fhb,
+		hitbox,
+		options.filter,
+		PP_SCRAMBLE_STR(timing.name),
+		true
+	)
 
 	root.CFrame = oldCFrame
 
