@@ -6,10 +6,13 @@ local Action = getfenv().Action
 ---@param timing AnimationTiming
 return function(self, timing)
 	local distance = self:distance(self.entity)
+	repeat
+		task.wait()
+	until self.track.TimePosition >= 0.75
 	local action = Action.new()
-	action._when = 630
+	action._when = 0
 	if distance >= 20 then
-		action._when = math.min(430 + distance * 8.5, 1500)
+		action._when = math.min(1 + distance * 3, 1500)
 	end
 	action._type = "Parry"
 	action.hitbox = Vector3.new(25, 20, 80)
