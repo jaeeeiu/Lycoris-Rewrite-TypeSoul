@@ -25,3 +25,11 @@
 ❌ Auto Mission Board  
 ❌ Auto Mob Grind (i.e kill x mobs)  
 ❌ Auto Save Config (with check delay)
+
+Suggestions :P
+❌ Parry chance
+❌ Dash instead of parry chance (if you're feeling cute make it ignore moves with multiple actions)
+❌ Fake Mistime Rate
+❌ Fix Hold keybind option
+❌ Block input
+❌ Add smoothing to aimlock the closer you are to an opponent (or think of something else to counter the very blatant anti aim spinning)

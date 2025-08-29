@@ -9,10 +9,10 @@ return function(self, timing)
 	local action = Action.new()
 	action._when = 750
 	if distance >= 15 then
-		action._when = math.min(800 + distance * 12.4, 2200)
+		action._when = math.min(795 + distance * 12.4, 2200)
 	end
 	action._type = "Parry"
-	action.hitbox = Vector3.new(25, 20, 30)
+	action.hitbox = Vector3.new(28, 20, 30)
 	action.name = string.format("(%.2f) Dynamic Flowing Passage Timing", distance)
 	return self:action(timing, action)
 end
