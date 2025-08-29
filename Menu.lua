@@ -88,6 +88,8 @@ function Menu.init()
 		"NoClip",
 		"Speedhack",
 		"InfiniteJump",
+		"AttachToBack",
+		"Invisibility",
 	})
 
 	-- Initialize all tabs.
