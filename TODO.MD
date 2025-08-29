@@ -32,3 +32,4 @@ Suggestions :P
 ❌ Fake Mistime Rate
 ❌ Fix Hold keybind option
 ❌ Block input
+❌ Add smoothing to aimlock the closer you are to an opponent (or think of something else to counter the very blatant anti aim spinning)
