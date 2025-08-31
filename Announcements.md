@@ -10,5 +10,5 @@
 + (addition) Added "Chinese Tracker Unit V2" 
 ```
 
-Your commit ID should == "37ac98" when the update is fully pushed to you.
+Your commit ID should == "ccfc72a" when the update is fully pushed to you.
 @Updates
