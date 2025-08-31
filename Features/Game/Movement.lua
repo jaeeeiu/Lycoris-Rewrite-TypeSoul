@@ -247,7 +247,12 @@ return LPH_NO_VIRTUALIZE(function()
 			updateAttachToBack(rootPart)
 		end
 
-		if humanoid.PlatformStand and movementMaid["flyBodyVelocity"] then
+		if
+			humanoid.PlatformStand
+			and movementMaid["flyBodyVelocity"]
+			and Configuration.expectToggleValue("AntiAAGun")
+			and not Configuration.expectToggleValue("Fly")
+		then
 			humanoid.PlatformStand = false
 		end
 
