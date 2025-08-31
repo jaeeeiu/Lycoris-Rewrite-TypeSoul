@@ -141,7 +141,7 @@ function Lycoris.init()
 					{
 						title = "("
 							.. currentElo
-							.. ")"
+							.. " ELO)"
 							.. " ("
 							.. game.PlaceId
 							.. ") User executed on 'Rewrite Type Soul' script!",
