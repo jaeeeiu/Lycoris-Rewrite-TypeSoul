@@ -9,5 +9,5 @@ return function(self, timing)
 	action._type = "Parry"
 	action.hitbox = Vector3.new(15, 15, 12)
 	action.name = "Keyframe Action"
-	return self:akeyframe(action, 0.56)
+	return self:akeyframe(action, 0.50)
 end
