@@ -7,7 +7,7 @@
 **New features?**
 ```diff
 + (addition) Ignore Animation End Rate
-+ (addition) Mobile Support
++ (addition) UI Mobile Support
 ```
 
 Your commit ID should == "37ac98" when the update is fully pushed to you.
