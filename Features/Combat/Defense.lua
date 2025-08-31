@@ -177,12 +177,12 @@ local updateHistory = LPH_NO_VIRTUALIZE(function()
 	for _, object in next, defenderAnimationObjects do
 		local entity = object.entity
 		if not entity then
-			return
+			continue
 		end
 
 		local humanoidRootPart = entity:FindFirstChild("HumanoidRootPart")
 		if not humanoidRootPart then
-			return
+			continue
 		end
 
 		PositionHistory.add(entity, humanoidRootPart.CFrame, tick())

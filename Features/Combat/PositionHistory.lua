@@ -103,11 +103,16 @@ function PositionHistory.stepped(idx, steps, phds)
 
 	return chunks
 end
+
 ---Get closest position (in time) to a timestamp.
 ---@param idx any
 ---@param timestamp number
 ---@return CFrame?
 function PositionHistory.closest(idx, timestamp)
+	if not histories[idx] then
+		return nil
+	end
+
 	local closestDelta = nil
 	local closestPosition = nil
 
