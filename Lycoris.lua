@@ -31,6 +31,9 @@ local CoreGuiManager = require("Utility/CoreGuiManager")
 ---@module Utility.PersistentData
 local PersistentData = require("Utility/PersistentData")
 
+---@module Game.PlayerScanning
+local PlayerScanning = require("Game/PlayerScanning")
+
 ---@module Game.Keybinding
 local Keybinding = require("Game/Keybinding")
 
@@ -112,6 +115,8 @@ function Lycoris.init()
 
 	Logger.warn("Anticheat has been successfully penetrated.")
 
+	PlayerScanning.init()
+
 	Keybinding.init()
 
 	CoreGuiManager.set()
@@ -157,6 +162,8 @@ end
 ---Detach instance.
 function Lycoris.detach()
 	lycorisMaid:clean()
+
+	PlayerScanning.detach()
 
 	Keybinding.detach()
 

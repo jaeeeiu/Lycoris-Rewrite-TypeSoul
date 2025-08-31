@@ -37,6 +37,7 @@ local Defense = {}
 -- Services.
 local players = game:GetService("Players")
 local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
 
 -- Maids.
 local defenseMaid = Maid.new()
@@ -211,17 +212,40 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
+	if target.humanoid.Health <= 0 then
+		return
+	end
+
+	if character:GetAttribute("CurrentState") == "Unconscious" then
+		return
+	end
+
+	if target.character:GetAttribute("CurrentState") == "Unconscious" then
+		return
+	end
+
 	local targetPosition = target.root.Position
 
 	if not Configuration.expectToggleValue("VerticalInfluence") then
 		targetPosition = Vector3.new(targetPosition.X, humanoidRootPart.Position.Y, targetPosition.Z)
 	end
 
+	local targetCFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
+
 	humanoid.AutoRotate = false
-	humanoidRootPart.CFrame = CFrame.lookAt(
-		humanoidRootPart.Position,
-		humanoidRootPart.Position + (targetPosition - humanoidRootPart.Position).Unit
-	)
+
+	-- https://www.unknowncheats.me/forum/counterstrike-global-offensive/141636-scaled-smoothing-adaptive-smoothing.html
+	if Configuration.expectToggleValue("Smoothing") then
+		local alpha = tweenService:GetValue(
+			math.clamp(1 - (Configuration.expectOptionValue("SmoothingFactor") or 0.1), 0, 1),
+			Enum.EasingStyle[Configuration.expectOptionValue("SmoothingStyle") or "Linear"],
+			Enum.EasingDirection[Configuration.expectOptionValue("SmoothingDirection") or "In"]
+		)
+
+		humanoidRootPart.CFrame = humanoidRootPart.CFrame:Lerp(targetCFrame, alpha)
+	else
+		humanoidRootPart.CFrame = targetCFrame
+	end
 end)
 
 ---Update visualizations.

@@ -1,27 +1,29 @@
-@everyone 
+# Type://Soul Rewrite
 
-# Type Soul Rewrite!
-The script is released.
+**Module diff vs. previous snapshot: no changes detected.**
 
-1. Sales will be closed until the 8/26th and I will re-open them up. We're still limited to ~200 users. So, during that time, I will get my Pro plan back.
+**Timing diff vs. previous snapshot: no changes detected.**
 
-2. (https://discord.com/channels/1124587366582059078/1319021375712657459) Look at this channel to see the full list of features along with their caveats. I don't plan on selling a slop script or a cash grab. I also want you as a buyer to be fully aware of what you're getting into.
+**New features?**
+```diff
+- (bug fix) Keybinds should no longer activate while typing or when a textbox is focused
+- (bug fix) Mod detector should now work as intended
+- (bug fix) Ally check should now work as intended
++ (addition) Player ESP now can show combat timer 
++ (addition) Player ESP marks who your allies are (allies is set as who is are Roblox friends)
++ (addition) Disable AP When Holding Block
++ (addition) Disable When Window Not Active
++ (addition) Disable When In Dash
++ (addition) Disable When In Flashstep
++ (addition) Failure Rate
++ (addition) Fixed 'Hold' feature on key pickers (note that, this will not let you toggle it manually)
++ (addition) Dash Instead Of Parry Rate
++ (addition) Fake Parry Mistime Rate
++ (addition) Smoothing Factor
++ (addition) Smoothing Style
++ (addition) Smoothing Direction
+```
+*For smoothing, play around with it and see what is best for you.*
 
-3. All exploits should be supported except for Externals without proper Lua State (e.g Matcha) on the script. Solara support was added but they are very, very laggy.
-
-4. If you open up the menu, you should see the name Linoria V2. This is not a rebrand of the script. I just like Linoria.
-
-5. I'm not going to be awake for your issues and I'm not going to be able to fix them until 5pm PST.
-
-# What Should I Do For Bad AP?
-**You must be a buyer and want to help out.**
-It's unreasonable to think that we have perfect Auto Parry. Currently, we thought it was good enough to release. But, it's a iterative process. 
-
-If you want to fix that issue, consider DMing me to be a tester. All we need you to do is clip bad timings, be active, and give important advice. More importantly, what we are looking for is people with the ability to prog and get moves or people who are simply rich.
-
-We also usually ping in #buyer-announcements if we need anything.
-
-**We do no hidden updates. All updates are super transparent with what timings, modules, and features got updated.**
-
-# What Should I Do For Suggestions And Bug Reports?
-I will bring the bot up tommorow. You may complain in chat.
+Your commit ID should == "9a213e" when the update is fully pushed to you.
+@Updates

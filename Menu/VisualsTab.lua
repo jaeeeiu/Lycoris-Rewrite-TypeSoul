@@ -122,6 +122,15 @@ end
 ---@param identifier string
 ---@param depbox table
 function VisualsTab.addPlayerESP(identifier, depbox)
+	local markAlliesToggle = depbox:AddToggle(Configuration.identify(identifier, "MarkAllies"), {
+		Text = "Mark Allies",
+		Default = false,
+	})
+
+	markAlliesToggle:AddColorPicker(Configuration.identify(identifier, "AllyColor"), {
+		Default = Color3.new(1, 1, 1),
+	})
+
 	depbox:AddToggle(Configuration.identify(identifier, "ShowHealthPercentage"), {
 		Text = "Show Health Percentage",
 		Default = false,
@@ -144,6 +153,12 @@ function VisualsTab.addPlayerESP(identifier, depbox)
 
 	depbox:AddToggle(Configuration.identify(identifier, "ShowElement"), {
 		Text = "Show Element",
+		Default = false,
+	})
+
+	depbox:AddToggle(Configuration.identify(identifier, "ShowCombatTimer"), {
+		Text = "Show Combat Timer",
+		Tooltip = "Show how long they have until they are out of combat.",
 		Default = false,
 	})
 

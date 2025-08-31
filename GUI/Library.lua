@@ -1636,8 +1636,12 @@ return LPH_NO_VIRTUALIZE(function()
 			local ModeButtons = {}
 
 			function KeyPicker:DoClick()
-				if ParentObj.Type == "Toggle" and KeyPicker.SyncToggleState then
+				if KeyPicker.Mode == "Toggle" and ParentObj.Type == "Toggle" and KeyPicker.SyncToggleState then
 					ParentObj:SetValue(not ParentObj.Value)
+				end
+
+				if KeyPicker.Mode == "Hold" and ParentObj.Type == "Toggle" and KeyPicker.SyncToggleState then
+					ParentObj:SetValue(KeyPicker.Toggled)
 				end
 
 				Library:SafeCallback("KeyPicker_Callback" .. "_" .. (Idx or ""), KeyPicker.Callback, KeyPicker.Toggled)
@@ -1735,7 +1739,7 @@ return LPH_NO_VIRTUALIZE(function()
 				elseif KeyPicker.Mode == "Off" then
 					return false
 				elseif KeyPicker.Mode == "Hold" then
-					if KeyPicker.Value == "None" then
+					if KeyPicker.Value == "N/A" then
 						return false
 					end
 
@@ -1845,6 +1849,14 @@ return LPH_NO_VIRTUALIZE(function()
 			end)
 
 			Library:GiveSignal(InputService.InputBegan:Connect(function(Input, ProcessedByGame)
+				local textChatService = game:GetService("TextChatService")
+				local userInputService = game:GetService("UserInputService")
+				local chatInputBarConfiguration = textChatService:FindFirstChildOfClass("ChatInputBarConfiguration")
+
+				if userInputService:GetFocusedTextBox() or chatInputBarConfiguration.IsFocused then
+					return
+				end
+
 				if not Picking then
 					if KeyPicker.Mode == "Toggle" then
 						local Key = KeyPicker.Value
@@ -1863,6 +1875,25 @@ return LPH_NO_VIRTUALIZE(function()
 								KeyPicker:DoClick()
 							end
 						end
+					end
+
+					if KeyPicker.Mode == "Hold" then
+						pcall(function()
+							local Key = KeyPicker.Value
+
+							if Key == "MB1" then
+								KeyPicker.Toggled = InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+							elseif Key == "MB2" then
+								KeyPicker.Toggled = InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+							end
+
+							if Key == "MB1" or Key == "MB2" then
+								KeyPicker:DoClick()
+							else
+								KeyPicker.Toggled = InputService:IsKeyDown(Enum.KeyCode[Key])
+								KeyPicker:DoClick()
+							end
+						end)
 					end
 
 					KeyPicker:Update()
@@ -1884,6 +1915,25 @@ return LPH_NO_VIRTUALIZE(function()
 
 			Library:GiveSignal(InputService.InputEnded:Connect(function(Input, ProcessedByGame)
 				if not Picking then
+					if KeyPicker.Mode == "Hold" then
+						pcall(function()
+							local Key = KeyPicker.Value
+
+							if Key == "MB1" then
+								KeyPicker.Toggled = InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+							elseif Key == "MB2" then
+								KeyPicker.Toggled = InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+							end
+
+							if Key == "MB1" or Key == "MB2" then
+								KeyPicker:DoClick()
+							else
+								KeyPicker.Toggled = InputService:IsKeyDown(Enum.KeyCode[Key])
+								KeyPicker:DoClick()
+							end
+						end)
+					end
+
 					KeyPicker:Update()
 				end
 			end))
