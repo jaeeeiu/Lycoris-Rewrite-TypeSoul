@@ -35,6 +35,8 @@ function AnimationBuilderSection:exload(timing)
 	self.ignoreAnimationEnd:SetRawValue(timing.iae)
 	self.ignoreEarlyAnimationEnd:SetRawValue(timing.ieae)
 	self.maxAnimationTimeout:SetRawValue(timing.mat)
+	self.pastHitboxDetection:SetRawValue(timing.phd)
+	self.predictFacingHitboxes:SetRawValue(timing.pfh)
 end
 
 ---Reset the elements. Extend me.
@@ -49,6 +51,8 @@ function AnimationBuilderSection:reset()
 	self.ignoreAnimationEnd:SetRawValue(false)
 	self.ignoreEarlyAnimationEnd:SetRawValue(false)
 	self.maxAnimationTimeout:SetRawValue(2000)
+	self.pastHitboxDetection:SetRawValue(false)
+	self.predictFacingHitboxes:SetRawValue(false)
 end
 
 ---Check before creating new timing. Override me.
@@ -128,6 +132,40 @@ function AnimationBuilderSection:extra(tab)
 		Default = false,
 		Callback = self:tnc(function(timing, value)
 			timing.ieae = value
+		end),
+	})
+
+	self.pastHitboxDetection = tab:AddToggle(nil, {
+		Text = "Past Hitbox Detection",
+		Default = false,
+		Tooltip = "Should the hitbox detection track the past hitboxes too?",
+		Callback = self:tnc(function(timing, value)
+			timing.phd = value
+		end),
+	})
+
+	local pfdOffDepBox = tab:AddDependencyBox()
+
+	pfdOffDepBox:AddSlider(nil, {
+		Text = "History Seconds",
+		Tooltip = "How far back in seconds should we fetch history? This is limited to 3 seconds.",
+		Default = 0,
+		Numeric = true,
+		Callback = self:tnc(function(timing, value)
+			timing.phds = tonumber(value) or 0
+		end),
+	})
+
+	pfdOffDepBox:SetupDependencies({
+		{ self.pastHitboxDetection, true },
+	})
+
+	self.predictFacingHitboxes = tab:AddToggle(nil, {
+		Text = "Predict Facing Hitboxes",
+		Default = false,
+		Tooltip = "Should we make a prediction on the facing direction and make a hitbox on that?",
+		Callback = self:tnc(function(timing, value)
+			timing.pfh = value
 		end),
 	})
 end

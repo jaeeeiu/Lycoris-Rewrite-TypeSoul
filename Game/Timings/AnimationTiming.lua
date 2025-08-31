@@ -10,6 +10,7 @@ local Timing = require("Game/Timings/Timing")
 ---@param iae boolean Flag to see whether or not this timing should ignore animation end.
 ---@field phd boolean Past hitbox detection.
 ---@field pfh boolean Predict hitboxes facing.
+---@field phds number History seconds for past hitbox detection.
 ---@param ieae boolean Flag to see whether or not this timing should ignore early animation end.
 ---@param mat number Max animation timeout in milliseconds.
 local AnimationTiming = setmetatable({}, { __index = Timing })
@@ -85,6 +86,10 @@ function AnimationTiming:load(values)
 	if typeof(values.pfh) == "boolean" then
 		self.pfh = values.pfh
 	end
+
+	if typeof(values.phds) == "number" then
+		self.phds = values.phds
+	end
 end
 
 ---Clone timing.
@@ -102,6 +107,7 @@ function AnimationTiming:clone()
 	clone.mat = self.mat
 	clone.phd = self.phd
 	clone.pfh = self.pfh
+	clone.phds = self.phds
 
 	return clone
 end
@@ -121,6 +127,7 @@ function AnimationTiming:serialize()
 	serializable.mat = self.mat
 	serializable.phd = self.phd
 	serializable.pfh = self.pfh
+	serializable.phds = self.phds
 
 	return serializable
 end
@@ -141,6 +148,7 @@ function AnimationTiming.new(values)
 	self.mat = 2000
 	self.phd = false
 	self.pfh = false
+	self.phds = 0
 
 	if values then
 		self:load(values)

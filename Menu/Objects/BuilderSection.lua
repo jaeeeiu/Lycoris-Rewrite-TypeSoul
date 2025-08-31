@@ -781,24 +781,6 @@ function BuilderSection:builder()
 		end),
 	})
 
-	self.pastHitboxDetection = tab:AddToggle(nil, {
-		Text = "Past Hitbox Detection",
-		Default = false,
-		Tooltip = "Should the hitbox detection track the past hitboxes too?",
-		Callback = self:tnc(function(timing, value)
-			timing.phd = value
-		end),
-	})
-
-	self.predictFacingHitboxes = tab:AddToggle(nil, {
-		Text = "Predict Facing Hitboxes",
-		Default = false,
-		Tooltip = "Should we make a prediction on the facing direction and make a hitbox on that?",
-		Callback = self:tnc(function(timing, value)
-			timing.pfh = value
-		end),
-	})
-
 	self.hitboxFacingOffset = tab:AddToggle(nil, {
 		Text = "Hitbox Facing Offset",
 		Tooltip = "Should the hitbox be offset towards the facing direction?",

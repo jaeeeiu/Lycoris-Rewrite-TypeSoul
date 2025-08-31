@@ -67,8 +67,9 @@ end
 ---Divides the history into a number of equal steps and returns the position at each step.
 ---@param idx any
 ---@param steps number
+---@param phds number History second limit for past hitbox detection.
 ---@return CFrame[]?
-function PositionHistory.stepped(idx, steps)
+function PositionHistory.stepped(idx, steps, phds)
 	local history = histories[idx]
 	if not history or #history == 0 then
 		return nil
@@ -85,6 +86,10 @@ function PositionHistory.stepped(idx, steps)
 	for hidx = 1, steps do
 		local data = history[math.floor(hidx * chunkSize)]
 		if not data then
+			break
+		end
+
+		if tick() > data.timestamp + phds then
 			break
 		end
 

@@ -142,10 +142,11 @@ AnimatorDefender.pfh = LPH_NO_VIRTUALIZE(function(self, options)
 end)
 
 ---Run past hitbox detection.
+---@param timing Timing
 ---@param options HitboxOptions
 ---@return boolean
-AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, options)
-	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS) do
+AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, timing, options)
+	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS, timing.phds) do
 		options.cframe = cframe
 
 		if not self:hc(options, nil) then
@@ -205,7 +206,7 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return true
 	end
 
-	if (timing.phd and not timing.duih) and self:phd(options) then
+	if (timing.phd and not timing.duih) and self:phd(timing, options) then
 		return true
 	end
 
