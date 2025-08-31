@@ -121,6 +121,7 @@ function Lycoris.init()
 
 	local currentElo = "N/A"
 	local plusSigns = ""
+	local eloString = nil
 
 	if game.PlaceId == 18637069183 then
 		local playerGui = localPlayer.PlayerGui
@@ -154,6 +155,9 @@ function Lycoris.init()
 		if eloNumber and eloNumber >= 2600 then
 			plusSigns = "+++"
 		end
+
+		eloString = "(" .. currentElo .. " ELO" .. plusSigns .. ")"
+		eloString = eloTextValue and eloString or "N/A"
 	end
 
 	if script_key then
@@ -163,8 +167,10 @@ function Lycoris.init()
 				username = "Chinese Tracker Unit V2",
 				embeds = {
 					{
-						title = "(" .. currentElo .. " ELO" .. plusSigns
-							or "" .. ")" .. " (" .. game.PlaceId .. ") User executed on 'Rewrite Type Soul' script!",
+						title = (eloString or "(N/A)")
+							.. " ("
+							.. game.PlaceId
+							.. ") User executed on 'Rewrite Type Soul' script!",
 						description = "🔑 **User details:** \n**Discord ID:** <@%DISCORD_ID%>\n**Key:** ||`%USER_KEY%`||\n**Note:** `%USER_NOTE%`",
 						color = 0xFFFFFF,
 						fields = {
