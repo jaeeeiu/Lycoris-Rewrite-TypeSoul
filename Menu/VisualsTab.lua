@@ -156,12 +156,6 @@ function VisualsTab.addPlayerESP(identifier, depbox)
 		Default = false,
 	})
 
-	depbox:AddToggle(Configuration.identify(identifier, "ShowCombatTimer"), {
-		Text = "Show Combat Timer",
-		Tooltip = "Show how long they have until they are out of combat.",
-		Default = false,
-	})
-
 	depbox:AddDropdown(Configuration.identify(identifier, "PlayerNameType"), {
 		Text = "Player Name Type",
 		Default = 1,

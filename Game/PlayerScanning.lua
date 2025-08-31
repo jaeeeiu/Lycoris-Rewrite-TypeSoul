@@ -90,21 +90,6 @@ local runPlayerScans = LPH_NO_VIRTUALIZE(function()
 			PlayerScanning.scanDataCache[player] = { staffRank = result }
 		end
 
-		local backpack = player:FindFirstChild("Backpack")
-		if not backpack then
-			return
-		end
-
-		if not collectionService:HasTag(backpack, "Loaded") or #backpack:GetChildren() < 1 then
-			if not PlayerScanning.waitingForLoad[player] then
-				Logger.warn("Player scanning is waiting for %s to load in the game.", fetchName(player))
-			end
-
-			PlayerScanning.waitingForLoad[player] = true
-
-			continue
-		end
-
 		PlayerScanning.scanQueue[player] = nil
 
 		PlayerScanning.friendCache[player] = localPlayer:GetFriendStatus(player) == Enum.FriendStatus.Friend

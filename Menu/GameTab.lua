@@ -39,6 +39,12 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	local flyDepBox = groupbox:AddDependencyBox()
 
+	flyDepBox:AddToggle("AntiAAGun", {
+		Text = "Anti AA Gun",
+		Tooltip = "Prevent the anti-air gun from targeting you.",
+		Default = false,
+	})
+
 	flyDepBox:AddSlider("FlySpeed", {
 		Text = "Fly Speed",
 		Default = 200,

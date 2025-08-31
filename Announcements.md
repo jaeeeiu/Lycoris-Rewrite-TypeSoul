@@ -22,8 +22,9 @@
 + (addition) Smoothing Factor
 + (addition) Smoothing Style
 + (addition) Smoothing Direction
++ (addition) Anti AA Gun
 ```
 *For smoothing, play around with it and see what is best for you.*
 
-Your commit ID should == "9a213e" when the update is fully pushed to you.
+Your commit ID should == "ed3232" when the update is fully pushed to you.
 @Updates

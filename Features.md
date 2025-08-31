@@ -41,6 +41,36 @@
 # Builder Tab (developer locked)
 ❌ Auto Save Config (with check delay)
 
+# Game Tab
+1. (caveat) All notification sounds were ported from DW. They are currently broken and I will have to re-upload after release.
+
+2. (caveat) Not every type of Slowdown has been tested. For example, getting hit will still cancel your sprint. It will be fixed after release.
+
+3. (caveat) This list of codes could be outdated or be more outdated with time. Just let me know.
+
++ Debugging
+  - Show Debug Information (currently hovered part, position)
++ Player Monitoring
+  - Mod Notifications
+  - Mod Notification Sound (see 1.)
+  - Player List Spectating
+  - Show Roblox Chat
+  - Show Network Ownership
+  - Player Proximity Notifications
+  - Play Beep Sound (see 1.)
++ Local Character
+  - Speedhack, Noclip, Infinite Jump
+  - Fly
+    - Anti AA Gun 
+  - Flashstep Speed Boost
+  - Attach To Back
+  - Anchor & Respawn Character
+  - Redeem Codes (see 3.)
++ Effect Removals
+  - No Slowdown (see 2.)
++ Instance Removals
+  - No Raid Music
+  - 
 # Visuals Tab
 1. (caveat) This was not able to be 100% fully ported. The color seems to be a bit more dulled here? I'll look into it after release.
 
