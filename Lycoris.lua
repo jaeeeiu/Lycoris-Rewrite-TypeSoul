@@ -1,5 +1,5 @@
 -- Detach and initialize a Lycoris instance.
-local Lycoris = { queued = false, silent = false }
+local Lycoris = { queued = false, silent = false, dpscanning = false }
 
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
@@ -66,6 +66,10 @@ function Lycoris.init()
 
 	if isfile and isfile("smarker_ts.txt") then
 		Lycoris.silent = true
+	end
+
+	if isfile and isfile("dpscanning_ts.txt") then
+		Lycoris.dpscanning = true
 	end
 
 	if script_key and queue_on_teleport and not Lycoris.queued and not no_queue_on_teleport then

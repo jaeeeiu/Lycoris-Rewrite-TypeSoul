@@ -37,6 +37,29 @@ function LycorisTab.initCheatSettingsSection(groupbox)
 		end
 	end)
 
+	groupbox:AddButton("Toggle Player Scanning", function()
+		if not isfile or not delfile or not writefile then
+			return
+		end
+
+		shared.Lycoris.dpscanning = not shared.Lycoris.dpscanning
+
+		if not shared.Lycoris.dpscanning then
+			Logger.notify("Player scanning was disabled.")
+		else
+			Logger.notify("Player scanning was enabled.")
+		end
+
+		if isfile("dpscanning_ts.txt") then
+			delfile("dpscanning_ts.txt")
+		else
+			writefile(
+				"dpscanning_ts.txt",
+				"Hello, if you're reading this, that means you have Lycoris-Rewrite-TypeSoul player scanning turned off. Deleting this file will turn it on."
+			)
+		end
+	end)
+
 	groupbox:AddButton("Unload Cheat", function()
 		shared.Lycoris.detach()
 	end)

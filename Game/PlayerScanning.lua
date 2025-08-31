@@ -55,6 +55,10 @@ local runPlayerScans = LPH_NO_VIRTUALIZE(function()
 	end
 
 	for player, _ in next, PlayerScanning.scanQueue do
+		if shared.Lycoris.dpscanning then
+			continue
+		end
+
 		if not PlayerScanning.scanDataCache[player] then
 			local success, result = pcall(PlayerScanning.getStaffRank, player)
 
