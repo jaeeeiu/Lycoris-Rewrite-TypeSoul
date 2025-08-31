@@ -2898,8 +2898,8 @@ return LPH_NO_VIRTUALIZE(function()
 						Slider:Display()
 
 						if newValue ~= oldValue then
-							Library:SafeCallback(Slider.Callback, Slider.Value)
-							Library:SafeCallback(Slider.Changed, Slider.Value)
+							Library:SafeCallback("Slider_Callback" .. "_" .. (Idx or ""), Slider.Callback, Slider.Value)
+							Library:SafeCallback("Slider_Changed" .. "_" .. (Idx or ""), Slider.Changed, Slider.Value)
 						end
 
 						RenderStepped:Wait()

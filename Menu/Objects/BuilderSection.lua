@@ -172,6 +172,7 @@ end
 ---@return function(...)
 function BuilderSection:tnc(callback)
 	return function(...)
+		print(...)
 		-- If no value, return.
 		if not self.timingList.Value then
 			return Logger.warn("No timing selected.")
