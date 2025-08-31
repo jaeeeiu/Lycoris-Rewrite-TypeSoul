@@ -6,13 +6,12 @@ local Action = getfenv().Action
 ---@param timing AnimationTiming
 return function(self, timing)
 	local distance = self:distance(self.entity)
+
 	local action = Action.new()
-	action._when = 370
-	if distance >= 8 then
-		action._when = math.min(400 + distance * 13.1, 1500)
-	end
-	action._type = "Parry"
-	action.hitbox = Vector3.new(14, 15, 20)
-	action.name = string.format("(%.2f) Dynamic Confliction Timing", distance)
+	action._when = math.min(1300 + distance * 7.6, 2000)
+	action._type = "Dash"
+	action.hitbox = Vector3.new(140, 50, 140)
+	action.name = string.format("(%.2f) Dynamic Reishi Bomb Timing", distance)
+
 	return self:action(timing, action)
 end

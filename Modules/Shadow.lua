@@ -25,7 +25,7 @@ return function(self, timing)
 	timing.fhb = false
 
 	local action = Action.new()
-	action._when = 335
+	action._when = 320
 	action._type = "Parry"
 	action.ihbc = false
 	action.hitbox = Vector3.new(50, 50, 50)
