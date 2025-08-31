@@ -349,6 +349,8 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		vpart.Parent = workspace
 		vpart.Anchored = true
 		vpart.CanCollide = false
+		vpart.CanQuery = false
+		vpart.CanTouch = false
 		vpart.Material = Enum.Material.ForceField
 		vpart.CastShadow = false
 
@@ -363,6 +365,8 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 		ppart.Parent = workspace
 		ppart.Anchored = true
 		ppart.CanCollide = false
+		ppart.CanQuery = false
+		ppart.CanTouch = false
 		ppart.Material = Enum.Material.ForceField
 		ppart.CastShadow = false
 

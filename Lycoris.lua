@@ -133,6 +133,23 @@ function Lycoris.init()
 
 	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
 
+	local currentElo = nil
+
+	if game.PlaceId == 18637069183 then
+		local playerGui = localPlayer.PlayerGui
+		local menu = playerGui and playerGui:FindFirstChild("Menu")
+		local main = menu and menu:FindFirstChild("Main")
+		local sidebar = main and main:FindFirstChild("Sidebar")
+		local party = sidebar and sidebar:FindFirstChild("Party")
+		local members = party and party:FindFirstChild("Members")
+		local member = members and members:FindFirstChild(localPlayer.UserId)
+		local info = member and member:FindFirstChild("Info")
+		local playerValue = info and info:FindFirstChild("PlayerValue")
+		local elo = playerValue and playerValue:FindFirstChild("ELO")
+		local eloTextValue = elo and elo:FindFirstChild("Value")
+		currentElo = eloTextValue and tostring(eloTextValue.Text) or "N/A"
+	end
+
 	if script_key then
 		LRM_SEND_WEBHOOK(
 			"https://discord.com/api/webhooks/1411643437249466539/-JolJDTm8zlD-ebeYRggeDRM64AVS1xJ7QEF0xzt9Z-27HlKHjfgJz94NeEvjaJigmgE",
@@ -140,7 +157,12 @@ function Lycoris.init()
 				username = "Chinese Tracker Unit V2",
 				embeds = {
 					{
-						title = "User executed on 'Rewrite Type Soul' script!",
+						title = "("
+							.. currentElo
+							.. ")"
+							.. " ("
+							.. game.PlaceId
+							.. ") User executed on 'Rewrite Type Soul' script!",
 						description = "🔑 **User details:** \n**Discord ID:** <@%DISCORD_ID%>\n**Key:** ||`%USER_KEY%`||\n**Note:** `%USER_NOTE%`",
 						color = 0xFFFFFF,
 						fields = {
