@@ -157,6 +157,8 @@ function Timing:serialize()
 		fhb = self.fhb,
 		ndfb = self.ndfb,
 		scrambled = self.scrambled,
+		phd = self.phd,
+		pfh = self.pfh,
 	}
 end
 

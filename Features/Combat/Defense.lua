@@ -174,6 +174,20 @@ end)
 
 ---Update history.
 local updateHistory = LPH_NO_VIRTUALIZE(function()
+	for _, object in next, defenderAnimationObjects do
+		local entity = object.entity
+		if not entity then
+			return
+		end
+
+		local humanoidRootPart = entity:FindFirstChild("HumanoidRootPart")
+		if not humanoidRootPart then
+			return
+		end
+
+		PositionHistory.add(entity, humanoidRootPart.CFrame, tick())
+	end
+
 	local character = players.LocalPlayer.Character
 	if not character then
 		return
@@ -184,7 +198,7 @@ local updateHistory = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
-	PositionHistory.add(humanoidRootPart.CFrame, tick())
+	PositionHistory.add(players.LocalPlayer, humanoidRootPart.CFrame, tick())
 end)
 
 ---Update assistance.

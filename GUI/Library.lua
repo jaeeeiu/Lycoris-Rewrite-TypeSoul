@@ -650,14 +650,20 @@ return LPH_NO_VIRTUALIZE(function()
 		Instance.Active = true
 
 		Instance.InputBegan:Connect(function(Input)
-			if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if
+				Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Input.UserInputType == Enum.UserInputType.Touch
+			then
 				local ObjPos = Vector2.new(Mouse.X - Instance.AbsolutePosition.X, Mouse.Y - Instance.AbsolutePosition.Y)
 
 				if ObjPos.Y > (Cutoff or 40) then
 					return
 				end
 
-				while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+				while
+					InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+					or InputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
+				do
 					Instance.Position = UDim2.new(
 						0,
 						Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
@@ -1246,7 +1252,10 @@ return LPH_NO_VIRTUALIZE(function()
 					Library:OnHighlight(Button, Button, { TextColor3 = "AccentColor" }, { TextColor3 = "FontColor" })
 
 					Button.InputBegan:Connect(function(Input)
-						if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+						if
+							Input.UserInputType ~= Enum.UserInputType.Touch
+							and Input.UserInputType ~= Enum.UserInputType.MouseButton1
+						then
 							return
 						end
 
@@ -1416,8 +1425,14 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			SatVibMap.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-					while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+				if
+					Input.UserInputType == Enum.UserInputType.Touch
+					or Input.UserInputType == Enum.UserInputType.MouseButton1
+				then
+					while
+						InputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
+						or InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+					do
 						local MinX = SatVibMap.AbsolutePosition.X
 						local MaxX = MinX + SatVibMap.AbsoluteSize.X
 						local MouseX = math.clamp(Mouse.X, MinX, MaxX)
@@ -1438,8 +1453,14 @@ return LPH_NO_VIRTUALIZE(function()
 			end)
 
 			HueSelectorInner.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-					while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+				if
+					Input.UserInputType == Enum.UserInputType.Touch
+					or Input.UserInputType == Enum.UserInputType.MouseButton1
+				then
+					while
+						InputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
+						or InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+					do
 						local MinY = HueSelectorInner.AbsolutePosition.Y
 						local MaxY = MinY + HueSelectorInner.AbsoluteSize.Y
 						local MouseY = math.clamp(Mouse.Y, MinY, MaxY)
@@ -1455,7 +1476,12 @@ return LPH_NO_VIRTUALIZE(function()
 			end)
 
 			DisplayFrame.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+				if
+					(
+						Input.UserInputType == Enum.UserInputType.Touch
+						or Input.UserInputType == Enum.UserInputType.MouseButton1
+					) and not Library:MouseIsOverOpenedFrame()
+				then
 					if PickerFrameOuter.Visible then
 						ColorPicker:Hide()
 					else
@@ -1463,7 +1489,10 @@ return LPH_NO_VIRTUALIZE(function()
 						ColorPicker:Show()
 					end
 				elseif
-					Input.UserInputType == Enum.UserInputType.MouseButton2 and not Library:MouseIsOverOpenedFrame()
+					(
+						Input.UserInputType == Enum.UserInputType.MouseButton2Touch
+						or Input.UserInputType == Enum.UserInputType.MouseButton1
+					) and not Library:MouseIsOverOpenedFrame()
 				then
 					ContextMenu:Show()
 					ColorPicker:Hide()
@@ -1472,8 +1501,14 @@ return LPH_NO_VIRTUALIZE(function()
 
 			if TransparencyBoxInner then
 				TransparencyBoxInner.InputBegan:Connect(function(Input)
-					if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-						while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+					if
+						Input.UserInputType == Enum.UserInputType.Touch
+						or Input.UserInputType == Enum.UserInputType.MouseButton1
+					then
+						while
+							InputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
+							or InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+						do
 							local MinX = TransparencyBoxInner.AbsolutePosition.X
 							local MaxX = MinX + TransparencyBoxInner.AbsoluteSize.X
 							local MouseX = math.clamp(Mouse.X, MinX, MaxX)
@@ -1745,9 +1780,12 @@ return LPH_NO_VIRTUALIZE(function()
 
 					local Key = KeyPicker.Value
 
-					if Key == "MB1" or Key == "MB2" then
-						return Key == "MB1" and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-							or Key == "MB2" and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+					if Key == "MB1" then
+						return InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+							or InputService.TouchEnabled and #InputService.Touches > 0
+					elseif Key == "MB2" then
+						return InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+							or InputService.TouchEnabled and #InputService.Touches > 1
 					else
 						return InputService:IsKeyDown(Enum.KeyCode[KeyPicker.Value])
 					end
@@ -1807,7 +1845,10 @@ return LPH_NO_VIRTUALIZE(function()
 					Event = InputService.InputBegan:Connect(function(Input)
 						local Key
 
-						if Input.UserInputType == Enum.UserInputType.Keyboard then
+						if
+							Input.UserInputType == Enum.UserInputType.Keyboard
+							or Input.UserInputType == Enum.UserInputType.Touch
+						then
 							Key = Input.KeyCode.Name
 						elseif Input.UserInputType == Enum.UserInputType.MouseButton1 then
 							Key = "MB1"
@@ -1874,6 +1915,11 @@ return LPH_NO_VIRTUALIZE(function()
 								KeyPicker.Toggled = not KeyPicker.Toggled
 								KeyPicker:DoClick()
 							end
+						elseif Input.UserInputType == Enum.UserInputType.Touch then
+							if Input.KeyCode.Name == Key then
+								KeyPicker.Toggled = not KeyPicker.Toggled
+								KeyPicker:DoClick()
+							end
 						end
 					end
 
@@ -1899,7 +1945,10 @@ return LPH_NO_VIRTUALIZE(function()
 					KeyPicker:Update()
 				end
 
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if
+					Input.UserInputType == Enum.UserInputType.Touch
+					or Input.UserInputType == Enum.UserInputType.MouseButton1
+				then
 					local AbsPos, AbsSize = ModeSelectOuter.AbsolutePosition, ModeSelectOuter.AbsoluteSize
 
 					if
@@ -2133,7 +2182,10 @@ return LPH_NO_VIRTUALIZE(function()
 						return false
 					end
 
-					if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
+					if
+						Input.UserInputType ~= Enum.UserInputType.MouseButton1
+						and Input.UserInputType ~= Enum.UserInputType.Touch
+					then
 						return false
 					end
 
@@ -2615,7 +2667,12 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			ToggleRegion.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+				if
+					(
+						Input.UserInputType == Enum.UserInputType.MouseButton1
+						or Input.UserInputType == Enum.UserInputType.Touch
+					) and not Library:MouseIsOverOpenedFrame()
+				then
 					Toggle:SetValue(not Toggle.Value) -- Why was it not like this from the start?
 					Library:AttemptSave()
 				end
@@ -2813,26 +2870,36 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			local CurrentAmount = 0.01
+			local isInputChangedConnected = true
+			local isInputEndedConnected = false
 
 			SliderInner.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-					local mPos = Mouse.X
-					local gPos = Fill.Size.X.Offset
-					local Diff = mPos - (Fill.AbsolutePosition.X + gPos)
+				isInputEndedConnected = false
 
-					while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-						local nMPos = Mouse.X
-						local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize)
+				if
+					(
+						Input.UserInputType == Enum.UserInputType.MouseButton1
+						or Input.UserInputType == Enum.UserInputType.Touch
+					) and not Library:MouseIsOverOpenedFrame()
+				then
+					local isTouch = Input.UserInputType == Enum.UserInputType.Touch
+					local startPos = isTouch and Input.Position.X or Mouse.X
+					local startFillPos = Fill.Size.X.Offset
+					local diff = startPos - (Fill.AbsolutePosition.X + startFillPos)
 
-						local nValue = Slider:GetValueFromXOffset(nX)
-						local OldValue = Slider.Value
-						Slider.Value = nValue
+					while isInputChangedConnected and not isInputEndedConnected do
+						local newPos = isTouch and Input.Position.X or Mouse.X
+						local newX = math.clamp(startFillPos + (newPos - startPos) + diff, 0, Slider.MaxSize)
+
+						local newValue = Slider:GetValueFromXOffset(newX)
+						local oldValue = Slider.Value
+						Slider.Value = newValue
 
 						Slider:Display()
 
-						if nValue ~= OldValue then
-							Library:SafeCallback("Slider_Callback" .. "_" .. (Idx or ""), Slider.Callback, Slider.Value)
-							Library:SafeCallback("Slider_Changed" .. "_" .. (Idx or ""), Slider.Changed, Slider.Value)
+						if newValue ~= oldValue then
+							Library:SafeCallback(Slider.Callback, Slider.Value)
+							Library:SafeCallback(Slider.Changed, Slider.Value)
 						end
 
 						RenderStepped:Wait()
@@ -2856,6 +2923,10 @@ return LPH_NO_VIRTUALIZE(function()
 				if Input.KeyCode == Enum.KeyCode.Left then
 					Slider:SetValue(Slider.Value - CurrentAmount)
 				end
+			end)
+
+			SliderInner.InputEnded:Connect(function()
+				isInputEndedConnected = true
 			end)
 
 			Slider:Display()
@@ -3162,7 +3233,10 @@ return LPH_NO_VIRTUALIZE(function()
 					end
 
 					ButtonLabel.InputBegan:Connect(function(Input)
-						if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+						if
+							Input.UserInputType == Enum.UserInputType.MouseButton1
+							or Input.UserInputType == Enum.UserInputType.Touch
+						then
 							local Try = not Selected
 
 							if Dropdown:GetActiveValues() == 1 and not Try and not Info.AllowNull then
@@ -3295,7 +3369,12 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			DropdownOuter.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+				if
+					(
+						Input.UserInputType == Enum.UserInputType.Touch
+						or Input.UserInputType == Enum.UserInputType.MouseButton1
+					) and not Library:MouseIsOverOpenedFrame()
+				then
 					if ListOuter.Visible then
 						Dropdown:CloseDropdown()
 					else
@@ -3305,7 +3384,10 @@ return LPH_NO_VIRTUALIZE(function()
 			end)
 
 			InputService.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if
+					Input.UserInputType == Enum.UserInputType.Touch
+					or Input.UserInputType == Enum.UserInputType.MouseButton1
+				then
 					local AbsPos, AbsSize = ListOuter.AbsolutePosition, ListOuter.AbsoluteSize
 
 					if
@@ -4551,8 +4633,10 @@ return LPH_NO_VIRTUALIZE(function()
 
 					Button.InputBegan:Connect(function(Input)
 						if
-							Input.UserInputType == Enum.UserInputType.MouseButton1
-							and not Library:MouseIsOverOpenedFrame()
+							(
+								Input.UserInputType == Enum.UserInputType.Touch
+								or Input.UserInputType == Enum.UserInputType.MouseButton1
+							) and not Library:MouseIsOverOpenedFrame()
 						then
 							Tab:Show()
 							Tab:Resize()
@@ -4598,7 +4682,10 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			TabButton.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if
+					Input.UserInputType == Enum.UserInputType.Touch
+					or Input.UserInputType == Enum.UserInputType.MouseButton1
+				then
 					Tab:ShowTab()
 				end
 			end)
@@ -4714,8 +4801,10 @@ return LPH_NO_VIRTUALIZE(function()
 		Library:GiveSignal(InputService.InputBegan:Connect(function(Input, Processed)
 			if type(Library.ToggleKeybind) == "table" and Library.ToggleKeybind.Type == "KeyPicker" then
 				if
-					Input.UserInputType == Enum.UserInputType.Keyboard
-					and Input.KeyCode.Name == Library.ToggleKeybind.Value
+					(
+						Input.UserInputType == Enum.UserInputType.Touch
+						or Input.UserInputType == Enum.UserInputType.Keyboard
+					) and Input.KeyCode.Name == Library.ToggleKeybind.Value
 				then
 					task.spawn(Library.Toggle)
 				end

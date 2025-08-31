@@ -37,6 +37,9 @@ local Task = require("Features/Combat/Objects/Task")
 ---@module Utility.TaskSpawner
 local TaskSpawner = require("Utility/TaskSpawner")
 
+---@module Features.Combat.PositionHistory
+local PositionHistory = require("Features/Combat/PositionHistory")
+
 ---@class AnimatorDefender: Defender
 ---@field animator Animator
 ---@field entity Model
@@ -59,6 +62,8 @@ local players = game:GetService("Players")
 
 -- Constants.
 local MAX_REPEAT_TIME = 5.0
+local HISTORY_STEPS = 5.0
+local PREDICTION_LENIENCY_MULTI = 5.0
 
 ---Is animation stopped? Made into a function for de-duplication.
 ---@param self AnimatorDefender
@@ -98,6 +103,57 @@ AnimatorDefender.rc = LPH_NO_VIRTUALIZE(function(self, info)
 	end
 
 	return true
+end)
+
+---Run predict facing hitbox.
+---@param self AnimatorDefender
+---@param options HitboxOptions
+---@return boolean
+AnimatorDefender.pfh = LPH_NO_VIRTUALIZE(function(self, options)
+	local yrate = PositionHistory.yrate(self.entity)
+	if not yrate then
+		return false
+	end
+
+	local root = self.entity:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+
+	-- Calculate send delay for the target entity.
+	local player = players:GetPlayerFromCharacter(self.entity)
+	local sd = (player and player:GetAttribute("AveragePing") or 10.0) / 2000
+
+	-- Extrapolate rotation angle.
+	local tsecs = (sd + self:rdelay()) * PREDICTION_LENIENCY_MULTI
+	local protation = CFrame.Angles(0, yrate * tsecs, 0)
+
+	-- Save old CFrame.
+	local oldCFrame = root.CFrame
+
+	-- Run prediction.
+	root.CFrame = root.CFrame * protation
+
+	local result = self:hc(options, nil)
+
+	root.CFrame = oldCFrame
+
+	return result
+end)
+
+---Run past hitbox detection.
+---@param options HitboxOptions
+---@return boolean
+AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, options)
+	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS) do
+		options.cframe = cframe
+
+		if not self:hc(options, nil) then
+			continue
+		end
+
+		return true
+	end
 end)
 
 ---Check if we're in a valid state to proceed with the action.
@@ -140,11 +196,20 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	local info = RepeatInfo.new(timing)
 	info.track = self.track
 
-	if not self:hc(options, timing.duih and info or nil) then
-		return self:notify(timing, "Not in hitbox.")
+	local hc = self:hc(options, timing.duih and info or nil)
+	if hc then
+		return true
 	end
 
-	return true
+	if (timing.pfh and not timing.duih) and self:pfh(options) then
+		return true
+	end
+
+	if (timing.phd and not timing.duih) and self:phd(options) then
+		return true
+	end
+
+	return self:notify(timing, "Not in hitbox.")
 end)
 
 ---Add a new Keyframe action.

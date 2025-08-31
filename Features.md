@@ -70,7 +70,7 @@
   - No Slowdown (see 2.)
 + Instance Removals
   - No Raid Music
-  - 
+  
 # Visuals Tab
 1. (caveat) This was not able to be 100% fully ported. The color seems to be a bit more dulled here? I'll look into it after release.
 

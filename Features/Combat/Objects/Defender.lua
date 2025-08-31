@@ -515,6 +515,8 @@ end)
 ---@return boolean
 Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 	local action = options.action
+
+	---@type Timing
 	local timing = options.timing
 
 	if action and action.ihbc then
@@ -555,7 +557,7 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 
 	local leniency = timing.duih and 1.0 or PREDICTION_LENIENCY_MULTI
 
-	local closest = PositionHistory.closest(tick() - (self.sdelay() * leniency))
+	local closest = PositionHistory.closest(players.LocalPlayer, tick() - (self.sdelay() * leniency))
 	if not closest then
 		return false
 	end
