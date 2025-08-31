@@ -22,6 +22,7 @@
 + (addition) Smoothing Factor
 + (addition) Smoothing Style
 + (addition) Smoothing Direction
++ (addition) Anti AA Gun
 ```
 *For smoothing, play around with it and see what is best for you.*
 

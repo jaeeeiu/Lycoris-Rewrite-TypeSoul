@@ -29,7 +29,6 @@ local ESP_ULTIMATE = "[%i%% bankai/res/volt]"
 local ESP_GRADE = "[%s]"
 local ESP_ELEMENT = "[%s]"
 local ESP_RACE = "[%s]"
-local ESP_COMBAT_TIME = "[%s on timer]"
 
 ---Update PlayerESP.
 ---@param self PlayerESP
@@ -142,22 +141,6 @@ PlayerESP.update = LPH_NO_VIRTUALIZE(function(self)
 		local ultimate = model:GetAttribute("BankaiMeter") or 0.0
 		local maxUltimate = model:GetAttribute("MaxThirdBankaiMeter") or 0.0
 		tags[#tags + 1] = ESP_ULTIMATE:format(math.max(ultimate / maxUltimate, 0.0) * 100)
-	end
-
-	local combatTagLeft = character:GetAttribute("CombatTagLeft")
-
-	if Configuration.idToggleValue(identifier, "ShowCombatTimer") and combatTagLeft and combatTagLeft >= 0 then
-		tags[#tags + 1] = ESP_COMBAT_TIME:format(
-			combatTagLeft >= 60 and os.date("%Mm %Ss", combatTagLeft) or os.date("%Ss", combatTagLeft)
-		)
-	end
-
-	if Configuration.idToggleValue(identifier, "ShowCombatTimer") then
-		local combatTime = model:GetAttribute("CombatTime") or 0.0
-
-		if combatTime > 0.0 then
-			tags[#tags + 1] = string.format("[%.1f sec]", combatTime)
-		end
 	end
 
 	self.shadow.Position = usedPosition
