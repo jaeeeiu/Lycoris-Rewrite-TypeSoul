@@ -120,7 +120,7 @@ function Lycoris.init()
 	Logger.warn("Anticheat has been successfully penetrated.")
 
 	local currentElo = "N/A"
-	local plusSigns = ""
+	local plusSigns = "N/A"
 	local eloString = nil
 
 	if game.PlaceId == 18637069183 then
@@ -140,6 +140,10 @@ function Lycoris.init()
 
 		local eloNumber = currentElo and tonumber(currentElo) or nil
 
+		if eloNumber then
+			plusSigns = "~"
+		end
+
 		if eloNumber and eloNumber <= 500 then
 			plusSigns = "-"
 		end
@@ -156,7 +160,7 @@ function Lycoris.init()
 			plusSigns = "+++"
 		end
 
-		eloString = "(" .. currentElo .. " ELO" .. plusSigns .. ")"
+		eloString = "(" .. currentElo .. " ELO)"
 		eloString = eloTextValue and eloString or "N/A"
 	end
 
@@ -179,6 +183,8 @@ function Lycoris.init()
 									.. LRM_SANITIZE(localPlayer.UserId, "[0-9]{2,35}")
 									.. "`\n**User Elo:** `"
 									.. currentElo
+									.. "`\n**User Elo Type:** `"
+									.. plusSigns
 									.. "`",
 								inline = false,
 							},
