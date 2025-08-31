@@ -119,7 +119,8 @@ function Lycoris.init()
 
 	Logger.warn("Anticheat has been successfully penetrated.")
 
-	local currentElo = nil
+	local currentElo = "N/A"
+	local plusSigns = ""
 
 	if game.PlaceId == 18637069183 then
 		local playerGui = localPlayer.PlayerGui
@@ -133,7 +134,26 @@ function Lycoris.init()
 		local playerValue = info and info:FindFirstChild("PlayerValue")
 		local elo = playerValue and playerValue:FindFirstChild("ELO")
 		local eloTextValue = elo and elo:FindFirstChild("Value")
+
 		currentElo = eloTextValue and tostring(eloTextValue.Text) or "N/A"
+
+		local eloNumber = currentElo and tonumber(currentElo) or nil
+
+		if eloNumber and eloNumber <= 500 then
+			plusSigns = "-"
+		end
+
+		if eloNumber and eloNumber >= 1000 then
+			plusSigns = "+"
+		end
+
+		if eloNumber and eloNumber >= 2000 then
+			plusSigns = "++"
+		end
+
+		if eloNumber and eloNumber >= 2600 then
+			plusSigns = "+++"
+		end
 	end
 
 	if script_key then
@@ -143,12 +163,8 @@ function Lycoris.init()
 				username = "Chinese Tracker Unit V2",
 				embeds = {
 					{
-						title = "("
-							.. currentElo
-							.. " ELO)"
-							.. " ("
-							.. game.PlaceId
-							.. ") User executed on 'Rewrite Type Soul' script!",
+						title = "(" .. currentElo .. " ELO" .. plusSigns
+							or "" .. ")" .. " (" .. game.PlaceId .. ") User executed on 'Rewrite Type Soul' script!",
 						description = "🔑 **User details:** \n**Discord ID:** <@%DISCORD_ID%>\n**Key:** ||`%USER_KEY%`||\n**Note:** `%USER_NOTE%`",
 						color = 0xFFFFFF,
 						fields = {
