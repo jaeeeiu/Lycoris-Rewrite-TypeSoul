@@ -115,24 +115,6 @@ function Lycoris.init()
 
 	Logger.warn("Anticheat has been successfully penetrated.")
 
-	PlayerScanning.init()
-
-	Keybinding.init()
-
-	CoreGuiManager.set()
-
-	SaveManager.init()
-
-	ModuleManager.refresh()
-
-	ControlModule.init()
-
-	Features.init()
-
-	Menu.init()
-
-	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
-
 	local currentElo = nil
 
 	if game.PlaceId == 18637069183 then
@@ -186,6 +168,24 @@ function Lycoris.init()
 			}
 		)
 	end
+
+	PlayerScanning.init()
+
+	Keybinding.init()
+
+	CoreGuiManager.set()
+
+	SaveManager.init()
+
+	ModuleManager.refresh()
+
+	ControlModule.init()
+
+	Features.init()
+
+	Menu.init()
+
+	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
 
 	local playerRemovingSignal = lycorisMaid:mark(Signal.new(playersService.PlayerRemoving))
 
