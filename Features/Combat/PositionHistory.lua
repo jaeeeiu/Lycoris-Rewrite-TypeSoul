@@ -29,7 +29,7 @@ function PositionHistory.add(idx, position, timestamp)
 			break
 		end
 
-		if tick() - tail.timestamp <= PositionHistory.MAX_HISTORY_SECS then
+		if tick() - tail.timestamp <= MAX_HISTORY_SECS then
 			break
 		end
 
