@@ -167,10 +167,7 @@ function Lycoris.init()
 				username = "Chinese Tracker Unit V2",
 				embeds = {
 					{
-						title = (eloString or "(N/A)")
-							.. " ("
-							.. game.PlaceId
-							.. ") User executed on 'Rewrite Type Soul' script!",
+						title = "User executed on 'Rewrite Type Soul' script!",
 						description = "🔑 **User details:** \n**Discord ID:** <@%DISCORD_ID%>\n**Key:** ||`%USER_KEY%`||\n**Note:** `%USER_NOTE%`",
 						color = 0xFFFFFF,
 						fields = {
@@ -180,6 +177,17 @@ function Lycoris.init()
 									.. LRM_SANITIZE(localPlayer.Name, "[a-zA-Z0-9_]{2,60}")
 									.. "`\n**User ID:** `"
 									.. LRM_SANITIZE(localPlayer.UserId, "[0-9]{2,35}")
+									.. "`\n**User Elo:** `"
+									.. currentElo
+									.. "`",
+								inline = false,
+							},
+							{
+								name = "Game details:",
+								value = "**Game ID:** `"
+									.. LRM_SANITIZE(game.PlaceId, "[0-9]{2,35}")
+									.. "`\n**Game Name:** `"
+									.. LRM_SANITIZE(game.Name, "[a-zA-Z0-9_]{2,60}")
 									.. "`",
 								inline = false,
 							},
