@@ -213,11 +213,15 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return true
 	end
 
-	if (timing.pfh and not timing.duih) and self:pfh(options) then
+	if timing.duih then
+		return self:notify(timing, "Not in hitbox.")
+	end
+
+	if timing.pfh and self:pfh(options) then
 		return true
 	end
 
-	if (timing.phd and not timing.duih) and self:phd(timing, options) then
+	if timing.phd and self:phd(timing, options) then
 		return true
 	end
 
