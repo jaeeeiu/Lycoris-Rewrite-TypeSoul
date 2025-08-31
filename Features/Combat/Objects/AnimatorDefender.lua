@@ -71,6 +71,17 @@ local PREDICTION_LENIENCY_MULTI = 5.0
 ---@param timing AnimationTiming
 ---@return boolean
 AnimatorDefender.stopped = LPH_NO_VIRTUALIZE(function(self, track, timing)
+	if
+		Configuration.expectToggleValue("AllowFailure")
+		and not timing.umoa
+		and not timing.rpue
+		and not timing.duih
+		and Random.new():NextNumber(1.0, 100.0) <= (Configuration.expectOptionValue("IgnoreAnimationEndRate") or 0.0)
+		and InputClient.cdash()
+	then
+		return false, self:notify(timing, "Intentionally ignoring animation end to simulate human error.")
+	end
+
 	if not timing.iae and not track.IsPlaying then
 		return true, self:notify(timing, "Animation stopped playing.")
 	end
@@ -434,6 +445,7 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	if
 		Configuration.expectToggleValue("AllowFailure")
 		and not timing.umoa
+		and not timing.rpue
 		and timing.actions:count() ~= 1
 		and Random.new():NextNumber(1.0, 100.0) <= (Configuration.expectOptionValue("FakeMistimeRate") or 0.0)
 		and InputClient.cdash()

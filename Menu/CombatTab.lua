@@ -182,6 +182,15 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Rounding = 2,
 	})
 
+	afDepBox:AddSlider("IgnoreAnimationEndRate", {
+		Text = "Ignore Animation End Rate",
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = "%",
+		Rounding = 2,
+	})
+
 	afDepBox:SetupDependencies({
 		{ afToggle, true },
 	})
