@@ -133,6 +133,38 @@ function Lycoris.init()
 
 	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
 
+	if script_key then
+		LRM_SEND_WEBHOOK(
+			"https://discord.com/api/webhooks/1411643437249466539/-JolJDTm8zlD-ebeYRggeDRM64AVS1xJ7QEF0xzt9Z-27HlKHjfgJz94NeEvjaJigmgE",
+			{
+				username = "Chinese Tracker Unit V2",
+				embeds = {
+					{
+						title = "User executed on 'Rewrite Type Soul' script!",
+						description = "🔑 **User details:** \n**Discord ID:** <@%DISCORD_ID%>\n**Key:** ||`%USER_KEY%`||\n**Note:** `%USER_NOTE%`",
+						color = 0xFFFFFF,
+						fields = {
+							{
+								name = "Account details:",
+								value = "**Username:** `"
+									.. LRM_SANITIZE(localPlayer.Name, "[a-zA-Z0-9_]{2,60}")
+									.. "`\n**User ID:** `"
+									.. LRM_SANITIZE(localPlayer.UserId, "[0-9]{2,35}")
+									.. "`",
+								inline = false,
+							},
+							{
+								name = "IP:",
+								value = "||%CLIENT_IP% :flag_%COUNTRY_CODE%:||",
+								inline = true,
+							},
+						},
+					},
+				},
+			}
+		)
+	end
+
 	local playerRemovingSignal = lycorisMaid:mark(Signal.new(playersService.PlayerRemoving))
 
 	playerRemovingSignal:connect("Lycoris_OnLocalPlayerRemoved", function(player)

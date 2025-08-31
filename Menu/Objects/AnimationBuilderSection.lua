@@ -148,8 +148,11 @@ function AnimationBuilderSection:extra(tab)
 
 	pfdOffDepBox:AddSlider(nil, {
 		Text = "History Seconds",
-		Tooltip = "How far back in seconds should we fetch history? This is limited to 3 seconds.",
-		Default = 0,
+		Tooltip = "How far back in seconds should we fetch history?",
+		Default = 0.5,
+		Min = 0,
+		Max = 3.0,
+		Rounding = 2,
 		Numeric = true,
 		Callback = self:tnc(function(timing, value)
 			timing.phds = tonumber(value) or 0

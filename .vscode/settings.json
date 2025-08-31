@@ -65,7 +65,9 @@
         "PP_SCRAMBLE_RE_NUM",
         "LRM_UserNote",
         "script_key",
-        "RepeatInfo"
+        "RepeatInfo",
+        "LRM_SEND_WEBHOOK",
+        "LRM_SANITIZE"
     ],
     "robloxLsp.suggestedImports.importIgnore": [
         "**/_Index/**",
