@@ -16,14 +16,17 @@ local PartTiming = require("Game/Timings/PartTiming")
 ---@module Game.Timings.SoundTiming
 local SoundTiming = require("Game/Timings/SoundTiming")
 
--- SaveManager module.
-local SaveManager = {
-	-- Last loaded config name.
-	llcn = nil,
+---@module Utility.Maid
+local Maid = require("Utility/Maid")
 
-	-- Should we autosave?
-	sautos = false,
-}
+---@module Utility.Signal
+local Signal = require("Utility/Signal")
+
+-- SaveManager module.
+local SaveManager = { llc = nil, llcn = nil, lct = nil }
+
+---@module Utility.Configuration
+local Configuration = require("Utility/Configuration")
 
 ---@module Utility.Filesystem
 local Filesystem = require("Utility/Filesystem")
@@ -45,6 +48,12 @@ local fs = Filesystem.new("Lycoris-Rewrite-TypeSoul-Timings")
 
 -- Current timing save.
 local config = TimingSave.new()
+
+-- Services.
+local runService = game:GetService("RunService")
+
+-- Maids.
+local saveMaid = Maid.new()
 
 ---Get save files list.
 ---@return table
@@ -284,28 +293,52 @@ function SaveManager.load(name)
 		os.clock() - timestamp
 	)
 
+	SaveManager.llc = config:clone()
 	SaveManager.llcn = name
-end
-
----Auto-save timings.
----@return boolean, number
-function SaveManager.autosave()
-	if not SaveManager.llcn then
-		return false, -1, Logger.warn("No config name has been loaded for auto-save.")
-	end
-
-	if not SaveManager.sautos then
-		return false, -2, Logger.warn("Auto-save has been disabled.")
-	end
-
-	Logger.warn("Auto-saving timings to '%s' config file.", SaveManager.llcn)
-
-	return true, SaveManager.write(SaveManager.llcn), Logger.notify("Auto-save has completed successfully.")
 end
 
 ---Initialize SaveManager.
 function SaveManager.init()
 	local timestamp = os.clock()
+	local preRenderSignal = Signal.new(runService.PreRender)
+
+	-- Run auto save.
+	saveMaid:add(preRenderSignal:connect("SaveManager_AutoSave", function()
+		local llc = SaveManager.llc
+		if not llc then
+			return
+		end
+
+		local llcn = SaveManager.llcn
+		if not llcn then
+			return
+		end
+
+		if not Configuration.expectToggleValue("PeriodicAutoSave") then
+			return
+		end
+
+		if
+			SaveManager.lct
+			and os.clock() - SaveManager.lct < (Configuration.expectOptionValue("PeriodicAutoSaveInterval") or 60)
+		then
+			return
+		end
+
+		SaveManager.lct = os.clock()
+
+		if config:equals(llc) then
+			return
+		end
+
+		Logger.warn("Auto-saving timings to '%s' config file.", SaveManager.llcn)
+
+		SaveManager.write(SaveManager.llcn)
+
+		SaveManager.llc = config:clone()
+
+		Logger.notify("Timing auto-save has completed successfully.")
+	end))
 
 	-- Create internal timing containers.
 	local internalAnimationContainer = TimingContainer.new(AnimationTiming.new())
@@ -343,6 +376,11 @@ function SaveManager.init()
 
 	-- Sound stack.
 	SaveManager.ss = TimingContainerPair.new(internalSoundContainer, config:get().sound)
+end
+
+---Detach SaveManager.
+function SaveManager.detach()
+	saveMaid:clean()
 end
 
 -- Return SaveManager module.

@@ -38,6 +38,33 @@ function Action:load(values)
 	end
 end
 
+---Equals check.
+---@param other Action
+---@return boolean
+function Action:equals(other)
+	if self._type ~= other._type then
+		return false
+	end
+
+	if self._when ~= other._when then
+		return false
+	end
+
+	if self.name ~= other.name then
+		return false
+	end
+
+	if self.hitbox ~= other.hitbox then
+		return false
+	end
+
+	if self.ihbc ~= other.ihbc then
+		return false
+	end
+
+	return true
+end
+
 ---Clone action.
 ---@return Action
 function Action:clone()

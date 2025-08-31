@@ -18,6 +18,28 @@ function ActionContainer:clone()
 	return clone
 end
 
+---Equal check.
+---@param other ActionContainer
+---@return boolean
+function ActionContainer:equals(other)
+	if self:count() ~= other:count() then
+		return false
+	end
+
+	for name, action in next, self._data do
+		local otherAction = other:find(name)
+		if not otherAction then
+			return false
+		end
+
+		if not action:equals(otherAction) then
+			return false
+		end
+	end
+
+	return true
+end
+
 ---Find a action from name.
 ---@param name string
 ---@return Action?

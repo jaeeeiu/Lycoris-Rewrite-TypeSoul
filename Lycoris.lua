@@ -222,31 +222,6 @@ function Lycoris.init()
 	Menu.init()
 
 	Logger.notify("Script has been initialized in %ims.", (os.clock() - startTimestamp) * 1000)
-
-	local playerRemovingSignal = lycorisMaid:mark(Signal.new(playersService.PlayerRemoving))
-
-	playerRemovingSignal:connect("Lycoris_OnLocalPlayerRemoved", function(player)
-		if player ~= playersService.LocalPlayer then
-			return
-		end
-
-		-- Auto-save.
-		local initial, result = SaveManager.autosave()
-
-		-- Make a marker to show that we were able to autosave properly.
-		pcall(function()
-			writefile(
-				"Lycoris_LastAutoSaveTimestamp.txt",
-				string.format(
-					"%s : %s the config file '%s' with result %i after player removal.",
-					DateTime.now():FormatLocalTime("LLLL", "en-us"),
-					initial and "(1) Attempted to save" or "(2) Attempted to save",
-					SaveManager.llcn or "N/A",
-					result
-				)
-			)
-		end)
-	end)
 end
 
 ---Detach instance.
@@ -259,7 +234,7 @@ function Lycoris.detach()
 
 	ModuleManager.detach()
 
-	SaveManager.autosave()
+	SaveManager.detach()
 
 	Menu.detach()
 

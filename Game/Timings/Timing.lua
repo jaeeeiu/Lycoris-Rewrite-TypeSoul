@@ -106,6 +106,81 @@ function Timing:load(values)
 	end
 end
 
+---Equals check.
+---@param other Timing
+---@return boolean
+function Timing:equals(other)
+	if self.name ~= other.name then
+		return false
+	end
+
+	if self.tag ~= other.tag then
+		return false
+	end
+
+	if self.imdd ~= other.imdd then
+		return false
+	end
+
+	if self.imxd ~= other.imxd then
+		return false
+	end
+
+	if self.duih ~= other.duih then
+		return false
+	end
+
+	if self.punishable ~= other.punishable then
+		return false
+	end
+
+	if self.after ~= other.after then
+		return false
+	end
+
+	if not self.actions:equals(other.actions) then
+		return false
+	end
+
+	if self.smn ~= other.smn then
+		return false
+	end
+
+	if self.hitbox ~= other.hitbox then
+		return false
+	end
+
+	if self.umoa ~= other.umoa then
+		return false
+	end
+
+	if self.srpn ~= other.srpn then
+		return false
+	end
+
+	if self.smod ~= other.smod then
+		return false
+	end
+
+	if self.aatk ~= other.aatk then
+		return false
+	end
+
+	if self.fhb ~= other.fhb then
+		return false
+	end
+
+	if self.ndfb ~= other.ndfb then
+		return false
+	end
+
+	if self.scrambled ~= other.scrambled then
+		return false
+	end
+
+	return true
+end
+
 ---Clone timing.
 ---@return Timing
 function Timing:clone()

@@ -35,6 +35,18 @@ function TimingContainer:find(name)
 	end
 end
 
+---Clone timing container.
+---@return TimingContainer
+function TimingContainer:clone()
+	local container = TimingContainer.new(self.module)
+
+	for _, timing in next, self.timings do
+		container:push(timing:clone())
+	end
+
+	return container
+end
+
 ---List all timings.
 ---@return Timing[]
 function TimingContainer:list()
@@ -91,6 +103,28 @@ function TimingContainer:push(timing)
 	end
 
 	self.timings[id] = timing
+end
+
+---Equals check.
+---@param other TimingContainer
+---@return boolean
+function TimingContainer:equals(other)
+	if self:count() ~= other:count() then
+		return false
+	end
+
+	for id, timing in next, self.timings do
+		local otherTiming = other.timings[id]
+		if not otherTiming then
+			return false
+		end
+
+		if not timing:equals(otherTiming) then
+			return false
+		end
+	end
+
+	return true
 end
 
 ---Clear all timings.

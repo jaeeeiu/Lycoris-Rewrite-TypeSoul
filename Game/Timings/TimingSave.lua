@@ -12,7 +12,6 @@ local SoundTiming = require("Game/Timings/SoundTiming")
 
 ---@class TimingSave
 ---@field _data TimingContainer[]
----@field _removals table<string, string[]> For every container, a list of timing IDs that we need to remove from the internal data.
 local TimingSave = {}
 TimingSave.__index = TimingSave
 
@@ -67,6 +66,40 @@ function TimingSave:load(values)
 	if typeof(values.sound) == "table" then
 		data.sound:load(values.sound)
 	end
+end
+
+---Clone timing save.
+---@return TimingSave
+function TimingSave:clone()
+	local save = TimingSave.new()
+
+	for idx, container in next, self._data do
+		save._data[idx] = container:clone()
+	end
+
+	return save
+end
+
+---Equal timing saves.
+---@param other TimingSave
+---@return boolean
+function TimingSave:equals(other)
+	if not other or typeof(other) ~= "table" then
+		return false
+	end
+
+	for idx, container in next, self._data do
+		local otherContainer = other._data[idx]
+		if not otherContainer then
+			return false
+		end
+
+		if not container:equals(otherContainer) then
+			return false
+		end
+	end
+
+	return true
 end
 
 ---Get timing save count.
