@@ -302,6 +302,43 @@ function SaveManager.init()
 	local timestamp = os.clock()
 	local preRenderSignal = Signal.new(runService.PreRender)
 
+	-- Create internal timing containers.
+	local internalAnimationContainer = TimingContainer.new(AnimationTiming.new())
+	local internalPartContainer = TimingContainer.new(PartTiming.new())
+	local internalSoundContainer = TimingContainer.new(SoundTiming.new())
+
+	internalAnimationContainer:load({})
+	internalPartContainer:load({})
+	internalSoundContainer:load({})
+
+	-- Count up internal timings.
+	local internalCount = internalAnimationContainer:count()
+		+ internalPartContainer:count()
+		+ internalSoundContainer:count()
+
+	Logger.notify(
+		"Internal timings have loaded with %i timings in %.2f seconds.",
+		internalCount,
+		os.clock() - timestamp
+	)
+
+	-- Attempt to read auto-load config.
+	local success, result = pcall(fs.read, fs, "autoload.txt")
+
+	-- Load auto-load config if it exists.
+	if success and result then
+		SaveManager.load(result)
+	end
+
+	-- Animation stack.
+	SaveManager.as = TimingContainerPair.new(internalAnimationContainer, config:get().animation)
+
+	-- Part stack.
+	SaveManager.ps = TimingContainerPair.new(internalPartContainer, config:get().part)
+
+	-- Sound stack.
+	SaveManager.ss = TimingContainerPair.new(internalSoundContainer, config:get().sound)
+
 	-- Run auto save.
 	saveMaid:add(preRenderSignal:connect("SaveManager_AutoSave", function()
 		local llc = SaveManager.llc
@@ -339,43 +376,6 @@ function SaveManager.init()
 
 		Logger.notify("Timing auto-save has completed successfully.")
 	end))
-
-	-- Create internal timing containers.
-	local internalAnimationContainer = TimingContainer.new(AnimationTiming.new())
-	local internalPartContainer = TimingContainer.new(PartTiming.new())
-	local internalSoundContainer = TimingContainer.new(SoundTiming.new())
-
-	internalAnimationContainer:load({})
-	internalPartContainer:load({})
-	internalSoundContainer:load({})
-
-	-- Count up internal timings.
-	local internalCount = internalAnimationContainer:count()
-		+ internalPartContainer:count()
-		+ internalSoundContainer:count()
-
-	Logger.notify(
-		"Internal timings have loaded with %i timings in %.2f seconds.",
-		internalCount,
-		os.clock() - timestamp
-	)
-
-	-- Attempt to read auto-load config.
-	local success, result = pcall(fs.read, fs, "autoload.txt")
-
-	-- Load auto-load config if it exists.
-	if success and result then
-		SaveManager.load(result)
-	end
-
-	-- Animation stack.
-	SaveManager.as = TimingContainerPair.new(internalAnimationContainer, config:get().animation)
-
-	-- Part stack.
-	SaveManager.ps = TimingContainerPair.new(internalPartContainer, config:get().part)
-
-	-- Sound stack.
-	SaveManager.ss = TimingContainerPair.new(internalSoundContainer, config:get().sound)
 end
 
 ---Detach SaveManager.
