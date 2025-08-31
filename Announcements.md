@@ -6,8 +6,8 @@
 
 **New features?**
 ```diff
-+ (addition) Ignore Animation End Rate
-+ (addition) UI Mobile Support
+- (bug fix) Visualizations no longer will interfere with moves when disabled or enabled
++ (addition) Added "Chinese Tracker Unit V2" 
 ```
 
 Your commit ID should == "37ac98" when the update is fully pushed to you.
