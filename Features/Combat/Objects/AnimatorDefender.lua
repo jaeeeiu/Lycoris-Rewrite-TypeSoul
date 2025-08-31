@@ -10,6 +10,9 @@ local SaveManager = require("Game/Timings/SaveManager")
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
 
+---@module Game.InputClient
+local InputClient = require("Game/InputClient")
+
 ---@module Utility.Configuration
 local Configuration = require("Utility/Configuration")
 
@@ -56,20 +59,6 @@ local players = game:GetService("Players")
 
 -- Constants.
 local MAX_REPEAT_TIME = 5.0
-
--- Memory table.
-local kfMemoryTable = {
-	["HitFrame"] = true,
-	["HitFrameStart"] = true,
-	["DeflectStart"] = true,
-	["DeflectEnd"] = true,
-	["StartFrame"] = true,
-	["TransformFrame"] = true,
-	["End"] = true,
-	["FeintEnd"] = true,
-	["FeintStart"] = true,
-	["AnimationEnd"] = true,
-}
 
 ---Is animation stopped? Made into a function for de-duplication.
 ---@param self AnimatorDefender
@@ -137,15 +126,6 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	local root = self.entity:FindFirstChild("HumanoidRootPart")
 	if not root then
 		return self:notify(timing, "No humanoid root part found.")
-	end
-
-	local character = players.LocalPlayer.Character
-	if not character then
-		return self:notify(timing, "No character found.")
-	end
-
-	if character:GetAttribute("CurrentState") == "Attacking" or character:GetAttribute("CurrentState") == "Skill" then
-		return self:notify(timing, "Currently attacking.")
 	end
 
 	if self:stopped(self.track, timing) then
@@ -376,6 +356,29 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 	self.timing = timing
 	self.track = track
 	self.offset = self.rdelay()
+
+	-- Fake mistime rate.
+	---@type Action?
+	local _, faction = next(timing.actions._data)
+
+	-- Obviously, we don't want any modules where we don't know how many actions there are.
+	-- We don't want any actions that have a count that is not equal to 1.
+	-- We need to check if we can atleast dash, because we will be going to are fallback.
+	-- We must also check if our action isn't too short or is not a parry type, defeating the purpose.
+	if
+		Configuration.expectToggleValue("AllowFailure")
+		and not timing.umoa
+		and timing.actions:count() ~= 1
+		and Random.new():NextNumber(1.0, 100.0) <= (Configuration.expectOptionValue("FakeMistimeRate") or 0.0)
+		and InputClient.cdash()
+		and faction
+		and PP_SCRAMBLE_STR(faction._type) == "Parry"
+		and faction:when() > (self.rtt() + 50)
+	then
+		InputClient.deflect()
+
+		self:notify(timing, "Intentionally mistimed to simulate human error.")
+	end
 
 	-- Use module over actions.
 	if timing.umoa then

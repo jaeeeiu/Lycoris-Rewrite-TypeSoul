@@ -184,7 +184,31 @@ end)
 ---@param action Action
 ---@return boolean
 Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
+	local integer = Random.new():NextNumber(1.0, 100.0)
+	local rate = Configuration.expectOptionValue("FailureRate") or 0.0
+
+	if Configuration.expectToggleValue("AllowFailure") and integer <= rate then
+		return self:notify(timing, "(%i <= %i) Intentionally did not run.", integer, rate)
+	end
+
 	local selectedFilters = Configuration.expectOptionValue("AutoDefenseFilters") or {}
+
+	local character = players.LocalPlayer.Character
+	if not character then
+		return self:notify(timing, "No character found.")
+	end
+
+	if selectedFilters["Disable When In Dash"] and character:GetAttribute("CurrentState") == "Dashing" then
+		return self:notify(timing, "User is dashing.")
+	end
+
+	if selectedFilters["Disable When In Flashstep"] and character:GetAttribute("CurrentState") == "Flashstep" then
+		return self:notify(timing, "User is flashstepping.")
+	end
+
+	if character:GetAttribute("CurrentState") == "Attacking" or character:GetAttribute("CurrentState") == "Skill" then
+		return self:notify(timing, "Currently attacking.")
+	end
 
 	local chatInputBarConfiguration = textChatService:FindFirstChildOfClass("ChatInputBarConfiguration")
 
@@ -592,6 +616,22 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action, notify)
 		self:notify(timing, "Action type '%s' is being executed.", PP_SCRAMBLE_STR(action._type))
 	end
 
+	-- Dash instead of parry.
+	local dashReplacement = Random.new():NextNumber(1.0, 100.0)
+		<= (Configuration.expectOptionValue("DashInsteadOfParryRate") or 0.0)
+
+	if PP_SCRAMBLE_STR(action._type) ~= "Parry" then
+		dashReplacement = false
+	end
+
+	if not Configuration.expectToggleValue("AllowFailure") then
+		dashReplacement = false
+	end
+
+	if timing.umoa or timing.actions:count() ~= 1 then
+		dashReplacement = false
+	end
+
 	if PP_SCRAMBLE_STR(action._type) == "Start Block" then
 		return InputClient.block(true)
 	end
@@ -607,7 +647,13 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action, notify)
 	-- Parry if possible.
 	-- We'll assume that we're in the parry state. There's no other type.
 	if AttributeListener.cparry() then
-		return InputClient.deflect()
+		if timing.nfdb or not AttributeListener.cdash() or not dashReplacement then
+			return InputClient.deflect()
+		end
+
+		self:notify(timing, "Action type 'Parry' replaced to 'Dash' type.")
+
+		return InputClient.dash()
 	end
 
 	---Block fallback function. Returns whether the fallback was successful.

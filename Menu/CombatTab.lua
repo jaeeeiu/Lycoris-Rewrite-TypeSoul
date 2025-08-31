@@ -147,6 +147,45 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Tooltip = "If enabled, the auto defense will fallback to block frames if parry action and/or fallback is not available.",
 	})
 
+	local afToggle = autoDefenseDepBox:AddToggle("AllowFailure", {
+		Text = "Allow Failure",
+		Default = false,
+		Tooltip = "If enabled, the auto defense will sometimes intentionally fail to parry/deflect.",
+	})
+
+	local afDepBox = autoDefenseDepBox:AddDependencyBox()
+
+	afDepBox:AddSlider("FailureRate", {
+		Text = "Failure Rate",
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = "%",
+		Rounding = 2,
+	})
+
+	afDepBox:AddSlider("DashInsteadOfParryRate", {
+		Text = "Dash Instead Of Parry Rate",
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = "%",
+		Rounding = 2,
+	})
+
+	afDepBox:AddSlider("FakeParryMistimeRate", {
+		Text = "Fake Parry Mistime Rate",
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = "%",
+		Rounding = 2,
+	})
+
+	afDepBox:SetupDependencies({
+		{ afToggle, true },
+	})
+
 	autoDefenseDepBox:AddDropdown("AutoDefenseFilters", {
 		Text = "Auto Defense Filters",
 		Values = {
@@ -157,6 +196,8 @@ function CombatTab.initAutoDefenseSection(groupbox)
 			"Disable When Textbox Focused",
 			"Disable When Window Not Active",
 			"Disable When Holding Block",
+			"Disable When In Dash",
+			"Disable When In Flashstep",
 		},
 		Multi = true,
 		AllowNull = true,
@@ -190,6 +231,38 @@ function CombatTab.initCombatAssistance(groupbox)
 
 	local alDepBox = groupbox:AddDependencyBox()
 
+	local lsToggle = alDepBox:AddToggle("Smoothing", {
+		Text = "Smoothing",
+		Default = false,
+		Tooltip = "Should we attempt to smooth the aim lock movement?",
+	})
+
+	local lsDepBox = alDepBox:AddDependencyBox()
+
+	lsDepBox:AddSlider("SmoothingFactor", {
+		Text = "Smoothing Factor",
+		Min = 0.0,
+		Max = 1.0,
+		Default = 0.1,
+		Rounding = 3,
+	})
+
+	local styles = {}
+
+	for _, style in next, Enum.EasingStyle:GetEnumItems() do
+		table.insert(styles, style.Name)
+	end
+
+	lsDepBox:AddDropdown("SmoothingStyle", { Text = "Smoothing Style", Default = 0, Values = styles })
+
+	local direction = {}
+
+	for _, dir in next, Enum.EasingDirection:GetEnumItems() do
+		table.insert(direction, dir.Name)
+	end
+
+	lsDepBox:AddDropdown("SmoothingDirection", { Text = "Smoothing Direction", Default = 0, Values = direction })
+
 	alDepBox:AddToggle("VerticalInfluence", {
 		Text = "Vertical Influence",
 		Default = false,
@@ -198,6 +271,10 @@ function CombatTab.initCombatAssistance(groupbox)
 
 	alDepBox:SetupDependencies({
 		{ alToggle, true },
+	})
+
+	lsDepBox:SetupDependencies({
+		{ lsToggle, true },
 	})
 end
 
