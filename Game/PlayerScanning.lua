@@ -179,7 +179,7 @@ function PlayerScanning.getStaffRank(player)
 	end
 
 	for _, groupData in next, responseData.data do
-		if groupData.group.id ~= 32740991 then
+		if groupData.group.id ~= 32740991 and groupData.group.id ~= 13077028 then
 			continue
 		end
 
