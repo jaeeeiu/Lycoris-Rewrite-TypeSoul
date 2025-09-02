@@ -230,6 +230,10 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
+	if humanoid.PlatformStand then
+		return
+	end
+
 	if character:GetAttribute("CurrentState") == "Unconscious" then
 		return
 	end
