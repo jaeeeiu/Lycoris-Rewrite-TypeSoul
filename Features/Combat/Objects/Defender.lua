@@ -301,12 +301,16 @@ end
 ---@param predicted boolean
 ---@return boolean
 Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier, predicted)
-	local isSolara = getexecutorname and getexecutorname():match("Solara")
+	local isShitExploit = getexecutorname and getexecutorname():match("Solara")
+
+	if getexecutorname and getexecutorname():match("Xeno") then
+		isShitExploit = true
+	end
 
 	---@note: Solara is very shit so we need to do the filtering ourselves
 	local overlapParams = OverlapParams.new()
-	overlapParams.FilterDescendantsInstances = isSolara and {} or filter
-	overlapParams.FilterType = isSolara and Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Include
+	overlapParams.FilterDescendantsInstances = isShitExploit and {} or filter
+	overlapParams.FilterType = isShitExploit and Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Include
 
 	local character = players.LocalPlayer.Character
 	if not character then
@@ -329,7 +333,7 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 	local parts = workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams)
 
 	-- Detect hit.
-	local hit = isSolara and checkParts(parts, filter) or #parts > 0
+	local hit = isShitExploit and checkParts(parts, filter) or #parts > 0
 
 	-- Visualize color.
 	local visColor = hit and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
