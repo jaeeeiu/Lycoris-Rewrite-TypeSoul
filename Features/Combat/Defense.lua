@@ -59,6 +59,9 @@ local deletedPlaybackData = {}
 -- Visualization updating.
 local lastVisualizationUpdate = os.clock()
 
+-- Aim lock state.
+local stickyTarget = nil
+
 -- History updating.
 local historyUpdateIndex = 1
 local HISTORY_UPDATE_BATCH_SIZE = 5
@@ -270,11 +273,19 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
+	if not Configuration.expectToggleValue("AimLock") or not Configuration.expectToggleValue("StickyTargets") then
+		stickyTarget = nil
+	end
+
 	if not Configuration.expectToggleValue("AimLock") then
 		return autoRotateStore:restore()
 	end
 
-	local target = Targeting.best()[1]
+	if Configuration.expectToggleValue("StickyTargets") then
+		stickyTarget = stickyTarget or Targeting.best()[1]
+	end
+
+	local target = stickyTarget or Targeting.best()[1]
 	if not target then
 		return
 	end

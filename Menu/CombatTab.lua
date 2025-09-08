@@ -276,6 +276,12 @@ function CombatTab.initCombatAssistance(groupbox)
 
 	lsDepBox:AddDropdown("SmoothingDirection", { Text = "Smoothing Direction", Default = 0, Values = direction })
 
+	alDepBox:AddToggle("StickyTargets", {
+		Text = "Sticky Targets",
+		Default = false,
+		Tooltip = "Should we attempt to stick to targets as long as the lock is active?",
+	})
+
 	alDepBox:AddToggle("VerticalInfluence", {
 		Text = "Vertical Influence",
 		Default = false,
