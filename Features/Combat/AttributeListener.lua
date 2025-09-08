@@ -57,7 +57,7 @@ function AttributeListener.krecently()
 		return false
 	end
 
-	return AttributeListener.lastKnock and tick() - AttributeListener.lastKnock <= 0.250
+	return not AttributeListener.lastKnock or tick() - AttributeListener.lastKnock >= 0.250
 end
 
 ---Can we parry?
@@ -82,7 +82,7 @@ function AttributeListener.cdash()
 		return false
 	end
 
-	return AttributeListener.lastDash and tick() - AttributeListener.lastDash <= (1750 / 1000)
+	return not AttributeListener.lastDash or tick() - AttributeListener.lastDash >= (1750 / 1000)
 end
 
 ---Initialize AttributeListener module.

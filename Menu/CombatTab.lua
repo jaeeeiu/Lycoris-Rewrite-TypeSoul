@@ -177,7 +177,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Rounding = 2,
 	})
 
-	afDepBox:AddSlider("FakeParryMistimeRate", {
+	afDepBox:AddSlider("FakeMistimeRate", {
 		Text = "Fake Parry Mistime Rate",
 		Min = 0,
 		Max = 100,

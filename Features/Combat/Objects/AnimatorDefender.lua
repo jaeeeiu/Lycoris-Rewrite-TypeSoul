@@ -43,6 +43,9 @@ local PositionHistory = require("Features/Combat/PositionHistory")
 ---@module Utility.OriginalStore
 local OriginalStore = require("Utility/OriginalStore")
 
+---@module Features.Combat.AttributeListener
+local AttributeListener = require("Features/Combat/AttributeListener")
+
 ---@class AnimatorDefender: Defender
 ---@field animator Animator
 ---@field entity Model
@@ -78,9 +81,8 @@ AnimatorDefender.stopped = LPH_NO_VIRTUALIZE(function(self, track, timing)
 		Configuration.expectToggleValue("AllowFailure")
 		and not timing.umoa
 		and not timing.rpue
-		and not timing.duih
 		and Random.new():NextNumber(1.0, 100.0) <= (Configuration.expectOptionValue("IgnoreAnimationEndRate") or 0.0)
-		and InputClient.cdash()
+		and AttributeListener.cdash()
 	then
 		return false, self:notify(timing, "Intentionally ignoring animation end to simulate human error.")
 	end
@@ -168,7 +170,7 @@ AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, timing, options)
 		clone.spredict = false
 		clone.cframe = cframe
 		clone.hcolor = Color3.new(0.839215, 0.976470, 0.537254)
-		clone.mcolor = Color3.new(1, 0.666666, 0)
+		clone.mcolor = Color3.new(0.564705, 0, 1)
 
 		if not self:hc(clone, nil) then
 			continue
@@ -479,12 +481,12 @@ AnimatorDefender.process = LPH_NO_VIRTUALIZE(function(self, track)
 		Configuration.expectToggleValue("AllowFailure")
 		and not timing.umoa
 		and not timing.rpue
-		and timing.actions:count() ~= 1
+		and timing.actions:count() == 1
 		and Random.new():NextNumber(1.0, 100.0) <= (Configuration.expectOptionValue("FakeMistimeRate") or 0.0)
-		and InputClient.cdash()
+		and AttributeListener.cdash()
 		and faction
 		and PP_SCRAMBLE_STR(faction._type) == "Parry"
-		and faction:when() > (self.rtt() + 50)
+		and faction:when() > (self.rtt() + 0.6)
 	then
 		InputClient.deflect()
 

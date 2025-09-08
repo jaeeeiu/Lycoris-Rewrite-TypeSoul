@@ -51,6 +51,7 @@ end
 ---@param action Action
 function ActionContainer:remove(action)
 	self._data[action.name] = nil
+	self._count = self._count - 1
 end
 
 ---Push a action to the list.
@@ -64,6 +65,7 @@ function ActionContainer:push(action)
 	end
 
 	self._data[name] = action
+	self._count = self._count + 1
 end
 
 ---Load from partial values.
@@ -89,13 +91,7 @@ end
 ---Get action count.
 ---@return number
 function ActionContainer:count()
-	local count = 0
-
-	for _, _ in next, self._data do
-		count = count + 1
-	end
-
-	return count
+	return self._count
 end
 
 ---Clear actions.
@@ -128,6 +124,7 @@ function ActionContainer.new(values)
 	local self = setmetatable({}, ActionContainer)
 
 	self._data = {}
+	self._count = 0
 
 	if values then
 		self:load(values)
