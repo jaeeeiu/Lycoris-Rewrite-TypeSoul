@@ -37,6 +37,8 @@ function AnimationBuilderSection:exload(timing)
 	self.maxAnimationTimeout:SetRawValue(timing.mat)
 	self.pastHitboxDetection:SetRawValue(timing.phd)
 	self.predictFacingHitboxes:SetRawValue(timing.pfh)
+	self.historySeconds:SetRawValue(timing.phds)
+	self.extrapolationTime:SetRawValue(timing.pfht)
 end
 
 ---Reset the elements. Extend me.
@@ -52,7 +54,9 @@ function AnimationBuilderSection:reset()
 	self.ignoreEarlyAnimationEnd:SetRawValue(false)
 	self.maxAnimationTimeout:SetRawValue(2000)
 	self.pastHitboxDetection:SetRawValue(false)
+	self.historySeconds:SetRawValue(0.5)
 	self.predictFacingHitboxes:SetRawValue(false)
+	self.extrapolationTime:SetRawValue(0.25)
 end
 
 ---Check before creating new timing. Override me.
@@ -146,7 +150,7 @@ function AnimationBuilderSection:extra(tab)
 
 	local pfdOffDepBox = tab:AddDependencyBox()
 
-	pfdOffDepBox:AddSlider(nil, {
+	self.historySeconds = pfdOffDepBox:AddSlider(nil, {
 		Text = "History Seconds",
 		Tooltip = "How far back in seconds should we fetch history?",
 		Default = 0.5,
@@ -169,6 +173,19 @@ function AnimationBuilderSection:extra(tab)
 		Tooltip = "Should we make a prediction on the facing direction and make a hitbox on that?",
 		Callback = self:tnc(function(timing, value)
 			timing.pfh = value
+		end),
+	})
+
+	self.extrapolationTime = tab:AddSlider(nil, {
+		Text = "Extrapolation Time",
+		Tooltip = "The time (in seconds) to extrapolate by.",
+		Default = 0.25,
+		Min = 0,
+		Max = 2.0,
+		Rounding = 3,
+		Numeric = true,
+		Callback = self:tnc(function(timing, value)
+			timing.pfht = tonumber(value)
 		end),
 	})
 end

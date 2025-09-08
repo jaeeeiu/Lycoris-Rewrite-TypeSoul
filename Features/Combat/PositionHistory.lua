@@ -48,7 +48,6 @@ function PositionHistory.yrate(index)
 
 	local latest = history[#history]
 	local previous = history[#history - 1]
-
 	local dt = latest.timestamp - previous.timestamp
 	if dt <= 1e-4 then
 		return nil
@@ -56,11 +55,9 @@ function PositionHistory.yrate(index)
 
 	local prevLook = Vector3.new(previous.position.LookVector.X, 0, previous.position.LookVector.Z).Unit
 	local latestLook = Vector3.new(latest.position.LookVector.X, 0, latest.position.LookVector.Z).Unit
-
 	local dot = prevLook:Dot(latestLook)
 	local crossY = prevLook:Cross(latestLook).Y
 	local angle = math.atan2(crossY, dot)
-
 	return angle / dt
 end
 
@@ -97,8 +94,8 @@ function PositionHistory.stepped(idx, steps, phds)
 		if not data then
 			break
 		end
-
-		chunks[#chunks + 1] = data.position
+		print(data)
+		chunks[#chunks + 1] = data
 	end
 
 	return chunks

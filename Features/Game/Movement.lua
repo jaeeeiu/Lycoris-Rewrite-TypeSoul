@@ -61,7 +61,7 @@ return LPH_NO_VIRTUALIZE(function()
 	---@param character Model
 	---@param rootPart BasePart
 	local function updateNoClip(character, rootPart)
-		for _, instance in pairs(Exploits.flipped and character:GetDescendants() or character:GetChildren()) do
+		for _, instance in pairs(character:GetChildren()) do
 			if not instance:IsA("BasePart") then
 				continue
 			end
@@ -124,8 +124,6 @@ return LPH_NO_VIRTUALIZE(function()
 		if userInputService:IsKeyDown(Enum.KeyCode.Space) then
 			flyVelocity = flyVelocity + Vector3.new(0, Configuration.expectOptionValue("FlyUpSpeed"), 0)
 		end
-
-		humanoid.PlatformStand = Configuration.expectToggleValue("AntiAAGun")
 
 		flyBodyVelocity.Velocity = flyVelocity
 	end
@@ -247,22 +245,13 @@ return LPH_NO_VIRTUALIZE(function()
 			updateAttachToBack(rootPart)
 		end
 
-		if
-			humanoid.PlatformStand
-			and movementMaid["flyBodyVelocity"]
-			and Configuration.expectToggleValue("AntiAAGun")
-			and not Configuration.expectToggleValue("Fly")
-		then
-			humanoid.PlatformStand = false
-		end
-
 		if Configuration.expectToggleValue("Fly") then
 			updateFlyHack(rootPart, humanoid)
 		else
 			movementMaid["flyBodyVelocity"] = nil
 		end
 
-		if Configuration.expectToggleValue("NoClip") or Exploits.flipped then
+		if Configuration.expectToggleValue("NoClip") then
 			updateNoClip(character, rootPart)
 		else
 			noClipMap:restore()

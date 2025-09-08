@@ -6,13 +6,14 @@ local Timing = require("Game/Timings/Timing")
 ---@field rpue boolean Repeat parry until end.
 ---@field _rsd number Repeat start delay in miliseconds. Never access directly.
 ---@field _rpd number Delay between each repeat parry in miliseconds. Never access directly.
----@param ha boolean Flag to see whether or not this timing can be cancelled by a hit.
----@param iae boolean Flag to see whether or not this timing should ignore animation end.
+---@field ha boolean Flag to see whether or not this timing can be cancelled by a hit.
+---@field iae boolean Flag to see whether or not this timing should ignore animation end.
 ---@field phd boolean Past hitbox detection.
 ---@field pfh boolean Predict hitboxes facing.
 ---@field phds number History seconds for past hitbox detection.
----@param ieae boolean Flag to see whether or not this timing should ignore early animation end.
----@param mat number Max animation timeout in milliseconds.
+---@field pfht number Extrapolation time for hitbox prediction.
+---@field ieae boolean Flag to see whether or not this timing should ignore early animation end.
+---@field mat number Max animation timeout in milliseconds.
 local AnimationTiming = setmetatable({}, { __index = Timing })
 AnimationTiming.__index = AnimationTiming
 
@@ -90,6 +91,10 @@ function AnimationTiming:load(values)
 	if typeof(values.phds) == "number" then
 		self.phds = values.phds
 	end
+
+	if typeof(values.pfht) == "number" then
+		self.pfht = values.pfht
+	end
 end
 
 ---Clone timing.
@@ -108,6 +113,7 @@ function AnimationTiming:clone()
 	clone.phd = self.phd
 	clone.pfh = self.pfh
 	clone.phds = self.phds
+	clone.pfht = self.pfht
 
 	return clone
 end
@@ -128,6 +134,7 @@ function AnimationTiming:serialize()
 	serializable.phd = self.phd
 	serializable.pfh = self.pfh
 	serializable.phds = self.phds
+	serializable.pfht = self.pfht
 
 	return serializable
 end
@@ -149,6 +156,7 @@ function AnimationTiming.new(values)
 	self.phd = false
 	self.pfh = false
 	self.phds = 0
+	self.pfht = 0.25
 
 	if values then
 		self:load(values)

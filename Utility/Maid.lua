@@ -67,6 +67,12 @@ Maid.mark = LPH_NO_VIRTUALIZE(function(self, task)
 	return task
 end)
 
+---Get a unique ID for a task.
+---@return number
+Maid.uid = LPH_NO_VIRTUALIZE(function(self)
+	return #self._tasks + 1
+end)
+
 ---Add a task without a specific ID.
 ---@param task any
 ---@return number
@@ -75,7 +81,7 @@ Maid.add = LPH_NO_VIRTUALIZE(function(self, task)
 		return error("task cannot be false or nil", 2)
 	end
 
-	local taskId = #self._tasks + 1
+	local taskId = self:uid()
 	self[taskId] = task
 
 	return taskId

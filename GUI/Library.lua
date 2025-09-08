@@ -307,7 +307,7 @@ return LPH_NO_VIRTUALIZE(function()
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
-		local ts = os.clock()
+		local ts = tick()
 
 		if bl[key] then
 			return
@@ -411,7 +411,7 @@ return LPH_NO_VIRTUALIZE(function()
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
-		local ts = os.clock()
+		local ts = tick()
 		local key = timing.name
 
 		if bl[key] then
@@ -504,7 +504,7 @@ return LPH_NO_VIRTUALIZE(function()
 		local ifd = Library.InfoLoggerData
 		local mde = ifd.MissingDataEntries
 		local bl = ifd.KeyBlacklistList
-		local ts = os.clock()
+		local ts = tick()
 
 		if bl[key] then
 			return
@@ -1490,7 +1490,7 @@ return LPH_NO_VIRTUALIZE(function()
 					end
 				elseif
 					(
-						Input.UserInputType == Enum.UserInputType.MouseButton2Touch
+						Input.UserInputType == Enum.UserInputType.Touch
 						or Input.UserInputType == Enum.UserInputType.MouseButton1
 					) and not Library:MouseIsOverOpenedFrame()
 				then
@@ -3632,6 +3632,7 @@ return LPH_NO_VIRTUALIZE(function()
 		}, true)
 
 		Library.Watermark = WatermarkOuter
+		Library.Watermark.Visible = false
 		Library.WatermarkText = WatermarkLabel
 		Library:MakeDraggable(Library.Watermark)
 
@@ -3842,6 +3843,7 @@ return LPH_NO_VIRTUALIZE(function()
 		})
 
 		Library.KeybindFrame = KeybindOuter
+		Library.KeybindFrame.Visible = false
 		Library.KeybindContainer = KeybindContainer
 		Library:MakeDraggable(KeybindOuter)
 	end
@@ -4820,6 +4822,8 @@ return LPH_NO_VIRTUALIZE(function()
 			task.spawn(Library.Toggle)
 		end
 
+		Library.KeybindFrame.Visible = not shared.Lycoris.silent
+		Library.Watermark.Visible = not shared.Lycoris.silent
 		Window.Holder = Outer
 
 		return Window

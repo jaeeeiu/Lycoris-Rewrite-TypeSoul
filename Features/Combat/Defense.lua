@@ -4,6 +4,9 @@ local Signal = require("Utility/Signal")
 ---@module Utility.Maid
 local Maid = require("Utility/Maid")
 
+---@module Utility.OriginalStore
+local OriginalStore = require("Utility/OriginalStore")
+
 ---@module Features.Combat.Objects.AnimatorDefender
 local AnimatorDefender = require("Features/Combat/Objects/AnimatorDefender")
 
@@ -39,6 +42,9 @@ local players = game:GetService("Players")
 local runService = game:GetService("RunService")
 local tweenService = game:GetService("TweenService")
 
+-- Auto rotate store.
+local autoRotateStore = OriginalStore.new()
+
 -- Maids.
 local defenseMaid = Maid.new()
 
@@ -50,8 +56,12 @@ local defenderAnimationObjects = {}
 -- Stored deleted playback data.
 local deletedPlaybackData = {}
 
--- Update.
+-- Visualization updating.
 local lastVisualizationUpdate = os.clock()
+
+-- History updating.
+local historyUpdateIndex = 1
+local HISTORY_UPDATE_BATCH_SIZE = 5
 
 ---Add animator defender.
 ---@param animator Animator
@@ -174,20 +184,6 @@ end)
 
 ---Update history.
 local updateHistory = LPH_NO_VIRTUALIZE(function()
-	for _, object in next, defenderAnimationObjects do
-		local entity = object.entity
-		if not entity then
-			continue
-		end
-
-		local humanoidRootPart = entity:FindFirstChild("HumanoidRootPart")
-		if not humanoidRootPart then
-			continue
-		end
-
-		PositionHistory.add(entity, humanoidRootPart.CFrame, tick())
-	end
-
 	local character = players.LocalPlayer.Character
 	if not character then
 		return
@@ -199,6 +195,65 @@ local updateHistory = LPH_NO_VIRTUALIZE(function()
 	end
 
 	PositionHistory.add(players.LocalPlayer, humanoidRootPart.CFrame, tick())
+
+	local daoIndicies = {}
+
+	for _, object in next, defenderAnimationObjects do
+		daoIndicies[#daoIndicies + 1] = object
+	end
+
+	if #daoIndicies <= 0 then
+		return
+	end
+
+	local processedCount = 0
+
+	for idx = historyUpdateIndex, #daoIndicies do
+		if processedCount >= HISTORY_UPDATE_BATCH_SIZE then
+			break
+		end
+
+		local object = daoIndicies[idx]
+		local entity = object and object.entity
+		local hrp = entity and entity:FindFirstChild("HumanoidRootPart")
+
+		if hrp then
+			PositionHistory.add(entity, hrp.CFrame, tick())
+		end
+
+		processedCount = processedCount + 1
+		historyUpdateIndex = idx + 1
+	end
+
+	if historyUpdateIndex <= #daoIndicies then
+		return
+	end
+
+	historyUpdateIndex = 1
+end)
+
+---Update visualization.
+local updateVisualizations = LPH_NO_VIRTUALIZE(function()
+	if os.clock() - lastVisualizationUpdate <= 5.0 then
+		return
+	end
+
+	lastVisualizationUpdate = os.clock()
+
+	for _, object in next, defenderObjects do
+		for idx, hitbox in next, object.hmaid._tasks do
+			if typeof(hitbox) ~= "Instance" then
+				continue
+			end
+
+			---@note: We call :Debris so we don't have to clean it up ourselves. We just unregister it from the maid.
+			if hitbox.Parent then
+				continue
+			end
+
+			object.hmaid._tasks[idx] = nil
+		end
+	end
 end)
 
 ---Update assistance.
@@ -215,10 +270,8 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
-	humanoid.AutoRotate = true
-
 	if not Configuration.expectToggleValue("AimLock") then
-		return
+		return autoRotateStore:restore()
 	end
 
 	local target = Targeting.best()[1]
@@ -250,9 +303,9 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 
 	local targetCFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
 
-	humanoid.AutoRotate = false
+	autoRotateStore:set(humanoid, "AutoRotate", false)
 
-	-- https://www.unknowncheats.me/forum/counterstrike-global-offensive/141636-scaled-smoothing-adaptive-smoothing.html
+	---@note: https://www.unknowncheats.me/forum/counterstrike-global-offensive/141636-scaled-smoothing-adaptive-smoothing.html
 	if Configuration.expectToggleValue("Smoothing") then
 		local alpha = tweenService:GetValue(
 			math.clamp(1 - (Configuration.expectOptionValue("SmoothingFactor") or 0.1), 0, 1),
@@ -263,23 +316,6 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		humanoidRootPart.CFrame = humanoidRootPart.CFrame:Lerp(targetCFrame, alpha)
 	else
 		humanoidRootPart.CFrame = targetCFrame
-	end
-end)
-
----Update visualizations.
-local updateVisualizations = LPH_NO_VIRTUALIZE(function()
-	if os.clock() - lastVisualizationUpdate <= 1.0 then
-		return
-	end
-
-	lastVisualizationUpdate = os.clock()
-
-	for _, object in next, defenderObjects do
-		if not object.vupdate then
-			continue
-		end
-
-		object:vupdate()
 	end
 end)
 
@@ -295,6 +331,19 @@ local updateDefenders = LPH_NO_VIRTUALIZE(function()
 
 	for _, object in next, defenderPartObjects do
 		object:update()
+	end
+end)
+
+---Toggle visualizations.
+Defense.visualizations = LPH_NO_VIRTUALIZE(function()
+	for _, object in next, defenderObjects do
+		for _, hitbox in next, object.hmaid._tasks do
+			if typeof(hitbox) ~= "Instance" then
+				continue
+			end
+
+			hitbox.Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
+		end
 	end
 end)
 
@@ -363,8 +412,8 @@ function Defense.init()
 
 	defenseMaid:mark(gameDescendantAdded:connect("Defense_OnDescendantAdded", onGameDescendantAdded))
 	defenseMaid:mark(gameDescendantRemoved:connect("Defense_OnDescendantRemoved", onGameDescendantRemoved))
-	defenseMaid:mark(renderStepped:connect("Defense_UpdateVisualizations", updateVisualizations))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateHistory", updateHistory))
+	defenseMaid:mark(renderStepped:connect("Defense_UpdateVisualizations", updateVisualizations))
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateAssistance", updateAssistance))
 	defenseMaid:mark(postSimulation:connect("Defense_UpdateDefenders", updateDefenders))
 	defenseMaid:mark(playersAdded:connect("Defense_OnPlayerAdded", onPlayerAdded))

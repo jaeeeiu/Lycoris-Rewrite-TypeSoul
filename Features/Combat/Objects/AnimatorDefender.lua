@@ -40,6 +40,9 @@ local TaskSpawner = require("Utility/TaskSpawner")
 ---@module Features.Combat.PositionHistory
 local PositionHistory = require("Features/Combat/PositionHistory")
 
+---@module Utility.OriginalStore
+local OriginalStore = require("Utility/OriginalStore")
+
 ---@class AnimatorDefender: Defender
 ---@field animator Animator
 ---@field entity Model
@@ -63,7 +66,7 @@ local players = game:GetService("Players")
 -- Constants.
 local MAX_REPEAT_TIME = 5.0
 local HISTORY_STEPS = 5.0
-local PREDICTION_LENIENCY_MULTI = 5.0
+local PREDICT_FACING_DELTA = 0.3
 
 ---Is animation stopped? Made into a function for de-duplication.
 ---@param self AnimatorDefender
@@ -116,7 +119,7 @@ AnimatorDefender.rc = LPH_NO_VIRTUALIZE(function(self, info)
 	return true
 end)
 
----Run predict facing hitbox.
+---Run predict facing hitbox check.
 ---@param self AnimatorDefender
 ---@param options HitboxOptions
 ---@return boolean
@@ -131,39 +134,71 @@ AnimatorDefender.pfh = LPH_NO_VIRTUALIZE(function(self, options)
 		return false
 	end
 
-	-- Calculate send delay for the target entity.
-	local player = players:GetPlayerFromCharacter(self.entity)
-	local sd = (player and player:GetAttribute("AveragePing") or 10.0) / 2000
+	local localRoot = players.LocalPlayer.Character and players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not localRoot then
+		return false
+	end
 
-	-- Extrapolate rotation angle.
-	local tsecs = (sd + self:rdelay()) * PREDICTION_LENIENCY_MULTI
-	local protation = CFrame.Angles(0, yrate * tsecs, 0)
+	if math.abs(yrate) < PREDICT_FACING_DELTA then
+		return
+	end
 
-	-- Save old CFrame.
-	local oldCFrame = root.CFrame
+	local clone = options:clone()
+	clone.spredict = false
+	clone.hcolor = Color3.new(0, 1, 1)
+	clone.mcolor = Color3.new(1, 1, 0)
 
-	-- Run prediction.
-	root.CFrame = root.CFrame * protation
+	local result = false
+	local store = OriginalStore.new()
 
-	local result = self:hc(options, nil)
-
-	root.CFrame = oldCFrame
+	store:run(root, "CFrame", CFrame.lookAt(root.Position, localRoot.Position), function()
+		result = self:hc(clone, nil)
+	end)
 
 	return result
 end)
 
----Run past hitbox detection.
+---Run past hitbox check.
 ---@param timing Timing
 ---@param options HitboxOptions
 ---@return boolean
 AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, timing, options)
 	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS, timing.phds) do
-		options.cframe = cframe
+		local clone = options:clone()
+		clone.spredict = false
+		clone.cframe = cframe
+		clone.hcolor = Color3.new(0.839215, 0.976470, 0.537254)
+		clone.mcolor = Color3.new(1, 0.666666, 0)
 
-		if not self:hc(options, nil) then
+		if not self:hc(clone, nil) then
 			continue
 		end
 
+		return true
+	end
+end)
+
+---Get extrapolated seconds.
+---@param self Defender
+---@param timing AnimationTiming
+---@return number
+AnimatorDefender.fsecs = LPH_NO_VIRTUALIZE(function(self, timing)
+	local player = players:GetPlayerFromCharacter(self.entity)
+	local sd = (player and player:GetAttribute("AveragePing") or 50.0) / 2000
+	return (timing.pfht or 0.25) + (sd + Defender.rdelay())
+end)
+
+---Run our facing extrapolation / interpolation.
+AnimatorDefender.fpc = LPH_NO_VIRTUALIZE(function(self, timing, options)
+	if timing.duih then
+		return false
+	end
+
+	if timing.pfh and self:pfh(options) then
+		return true
+	end
+
+	if timing.phd and self:phd(timing, options) then
 		return true
 	end
 end)
@@ -201,7 +236,8 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	end
 
 	local options = HitboxOptions.new(root, timing)
-	options.spredict = true
+	options.spredict = not timing.duih
+	options.ptime = self:fsecs(timing)
 	options.action = action
 	options.entity = self.entity
 
@@ -213,15 +249,8 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return true
 	end
 
-	if timing.duih then
-		return self:notify(timing, "Not in hitbox.")
-	end
-
-	if timing.pfh and self:pfh(options) then
-		return true
-	end
-
-	if timing.phd and self:phd(timing, options) then
+	local pc = self:fpc(timing, options)
+	if pc then
 		return true
 	end
 

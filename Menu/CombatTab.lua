@@ -4,6 +4,9 @@ local CombatTab = {}
 ---@module Utility.Logger
 local Logger = require("Utility/Logger")
 
+---@module Features.Combat.Defense
+local Defense = require("Features/Combat/Defense")
+
 -- Initialize combat targeting section.
 ---@param tab table
 function CombatTab.initCombatTargetingSection(tab)
@@ -133,6 +136,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 	autoDefenseDepBox:AddToggle("EnableVisualizations", {
 		Text = "Enable Visualizations",
 		Default = false,
+		Callback = Defense.visualizations,
 	})
 
 	autoDefenseDepBox:AddToggle("DashOnParryCooldown", {

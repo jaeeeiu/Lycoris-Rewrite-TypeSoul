@@ -1,5 +1,5 @@
 -- AttributeListener module.
-local AttributeListener = { lastParry = nil, lastDash = nil }
+local AttributeListener = { lastParry = nil, lastDash = nil, lastKnock = nil }
 
 ---@modules Utility.Maid
 local Maid = require("Utility/Maid")
@@ -31,6 +31,10 @@ local function onCharacterAdded(character)
 			then
 				AttributeListener.lastDash = tick()
 			end
+
+			if character:GetAttribute("CurrentState") == "Unconscious" then
+				AttributeListener.lastKnock = tick()
+			end
 		end
 	)
 end
@@ -41,6 +45,19 @@ local function onCharacterRemoving(character)
 	attributeMaid["CurrentStateAttributeChanged"] = nil
 	AttributeListener.lastParry = nil
 	AttributeListener.lastDash = nil
+	AttributeListener.lastKnock = nil
+end
+
+---Knocked recently?
+---@return boolean
+function AttributeListener.krecently()
+	local localPlayer = players.LocalPlayer
+	local character = localPlayer.Character
+	if not character then
+		return false
+	end
+
+	return AttributeListener.lastKnock and tick() - AttributeListener.lastKnock <= 0.250
 end
 
 ---Can we parry?

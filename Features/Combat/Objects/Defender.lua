@@ -37,16 +37,16 @@ local AttributeListener = require("Features/Combat/AttributeListener")
 ---@module Game.Keybinding
 local Keybinding = require("Game/Keybinding")
 
+---@module Utility.OriginalStore
+local OriginalStore = require("Utility/OriginalStore")
+
 ---@class Defender
 ---@field tasks Task[]
 ---@field tmaid Maid Cleaned up every clean cycle.
 ---@field rhook table<string, function> Hooked functions that we can restore on clean-up.
 ---@field markers table<string, boolean> Blocking markers for unknown length timings. If the entry exists and is true, then we're blocking.
 ---@field maid Maid
----@field vpart Part?
----@field ppart Part?
----@field pvpart Part?
----@field pppart Part?
+---@field hmaid Maid
 local Defender = {}
 Defender.__index = Defender
 Defender.__type = "Defender"
@@ -56,6 +56,7 @@ local stats = game:GetService("Stats")
 local userInputService = game:GetService("UserInputService")
 local players = game:GetService("Players")
 local textChatService = game:GetService("TextChatService")
+local debrisService = game:GetService("Debris")
 
 -- Constants.
 local MAX_VISUALIZATION_TIME = 5.0
@@ -198,6 +199,10 @@ Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 		return self:notify(timing, "No character found.")
 	end
 
+	if selectedFilters["Disable When Knocked Recently"] and AttributeListener.krecently() then
+		return self:notify(timing, "User was knocked recently.")
+	end
+
 	if selectedFilters["Disable When In Dash"] and character:GetAttribute("CurrentState") == "Dashing" then
 		return self:notify(timing, "User is dashing.")
 	end
@@ -249,31 +254,6 @@ Defender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	return true
 end)
 
----Update visualizations.
----@param self Defender
-Defender.vupdate = LPH_NO_VIRTUALIZE(function(self)
-	-- Calculate whether or not we should be showing visualizations.
-	local showVisualizations = Configuration.expectToggleValue("EnableVisualizations")
-		and os.clock() - self.lvisualization <= MAX_VISUALIZATION_TIME
-
-	-- Set transparency.
-	if self.vpart then
-		self.vpart.Transparency = showVisualizations and 0.2 or 1.0
-	end
-
-	if self.ppart then
-		self.ppart.Transparency = showVisualizations and 0.2 or 1.0
-	end
-
-	if self.ppart then
-		self.ppart.Transparency = showVisualizations and 0.2 or 1.0
-	end
-
-	if self.pvpart then
-		self.pvpart.Transparency = showVisualizations and 0.2 or 1.0
-	end
-end)
-
 ---Check if any parts that are in our filter were hit.
 ---@note: Solara fallback.
 local function checkParts(parts, filter)
@@ -290,6 +270,38 @@ local function checkParts(parts, filter)
 	return false
 end
 
+---Visualize a position and size.
+---@param self Defender
+---@param identifier number? If the identifier is nil, then we will auto-generate one for each visualization.
+---@param cframe CFrame
+---@param size Vector3
+---@param color Color3
+Defender.visualize = LPH_NO_VIRTUALIZE(function(self, identifier, cframe, size, color)
+	local id = identifier or self.hmaid:uid()
+	local vpart = self.hmaid[id] or Instance.new("Part")
+
+	vpart.Parent = workspace
+	vpart.Anchored = true
+	vpart.CanCollide = false
+	vpart.CanQuery = false
+	vpart.CanTouch = false
+	vpart.Material = Enum.Material.ForceField
+	vpart.CastShadow = false
+	vpart.Size = size
+	vpart.CFrame = cframe
+	vpart.Color = color
+	vpart.Name = string.format("RW_Visualization_%i", id)
+	vpart.Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
+
+	if self.hmaid[id] then
+		return
+	end
+
+	self.hmaid[id] = vpart
+
+	debrisService:AddItem(vpart, MAX_VISUALIZATION_TIME)
+end)
+
 ---Run hitbox check. Returns wheter if the hitbox is being touched.
 ---@todo: An issue is that the player's current look vector will not be the same as when they attack due to a parry timing being seperate from the attack causing this check to fail.
 ---@param self Defender
@@ -297,29 +309,23 @@ end
 ---@param fd boolean
 ---@param size Vector3
 ---@param filter Instance[]
----@param identifier string
----@param predicted boolean
----@return boolean
-Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, identifier, predicted)
-	local isShitExploit = getexecutorname and getexecutorname():match("Solara")
+---@return boolean?, CFrame?
+Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter)
+	local shouldManualFilter = getexecutorname
+		and (getexecutorname():match("Solara") or getexecutorname():match("Xeno"))
 
-	if getexecutorname and getexecutorname():match("Xeno") then
-		isShitExploit = true
-	end
-
-	---@note: Solara is very shit so we need to do the filtering ourselves
 	local overlapParams = OverlapParams.new()
-	overlapParams.FilterDescendantsInstances = isShitExploit and {} or filter
-	overlapParams.FilterType = isShitExploit and Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Include
+	overlapParams.FilterDescendantsInstances = shouldManualFilter and {} or filter
+	overlapParams.FilterType = shouldManualFilter and Enum.RaycastFilterType.Exclude or Enum.RaycastFilterType.Include
 
 	local character = players.LocalPlayer.Character
 	if not character then
-		return nil
+		return nil, nil
 	end
 
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root then
-		return nil
+		return nil, nil
 	end
 
 	-- Used CFrame.
@@ -332,71 +338,8 @@ Defender.hitbox = LPH_NO_VIRTUALIZE(function(self, cframe, fd, size, filter, ide
 	-- Parts in bounds.
 	local parts = workspace:GetPartBoundsInBox(usedCFrame, size, overlapParams)
 
-	-- Detect hit.
-	local hit = isShitExploit and checkParts(parts, filter) or #parts > 0
-
-	-- Visualize color.
-	local visColor = hit and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-
-	if predicted then
-		visColor = hit and Color3.fromRGB(255, 0, 255) or Color3.fromRGB(0, 0, 0)
-	end
-
-	-- Indexes.
-	local vpartIndex = predicted and "pvpart" or "vpart"
-	local ppartIndex = predicted and "pppart" or "ppart"
-
-	-- Create visualization part if it doesn't exist.
-	if not self[vpartIndex] then
-		-- Create part.
-		local vpart = Instance.new("Part")
-		vpart.Parent = workspace
-		vpart.Anchored = true
-		vpart.CanCollide = false
-		vpart.CanQuery = false
-		vpart.CanTouch = false
-		vpart.Material = Enum.Material.ForceField
-		vpart.CastShadow = false
-
-		-- Set part.
-		self[vpartIndex] = vpart
-	end
-
-	-- Create player part if it doesn't exist.
-	if not self[ppartIndex] then
-		-- Create part.
-		local ppart = Instance.new("Part")
-		ppart.Parent = workspace
-		ppart.Anchored = true
-		ppart.CanCollide = false
-		ppart.CanQuery = false
-		ppart.CanTouch = false
-		ppart.Material = Enum.Material.ForceField
-		ppart.CastShadow = false
-
-		-- Set part.
-		self[ppartIndex] = ppart
-	end
-
-	-- Visual part.
-	self[vpartIndex].Size = size
-	self[vpartIndex].CFrame = usedCFrame
-	self[vpartIndex].Color = visColor
-	self[vpartIndex].Name = string.format("VP_%s", identifier)
-	self[vpartIndex].Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
-
-	-- Player part.
-	self[ppartIndex].Size = root.Size
-	self[ppartIndex].CFrame = root.CFrame
-	self[ppartIndex].Color = visColor
-	self[ppartIndex].Name = string.format("PP_%s", identifier)
-	self[ppartIndex].Transparency = Configuration.expectToggleValue("EnableVisualizations") and 0.2 or 1.0
-
-	-- Set timestamp.
-	self.lvisualization = os.clock()
-
-	-- Return reuslt.
-	return hit
+	-- Return result.
+	return shouldManualFilter and checkParts(parts, filter) or #parts > 0, usedCFrame
 end)
 
 ---Check initial state.
@@ -503,12 +446,15 @@ end)
 ---@param info RepeatInfo
 ---@return boolean
 Defender.duih = LPH_NO_VIRTUALIZE(function(self, options, info)
+	local clone = options:clone()
+	clone.hmid = self.hmaid:uid()
+
 	while task.wait() do
 		if not self:rc(info) then
 			return false
 		end
 
-		if not self:hc(options, nil) then
+		if not self:hc(clone, nil) then
 			continue
 		end
 
@@ -519,40 +465,13 @@ end)
 ---Handle hitbox check options.
 ---@param self Defender
 ---@param options HitboxOptions
----@param info RepeatInfo? Pass this in if you want to use the repeat until in hitbox conditional.
+---@param info RepeatInfo? Pass this in if you want to use the delay until in hitbox.
 ---@return boolean
 Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 	local action = options.action
-
-	---@type Timing
 	local timing = options.timing
 
-	if action and action.ihbc then
-		return true
-	end
-
-	if info then
-		return self:duih(options, info)
-	end
-
-	local hitbox = action and action.hitbox or timing.hitbox
-
-	if timing.duih then
-		hitbox = timing.hitbox
-	end
-
-	hitbox = Vector3.new(PP_SCRAMBLE_NUM(hitbox.X), PP_SCRAMBLE_NUM(hitbox.Y), PP_SCRAMBLE_NUM(hitbox.Z))
-
-	local result = self:hitbox(options:pos(), timing.fhb, hitbox, options.filter, PP_SCRAMBLE_STR(timing.name), false)
-
-	if result then
-		return result
-	end
-
-	if not options.spredict then
-		return false
-	end
-
+	-- Run basic validation.
 	local character = players.LocalPlayer.Character
 	if not character then
 		return false
@@ -563,33 +482,53 @@ Defender.hc = LPH_NO_VIRTUALIZE(function(self, options, info)
 		return false
 	end
 
-	local leniency = timing.duih and 1.0 or PREDICTION_LENIENCY_MULTI
+	if action and action.ihbc then
+		return true
+	end
 
-	local closest = PositionHistory.closest(players.LocalPlayer, tick() - (self.sdelay() * leniency))
+	-- If we have info, then we want to delay until in hitbox.
+	if info then
+		return self:duih(options, info)
+	end
+
+	-- Fetch the data that we need.
+	local hitbox = options:hitbox()
+	local eposition = options.spredict and options:extrapolate() or nil
+	local position = options:pos()
+
+	-- Run hitbox check.
+	local result, usedCFrame = self:hitbox(position, timing.fhb, hitbox, options.filter)
+
+	if usedCFrame then
+		self:visualize(options.hmid, usedCFrame, hitbox, options:ghcolor(result))
+		self:visualize(options.hmid and options.hmid + 1 or nil, root.CFrame, root.Size, options:ghcolor(result))
+	end
+
+	if not options.spredict or result then
+		return result
+	end
+
+	-- Run prediction check.
+	local closest = PositionHistory.closest(players.LocalPlayer, tick() - (self.sdelay() * PREDICTION_LENIENCY_MULTI))
 	if not closest then
 		return false
 	end
 
-	local oldCFrame = root.CFrame
+	local store = OriginalStore.new()
 
-	root.CFrame = closest
+	-- Run check.
+	store:run(root, "CFrame", closest, function()
+		result, usedCFrame = self:hitbox(eposition, timing.fhb, hitbox, options.filter)
+	end)
 
-	result = self:hitbox(
-		options:extrapolate(leniency),
-		timing.fhb,
-		hitbox,
-		options.filter,
-		PP_SCRAMBLE_STR(timing.name),
-		true
-	)
-
-	root.CFrame = oldCFrame
-
-	if not result then
-		return false
+	-- Visualize predicted hitbox.
+	if usedCFrame then
+		self:visualize(options.hmid and options.hmid + 1 or nil, usedCFrame, hitbox, options:gphcolor(result))
+		self:visualize(options.hmid and options.hmid + 1 or nil, root.CFrame, root.Size, options:gphcolor(result))
 	end
 
-	return true
+	-- Return result.
+	return result
 end)
 
 ---Handle end block.
@@ -749,22 +688,8 @@ Defender.clean = LPH_NO_VIRTUALIZE(function(self)
 	-- Clear markers.
 	self.markers = {}
 
-	-- Teleport visualizations away.
-	if self.vpart then
-		self.vpart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
-	end
-
-	if self.ppart then
-		self.ppart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
-	end
-
-	if self.pvpart then
-		self.pvpart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
-	end
-
-	if self.pppart then
-		self.pppart.CFrame = CFrame.new(math.huge, math.huge, math.huge)
-	end
+	-- Clean up hitboxes.
+	self.hmaid:clean()
 
 	-- Was there a start block, end block, or parry?
 	local blocking = false
@@ -900,23 +825,6 @@ function Defender:detach()
 	self:clean()
 	self.maid:clean()
 
-	-- Destroy parts.
-	if self.vpart then
-		self.vpart:Destroy()
-	end
-
-	if self.ppart then
-		self.ppart:Destroy()
-	end
-
-	if self.ppart then
-		self.ppart:Destroy()
-	end
-
-	if self.pvpart then
-		self.pvpart:Destroy()
-	end
-
 	-- Set object nil.
 	self = nil
 end
@@ -929,8 +837,7 @@ function Defender.new()
 	self.rhook = {}
 	self.tmaid = Maid.new()
 	self.maid = Maid.new()
-	self.ppart = nil
-	self.vpart = nil
+	self.hmaid = Maid.new()
 	self.markers = {}
 	self.lvisualization = os.clock()
 	return self

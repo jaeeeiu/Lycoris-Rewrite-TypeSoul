@@ -60,28 +60,32 @@ local runPlayerScans = LPH_NO_VIRTUALIZE(function()
 		end
 
 		if not PlayerScanning.scanDataCache[player] then
-			local success, result = pcall(PlayerScanning.getStaffRank, player)
+			local handledSuccess, handledResult = nil, nil
 
-			if not success then
-				if result:match("Rate-limited.") then
-					continue
-				end
+			local unhandledSuccess, unhandledResult = pcall(function()
+				handledSuccess, handledResult = PlayerScanning.getStaffRank(player)
+			end)
 
-				if result:match("On rate-limit cooldown.") then
-					continue
-				end
+			if not unhandledSuccess then
+				Logger.warn(
+					"Scan player %s ran into error '%s' while getting staff rank.",
+					player.Name,
+					unhandledResult
+				)
 
-				Logger.warn("Scan player %s ran into error '%s' while getting staff rank.", player.Name, result)
-
-				Logger.longNotify("Failed to scan player %s for moderator status.", fetchName(player), result)
+				Logger.longNotify("Failed to scan player %s for moderator status.", fetchName(player), unhandledResult)
 
 				PlayerScanning.scanQueue[player] = nil
 
 				continue
 			end
 
-			if Configuration.expectToggleValue("NotifyMod") and result then
-				Logger.longNotify("%s is a staff member with the rank '%s' in group.", fetchName(player), result)
+			if not handledSuccess then
+				continue
+			end
+
+			if Configuration.expectToggleValue("NotifyMod") and handledResult then
+				Logger.longNotify("%s is a staff member with the rank '%s' in group.", fetchName(player), handledResult)
 
 				if Configuration.expectToggleValue("NotifyModSound") then
 					moderatorSound.SoundId = "rbxassetid://6045346303"
@@ -91,7 +95,7 @@ local runPlayerScans = LPH_NO_VIRTUALIZE(function()
 				end
 			end
 
-			PlayerScanning.scanDataCache[player] = { staffRank = result }
+			PlayerScanning.scanDataCache[player] = { staffRank = handledResult }
 		end
 
 		PlayerScanning.scanQueue[player] = nil
@@ -125,10 +129,10 @@ end
 
 ---Fetch roblox data.
 ---@param url string
----@return table
+---@return boolean, string?
 local function fetchRobloxData(url)
 	if lastRateLimit and os.clock() - lastRateLimit <= 30 then
-		return error("On rate-limit cooldown.")
+		return false, "On rate-limit cooldown."
 	end
 
 	local response = request({
@@ -145,7 +149,7 @@ local function fetchRobloxData(url)
 
 		lastRateLimit = os.clock()
 
-		return error("Rate-limited.")
+		return false, "Rate-limited."
 	end
 
 	if not response then
@@ -162,20 +166,24 @@ local function fetchRobloxData(url)
 		return error("Failed to find Roblox data.")
 	end
 
-	return httpService:JSONDecode(response.Body)
+	return true, httpService:JSONDecode(response.Body)
 end
 
 ---Get staff rank - nil if they're not a staff.
 ---@param player Player
----@return string?
+---@return boolean, string?
 function PlayerScanning.getStaffRank(player)
-	local responseData =
+	local responseSuccess, responseData =
 		fetchRobloxData(("https://groups.roblox.com/v2/users/%i/groups/roles?includeLocked=true"):format(player.UserId))
+
+	if not responseSuccess then
+		return false, responseData
+	end
 
 	local character = player.Character
 
 	if character and character:GetAttribute("ContentCreator") then
-		return "Content Creator"
+		return true, "Content Creator"
 	end
 
 	for _, groupData in next, responseData.data do
@@ -187,10 +195,10 @@ function PlayerScanning.getStaffRank(player)
 			continue
 		end
 
-		return groupData.role.name
+		return true, groupData.role.name
 	end
 
-	return nil
+	return true, nil
 end
 
 ---Update player scanning.

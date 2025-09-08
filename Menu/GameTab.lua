@@ -39,12 +39,6 @@ function GameTab.initLocalCharacterSection(groupbox)
 
 	local flyDepBox = groupbox:AddDependencyBox()
 
-	flyDepBox:AddToggle("AntiAAGun", {
-		Text = "Anti AA Gun",
-		Tooltip = "Prevent the anti-air gun from targeting you.",
-		Default = false,
-	})
-
 	flyDepBox:AddSlider("FlySpeed", {
 		Text = "Fly Speed",
 		Default = 200,
@@ -248,7 +242,7 @@ end
 function GameTab.initPlayerMonitoringSection(groupbox)
 	groupbox:AddToggle("NotifyMod", {
 		Text = "Mod Notifications",
-		Default = true,
+		Default = false,
 	})
 
 	local nmDepBox = groupbox:AddDependencyBox()
@@ -286,7 +280,7 @@ function GameTab.initPlayerMonitoringSection(groupbox)
 
 	groupbox:AddToggle("ShowRobloxChat", {
 		Text = "Show Roblox Chat",
-		Default = true,
+		Default = false,
 	})
 
 	groupbox:AddToggle("ShowOwnership", {
