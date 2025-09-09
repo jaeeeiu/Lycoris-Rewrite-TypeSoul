@@ -11,7 +11,7 @@
 - (bug fix) Mobile support for color picker context menu is now fixed
 - (bug fix) Aim lock should no longer interfere with character AutoRotate (people were being able to turn while knocked)
 - (bug fix) Fixed 3/4 (except for Failure Rate) "Allow Failure" options and their limitation checks to prevent it completely messing up AP
-- (bug fix) Fixed dodge check to return a proper result (dodge fallbacks are now fixed aswell)
+- (bug fix) Fixed "Can Dodge?" check to return a proper result (dodge fallbacks are now fixed aswell)
 - (bug fix) Fixed ESP position bugs
 - (removed) Anti AA Gun (it was simply not effective, interfered with PlatformStand)
 + (optimization) Optimized player position history tracking
