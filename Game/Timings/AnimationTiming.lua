@@ -14,6 +14,7 @@ local Timing = require("Game/Timings/Timing")
 ---@field pfht number Extrapolation time for hitbox prediction.
 ---@field ieae boolean Flag to see whether or not this timing should ignore early animation end.
 ---@field mat number Max animation timeout in milliseconds.
+---@field dp boolean Disable prediction.
 local AnimationTiming = setmetatable({}, { __index = Timing })
 AnimationTiming.__index = AnimationTiming
 
@@ -95,6 +96,10 @@ function AnimationTiming:load(values)
 	if typeof(values.pfht) == "number" then
 		self.pfht = values.pfht
 	end
+
+	if typeof(values.dp) == "boolean" then
+		self.dp = values.dp
+	end
 end
 
 ---Clone timing.
@@ -114,6 +119,7 @@ function AnimationTiming:clone()
 	clone.pfh = self.pfh
 	clone.phds = self.phds
 	clone.pfht = self.pfht
+	clone.dp = self.dp
 
 	return clone
 end
@@ -135,6 +141,7 @@ function AnimationTiming:serialize()
 	serializable.pfh = self.pfh
 	serializable.phds = self.phds
 	serializable.pfht = self.pfht
+	serializable.dp = self.dp
 
 	return serializable
 end
@@ -145,6 +152,7 @@ end
 function AnimationTiming.new(values)
 	local self = setmetatable(Timing.new(), AnimationTiming)
 
+	self.dp = false
 	self._id = ""
 	self._rsd = 0
 	self._rpd = 0
@@ -156,7 +164,7 @@ function AnimationTiming.new(values)
 	self.phd = false
 	self.pfh = false
 	self.phds = 0
-	self.pfht = 0.25
+	self.pfht = 0.15
 
 	if values then
 		self:load(values)

@@ -187,7 +187,7 @@ end)
 AnimatorDefender.fsecs = LPH_NO_VIRTUALIZE(function(self, timing)
 	local player = players:GetPlayerFromCharacter(self.entity)
 	local sd = (player and player:GetAttribute("AveragePing") or 50.0) / 2000
-	return (timing.pfht or 0.25) + (sd + Defender.rdelay())
+	return (timing.pfht or 0.15) + (sd + Defender.rdelay())
 end)
 
 ---Run our facing extrapolation / interpolation.
@@ -238,7 +238,7 @@ AnimatorDefender.valid = LPH_NO_VIRTUALIZE(function(self, timing, action)
 	end
 
 	local options = HitboxOptions.new(root, timing)
-	options.spredict = not timing.duih
+	options.spredict = not timing.duih and not timing.dp
 	options.ptime = self:fsecs(timing)
 	options.action = action
 	options.entity = self.entity

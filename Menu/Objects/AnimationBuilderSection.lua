@@ -176,10 +176,19 @@ function AnimationBuilderSection:extra(tab)
 		end),
 	})
 
+	self.disablePrediction = tab:AddToggle(nil, {
+		Text = "Disable Prediction",
+		Default = false,
+		Tooltip = "Should we disable prediction?",
+		Callback = self:tnc(function(timing, value)
+			timing.dp = value
+		end),
+	})
+
 	self.extrapolationTime = tab:AddSlider(nil, {
 		Text = "Extrapolation Time",
 		Tooltip = "The time (in seconds) to extrapolate by.",
-		Default = 0.25,
+		Default = 0.15,
 		Min = 0,
 		Max = 2.0,
 		Rounding = 3,
