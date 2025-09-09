@@ -39,6 +39,7 @@ local Defense = {}
 
 -- Services.
 local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 local tweenService = game:GetService("TweenService")
 
@@ -259,6 +260,35 @@ local updateVisualizations = LPH_NO_VIRTUALIZE(function()
 	end
 end)
 
+---On quick client effect.
+local onQuickClientEffect = LPH_NO_VIRTUALIZE(function(entity, value, skillData, timingData)
+	if not skillData or skillData.Skill ~= "TimingPrompt" then
+		return
+	end
+
+	local character = players.LocalPlayer.Character
+	if not character then
+		return
+	end
+
+	local characterHandler = character:FindFirstChild("CharacterHandler")
+	if not characterHandler then
+		return
+	end
+
+	local remotes = characterHandler:FindFirstChild("Remotes")
+	if not remotes then
+		return
+	end
+
+	local m2Remote = remotes:FindFirstChild("M2")
+	if not m2Remote then
+		return
+	end
+
+	m2Remote:FireServer()
+end)
+
 ---Update assistance.
 local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	local localPlayer = players.LocalPlayer
@@ -414,12 +444,17 @@ end)
 
 ---Initialize defense.
 function Defense.init()
+	-- Instances.
+	local remotes = replicatedStorage:WaitForChild("Remotes")
+	local quickClientEffects = remotes:WaitForChild("QuickClientEffects")
+
 	-- Signals.
 	local gameDescendantAdded = Signal.new(game.DescendantAdded)
 	local gameDescendantRemoved = Signal.new(game.DescendantRemoving)
 	local renderStepped = Signal.new(runService.RenderStepped)
 	local postSimulation = Signal.new(runService.PostSimulation)
 	local playersAdded = Signal.new(players.PlayerAdded)
+	local quickClientEffectSignal = Signal.new(quickClientEffects.OnClientEvent)
 
 	defenseMaid:mark(gameDescendantAdded:connect("Defense_OnDescendantAdded", onGameDescendantAdded))
 	defenseMaid:mark(gameDescendantRemoved:connect("Defense_OnDescendantRemoved", onGameDescendantRemoved))
@@ -428,6 +463,7 @@ function Defense.init()
 	defenseMaid:mark(renderStepped:connect("Defense_UpdateAssistance", updateAssistance))
 	defenseMaid:mark(postSimulation:connect("Defense_UpdateDefenders", updateDefenders))
 	defenseMaid:mark(playersAdded:connect("Defense_OnPlayerAdded", onPlayerAdded))
+	defenseMaid:mark(quickClientEffectSignal:connect("Defense_OnQuickClientEffect", onQuickClientEffect))
 
 	if players.LocalPlayer then
 		onPlayerAdded(players.LocalPlayer)
