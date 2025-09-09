@@ -7,7 +7,7 @@ local Action = getfenv().Action
 return function(self, timing)
 	repeat
 		task.wait()
-	until self.track.TimePosition >= 0.375
+	until self.track.TimePosition >= 0.5
 
 	local action = Action.new()
 	action._when = 0
