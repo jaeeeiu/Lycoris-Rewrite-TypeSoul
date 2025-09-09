@@ -27,8 +27,8 @@
 *Organized prediction + hitbox code (+ new builder feature which allows facing angles to be predicted) with the newest update although that's irrelevant to you guys*
 *Pink / grey -- predicted hitboxes*
 *Green / red -- current state hitbox check*
-*Lime / purple -- past hitbox check*
-*Cyan / yellow -- predicted facing hitbox check, based on conditions to force a hitbox facing you*
+*Lime / purple (per-timing) -- past hitbox check*
+*Cyan / yellow (per-timing) -- predicted facing hitbox check, based on conditions to force a hitbox facing you*
 
 Your commit ID should == "ccfc72a" when the update is fully pushed to you.
 @Updates
