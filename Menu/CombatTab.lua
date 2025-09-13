@@ -220,6 +220,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 	autoDefenseDepBox:AddDropdown("DefaultDashDirection", {
 		Text = "Default Dash Direction",
 		Values = { "W", "A", "S", "D", "Random" },
+		Tooltip = "The default direction to dash when you are not holding any movement keys.",
 		Default = 3,
 	})
 
