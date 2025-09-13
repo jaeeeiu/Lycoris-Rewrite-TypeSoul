@@ -217,8 +217,8 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = {},
 	})
 
-	autoDefenseDepBox:AddDropdown("DefaultParryDirection", {
-		Text = "Default Parry Direction",
+	autoDefenseDepBox:AddDropdown("DefaultDashDirection", {
+		Text = "Default Dash Direction",
 		Values = { "W", "A", "S", "D", "Random" },
 		Default = 3,
 	})
