@@ -316,11 +316,24 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	end
 
 	local target = stickyTarget or Targeting.best()[1]
+	local failure = false
+
 	if not target then
-		return
+		failure = true
+		stickyTarget = nil
+	end
+
+	if not target.character.Parent then
+		failure = true
+		stickyTarget = nil
 	end
 
 	if target.humanoid.Health <= 0 then
+		failure = true
+		stickyTarget = nil
+	end
+
+	if failure then
 		return
 	end
 
