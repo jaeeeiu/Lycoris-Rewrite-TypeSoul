@@ -60,12 +60,11 @@ local deletedPlaybackData = {}
 -- Visualization updating.
 local lastVisualizationUpdate = os.clock()
 
+-- Last history updating.
+local lastHistoryUpdate = os.clock()
+
 -- Aim lock state.
 local stickyTarget = nil
-
--- History updating.
-local historyUpdateIndex = 1
-local HISTORY_UPDATE_BATCH_SIZE = 5
 
 ---Add animator defender.
 ---@param animator Animator
@@ -188,6 +187,12 @@ end)
 
 ---Update history.
 local updateHistory = LPH_NO_VIRTUALIZE(function()
+	if os.clock() - lastHistoryUpdate <= 0.05 then
+		return
+	end
+
+	lastHistoryUpdate = os.clock()
+
 	local character = players.LocalPlayer.Character
 	if not character then
 		return
@@ -200,40 +205,23 @@ local updateHistory = LPH_NO_VIRTUALIZE(function()
 
 	PositionHistory.add(players.LocalPlayer, humanoidRootPart.CFrame, tick())
 
-	local daoIndicies = {}
-
-	for _, object in next, defenderAnimationObjects do
-		daoIndicies[#daoIndicies + 1] = object
-	end
-
-	if #daoIndicies <= 0 then
-		return
-	end
-
-	local processedCount = 0
-
-	for idx = historyUpdateIndex, #daoIndicies do
-		if processedCount >= HISTORY_UPDATE_BATCH_SIZE then
-			break
+	for _, player in next, players:GetPlayers() do
+		if player == players.LocalPlayer then
+			continue
 		end
 
-		local object = daoIndicies[idx]
-		local entity = object and object.entity
-		local hrp = entity and entity:FindFirstChild("HumanoidRootPart")
-
-		if hrp then
-			PositionHistory.add(entity, hrp.CFrame, tick())
+		local pcharacter = player.Character
+		if not pcharacter then
+			continue
 		end
 
-		processedCount = processedCount + 1
-		historyUpdateIndex = idx + 1
-	end
+		local proot = pcharacter:FindFirstChild("HumanoidRootPart")
+		if not proot then
+			continue
+		end
 
-	if historyUpdateIndex <= #daoIndicies then
-		return
+		PositionHistory.add(pcharacter, proot.CFrame, tick())
 	end
-
-	historyUpdateIndex = 1
 end)
 
 ---Update visualization.
@@ -327,12 +315,12 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		stickyTarget = nil
 	end
 
-	if not target.character.Parent then
+	if target and not target.character.Parent then
 		failure = true
 		stickyTarget = nil
 	end
 
-	if target.humanoid.Health <= 0 then
+	if target and target.humanoid.Health <= 0 then
 		failure = true
 		stickyTarget = nil
 	end

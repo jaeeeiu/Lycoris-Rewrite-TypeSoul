@@ -165,7 +165,7 @@ end)
 ---@param options HitboxOptions
 ---@return boolean
 AnimatorDefender.phd = LPH_NO_VIRTUALIZE(function(self, timing, options)
-	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS, timing.phds) do
+	for _, cframe in next, PositionHistory.stepped(self.entity, HISTORY_STEPS, timing.phds) or {} do
 		local clone = options:clone()
 		clone.spredict = false
 		clone.cframe = cframe
@@ -192,6 +192,7 @@ end)
 
 ---Run our facing extrapolation / interpolation.
 AnimatorDefender.fpc = LPH_NO_VIRTUALIZE(function(self, timing, options)
+	print(timing.duih, timing.pfh, timing.phd)
 	if timing.duih then
 		return false
 	end

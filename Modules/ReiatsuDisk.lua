@@ -23,7 +23,19 @@ return function(self, timing)
 	local distance = self:distance(self.entity)
 
 	if distance <= 15 then
-		return self:notify(timing, "Reiatsu Disc cannot be reliably parried from close range.")
+		local action = Action.new()
+		action._when = 400
+		action._type = "Start Block"
+		action.ihbc = true
+		action.name = "Reiatsu Disk Start Block"
+		self:action(timing, action)
+
+		local action2 = Action.new()
+		action2._when = 1300
+		action2._type = "End Block"
+		action2.ihbc = true
+		action2.name = "Reiatsu Disk End Block"
+		return self:action(timing, action2)
 	end
 
 	local childAdded = Signal.new(peffects.ChildAdded)

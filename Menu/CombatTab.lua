@@ -211,6 +211,7 @@ function CombatTab.initAutoDefenseSection(groupbox)
 			"Disable When Holding Block",
 			"Disable When In Dash",
 			"Disable When In Flashstep",
+			"Disable When Knocked Recently",
 		},
 		Multi = true,
 		AllowNull = true,

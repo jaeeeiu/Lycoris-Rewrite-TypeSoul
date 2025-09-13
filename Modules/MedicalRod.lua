@@ -10,15 +10,15 @@ return function(self, timing)
 	local action = Action.new()
 
 	-- pattern seems to be for every distance increment of 12 += 50
-	-- 3 : 650
-	-- 9-11 : 650
-	-- 11-23 : 700
-	-- 23-34: 750
+	-- 3 : 1100
+	-- 9-11 : 1150
+	-- 11-23 : 1200
+	-- 23-34: 1250
 
-	action._when = 650
+	action._when = 850
 
 	if distance >= 12 then
-		action._when += math.floor(distance / 12) * 50
+		action._when += math.floor(distance / 12) * 60
 	end
 
 	action._type = "Parry"

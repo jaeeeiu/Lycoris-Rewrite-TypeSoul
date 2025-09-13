@@ -77,28 +77,28 @@ function PositionHistory.stepped(idx, steps, phds)
 	end
 
 	local vhistory = {}
+	local vhtime = history[#history].timestamp
 
 	for _, data in next, history do
-		if tick() > data.timestamp + phds then
-			break
+		if vhtime - data.timestamp > phds then
+			continue
 		end
 
 		vhistory[#vhistory + 1] = data.position
 	end
 
-	local chunks = {}
-	local csize = #vhistory / steps
-
-	for hidx = 1, steps do
-		local data = vhistory[math.floor(hidx * csize)]
-		if not data then
-			break
-		end
-		print(data)
-		chunks[#chunks + 1] = data
+	if #vhistory == 0 then
+		return {}
 	end
 
-	return chunks
+	local count = math.min(steps, #vhistory)
+	local out = table.create(count)
+
+	for cidx = 1, count do
+		out[cidx] = vhistory[math.max(math.floor((cidx * #vhistory) / count), 1)]
+	end
+
+	return out
 end
 
 ---Get closest position (in time) to a timestamp.
