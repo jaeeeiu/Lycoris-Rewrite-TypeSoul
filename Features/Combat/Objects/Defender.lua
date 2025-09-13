@@ -627,7 +627,7 @@ Defender.handle = LPH_NO_VIRTUALIZE(function(self, timing, action, notify)
 		return self:notify(timing, "Action fallback 'Dodge' is disabled for this timing.")
 	end
 
-	if AttributeListener.cdash() then
+	if not AttributeListener.cdash() then
 		return blockFallback() or self:notify(timing, "Action fallback 'Dodge' blocked because we are unable to dash.")
 	end
 

@@ -85,14 +85,14 @@ function InputClient.dash()
         end
     ]]
 	--
-	local v348 = "S"
+	local v348 = Configuration.expectOptionValue("DefaultDashDirection") or "S"
+	local directions = { "W", "A", "S", "D" }
 
-	for _, v350 in ipairs({
-		"W",
-		"D",
-		"A",
-		"S",
-	}) do
+	if v348 == "Random" then
+		v348 = directions[math.random(1, #directions)]
+	end
+
+	for _, v350 in ipairs(directions) do
 		local l_status_4, l_result_4 = pcall(function() --[[ Line: 1629 ]]
 			-- upvalues: v350 (copy)
 			return Enum.KeyCode[v350]

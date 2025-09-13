@@ -217,6 +217,13 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = {},
 	})
 
+	autoDefenseDepBox:AddDropdown("DefaultDashDirection", {
+		Text = "Default Dash Direction",
+		Values = { "W", "A", "S", "D", "Random" },
+		Tooltip = "The default direction to dash when you are not holding any movement keys.",
+		Default = 3,
+	})
+
 	autoDefenseDepBox:AddSlider("DeflectHoldTime", {
 		Text = "Deflect Hold Time",
 		Min = 0,
@@ -234,6 +241,12 @@ end
 ---Initialize combat assistance section.
 ---@param groupbox table
 function CombatTab.initCombatAssistance(groupbox)
+	groupbox:AddToggle("AutoTimingPrompt", {
+		Text = "Auto Timing Prompt",
+		Default = false,
+		Tooltip = "Automatically perform a timing prompt and M2 for you.",
+	})
+
 	local alToggle = groupbox:AddToggle("AimLock", {
 		Text = "Aim Lock",
 		Default = false,
