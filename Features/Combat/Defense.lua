@@ -261,8 +261,12 @@ local updateVisualizations = LPH_NO_VIRTUALIZE(function()
 end)
 
 ---On quick client effect.
-local onQuickClientEffect = LPH_NO_VIRTUALIZE(function(entity, value, skillData, timingData)
+local onQuickClientEffect = LPH_NO_VIRTUALIZE(function(_, _, skillData, _)
 	if not skillData or skillData.Skill ~= "TimingPrompt" then
+		return
+	end
+
+	if not Configuration.expectToggleValue("AutoTimingPrompt") then
 		return
 	end
 
