@@ -217,6 +217,12 @@ function CombatTab.initAutoDefenseSection(groupbox)
 		Default = {},
 	})
 
+	autoDefenseDepBox:AddDropdown("DefaultParryDirection", {
+		Text = "Default Parry Direction",
+		Values = { "W", "A", "S", "D", "Random" },
+		Default = 3,
+	})
+
 	autoDefenseDepBox:AddSlider("DeflectHoldTime", {
 		Text = "Deflect Hold Time",
 		Min = 0,
