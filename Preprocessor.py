@@ -39,13 +39,6 @@ class LuaPreprocessor:
         # Optional timing file (MessagePack preferred). Parsed lazily.
         self.timing_file = timing_file
         self._timing_data: Optional[dict[str, Any]] = None
-        # Where we persist the last (unscrambled) decoded timing data for diffing across runs
-        self._timing_snapshot_path: Optional[Path] = None
-        if self.timing_file:
-            try:
-                self._timing_snapshot_path = self.timing_file.with_suffix('.preprocessor.last.json')
-            except Exception:
-                self._timing_snapshot_path = None
         # Snapshot for module content/name diffing
         self._modules_snapshot_path = self.output_path.parent / "modules.preprocessor.last.json"
 
@@ -531,94 +524,90 @@ class LuaPreprocessor:
         original_data = copy.deepcopy(data)
         self._timing_data = data
 
-        # Load previous snapshot (also expected unscrambled) and compute diff summary
-        prev_snapshot: Optional[dict[str, Any]] = None
-        if getattr(self, '_timing_snapshot_path', None) and self._timing_snapshot_path and self._timing_snapshot_path.exists():
-            try:
-                prev_snapshot = json.loads(self._timing_snapshot_path.read_text(encoding='utf-8'))
-            except Exception as e:
-                print(f"Warning: failed to read previous timing snapshot: {e}")
+        # Compute timing differences using patch files instead of snapshots
+        try:
+            patch_dir: Optional[Path] = self.timing_file.parent if self.timing_file else None
+            stamp_path: Optional[Path] = (patch_dir / "timing.preprocessor.last.json") if patch_dir else None
+            last_ts: Optional[str] = None
+            
+            if stamp_path and stamp_path.exists():
+                try:
+                    meta = json.loads(stamp_path.read_text(encoding='utf-8'))
+                    if isinstance(meta, dict):
+                        last_ts = str(meta.get('lastTimestamp') or meta.get('lastProcessedTimestamp') or '') or None
+                except Exception as e:
+                    print(f"Warning: failed to read timing preprocessor stamp: {e}")
 
-        if prev_snapshot:
-            def index_by_id(arr: Any) -> Dict[str, Any]:
-                out: Dict[str, Any] = {}
-                if isinstance(arr, list):
-                    for idx, item in enumerate(arr):
-                        if isinstance(item, dict):
-                            k = item.get('name')
-                            out[str(k)] = item
-                return out
+            patches: list[tuple[str, dict]] = []
+            if patch_dir and patch_dir.exists():
+                for fp in patch_dir.glob('patch_*.json'):
+                    try:
+                        obj = json.loads(fp.read_text(encoding='utf-8'))
+                        ts = obj.get('timestamp')
+                        diff = obj.get('diff')
+                        if isinstance(ts, str) and isinstance(diff, dict):
+                            patches.append((ts, diff))
+                    except Exception:
+                        continue
+            # Sort by timestamp (ISO 8601 strings sort lexicographically)
+            patches.sort(key=lambda t: t[0])
 
+            # Determine which patches to consider based on last processed timestamp
+            to_process: list[tuple[str, dict]] = []
+            if patches:
+                if last_ts is None:
+                    # Start at earliest timestamp as baseline; process only later patches
+                    earliest_ts = patches[0][0]
+                    to_process = [(ts, diff) for ts, diff in patches if ts > earliest_ts]
+                    last_ts = earliest_ts
+                else:
+                    to_process = [(ts, diff) for ts, diff in patches if ts > last_ts]
+
+            # Aggregate and print diffs in the same format as before
             containers = ['animation', 'part', 'sound']
+            per_container_counts = {k: {'added': 0, 'removed': 0, 'modified': 0} for k in containers}
             added_total = removed_total = modified_total = 0
             per_container_msgs: list[str] = []
             detail_lines: list[str] = []
-            detail_cap = 100  # limit noisy output
-            def _deep_equal(a: Any, b: Any) -> bool:
-                if a is b:
-                    return True
-                if type(a) is not type(b):
-                    return False
-                if isinstance(a, dict):
-                    if set(a.keys()) != set(b.keys()):
-                        return False
-                    for k in a.keys():
-                        if not _deep_equal(a[k], b[k]):
-                            return False
-                    return True
-                if isinstance(a, list):
-                    if len(a) != len(b):
-                        return False
-                    for ia, ib in zip(a, b):
-                        if not _deep_equal(ia, ib):
-                            return False
-                    return True
-                return a == b
-
+            detail_cap = 500
             full_len = 0
-        
-            for key in containers:
-                prev_map = index_by_id(prev_snapshot.get(key)) if isinstance(prev_snapshot, dict) else {}
-                curr_map = index_by_id(original_data.get(key)) if isinstance(original_data, dict) else {}
-                prev_ids = set(prev_map.keys())
-                curr_ids = set(curr_map.keys())
-                added = sorted(curr_ids - prev_ids)
-                removed = sorted(prev_ids - curr_ids)
-                common = prev_ids & curr_ids
-                modified_ids: list[str] = []
-    
-                for cid in common:
-                    p = prev_map[cid]; c = curr_map[cid]
-                    if not _deep_equal(p, c):
-                        modified_ids.append(cid)
-                        
-                full_len += len(added) + len(removed) + len(modified_ids)
-            
-                if added or removed or modified_ids:
-                    added_total += len(added); removed_total += len(removed); modified_total += len(modified_ids)
-                    per_container_msgs.append(f"{key}: +{len(added)}/-{len(removed)}/~{len(modified_ids)}")
-                    
-                    if key == "animation":
-                        key = "Animation"
-                        
-                    if key == "part":
-                        key = "Part"
-                    
-                    if key == "sound":
-                        key = "Sound"
-                    
-                    # Emit limited detail
-                    for cid in added:
-                        if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"+ (added) {key} : {cid}")
-                    for cid in removed:
-                        if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"- (removed) {key} : {cid}")
-                    for cid in modified_ids:
-                        if len(detail_lines) < detail_cap:
-                            detail_lines.append(f"+ (changed) {key} : {cid}")
-    
-            if added_total or removed_total or modified_total:
+
+            if to_process:
+                for ts, diff in to_process:
+                    for key in containers:
+                        changes = diff.get(key) if isinstance(diff, dict) else None
+                        if not isinstance(changes, dict):
+                            continue
+                        for cid, change in changes.items():
+                            status = (change or {}).get('status')
+                            if status == 'added':
+                                per_container_counts[key]['added'] += 1
+                                added_total += 1
+                                if len(detail_lines) < detail_cap:
+                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                    detail_lines.append(f"+ (added) {typ} : {cid}")
+                                full_len += 1
+                            elif status == 'removed':
+                                per_container_counts[key]['removed'] += 1
+                                removed_total += 1
+                                if len(detail_lines) < detail_cap:
+                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                    detail_lines.append(f"- (removed) {typ} : {cid}")
+                                full_len += 1
+                            elif status == 'modified':
+                                per_container_counts[key]['modified'] += 1
+                                modified_total += 1
+                                if len(detail_lines) < detail_cap:
+                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                    detail_lines.append(f"+ (changed) {typ} : {cid}")
+                                full_len += 1
+
+                # Build per-container summary strings (lowercase keys preserved)
+                for key in containers:
+                    c = per_container_counts[key]
+                    if c['added'] or c['removed'] or c['modified']:
+                        per_container_msgs.append(f"{key}: +{c['added']}/-{c['removed']}/~{c['modified']}")
+
                 summary = ', '.join(per_container_msgs) if per_container_msgs else 'no container changes'
                 print(f"Timing diff vs. previous snapshot: +{added_total}/-{removed_total}/~{modified_total} ({summary})")
                 if detail_lines:
@@ -629,12 +618,19 @@ class LuaPreprocessor:
             else:
                 print("Timing diff vs. previous snapshot: no changes detected.")
 
-        # Persist new snapshot (unscrambled original)
-        if getattr(self, '_timing_snapshot_path', None) and self._timing_snapshot_path:
-            try:
-                self._timing_snapshot_path.write_text(json.dumps(original_data, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-            except Exception as e:
-                print(f"Warning: failed to write timing snapshot: {e}")
+            # Persist the last processed patch timestamp (if any)
+            if stamp_path:
+                try:
+                    new_last_ts = last_ts
+                    if to_process:
+                        # Use the max timestamp we processed
+                        new_last_ts = max(ts for ts, _ in to_process)
+                    if new_last_ts is not None:
+                        stamp_path.write_text(json.dumps({"lastTimestamp": new_last_ts}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+                except Exception as e:
+                    print(f"Warning: failed to write timing preprocessor stamp: {e}")
+        except Exception as e:
+            print(f"Warning: failed to compute timing diff from patches: {e}")
             
         replaced = 0
         # Expect keys: animation, part, sound
