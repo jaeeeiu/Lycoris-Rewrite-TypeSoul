@@ -87,7 +87,7 @@ def find_differences(data1, data2):
             t2 = timings2.get(key)
 
             if t1 and not t2: # Removed
-                patch.setdefault(container, {})[key] = {"status": "removed"}
+                patch.setdefault(container, {})[key] = {"status": "removed", "name": t1.get("name", key)}
             elif not t1 and t2: # Added
                 patch.setdefault(container, {})[key] = {"status": "added", "data": t2}
             elif str(t1) != str(t2): # Modified
@@ -203,11 +203,16 @@ class ModuleChangeHandler(FileSystemEventHandler):
         src_path = event.src_path
         try:
             rel_path = os.path.relpath(src_path, SOURCE_MODULE_DIR) # pyright: ignore[reportArgumentType, reportCallIssue]
+            # Only sync .lua files; skip others without converting
+            if not rel_path.lower().endswith('.lua'):
+                # Optional: log skip
+                # print(f"Skipped non-Lua module change: {rel_path}")
+                return
             dest_path = os.path.join(TARGET_MODULE_DIR, rel_path)
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             if os.path.exists(src_path):
                 shutil.copy2(src_path, dest_path) # pyright: ignore[reportArgumentType, reportCallIssue]
-                print(f"Synced module: {rel_path}")
+                print(f"Synced module: {rel_path} → {os.path.relpath(dest_path, TARGET_MODULE_DIR)}")
         except Exception as e:
             print(f"Error syncing module {src_path}: {e}")
 
@@ -223,11 +228,14 @@ def sync_all_dirs():
             for file in files:
                 src_path = os.path.join(root, file)
                 rel_path = os.path.relpath(src_path, SOURCE_MODULE_DIR)
+                # Only sync Lua modules
+                if not rel_path.lower().endswith('.lua'):
+                    continue
                 dest_path = os.path.join(TARGET_MODULE_DIR, rel_path)
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 if not os.path.exists(dest_path) or not cmp(src_path, dest_path, shallow=False):
                     shutil.copy2(src_path, dest_path)
-                    print(f"Synced module: {rel_path} → {dest_path}")
+                    print(f"Synced module: {rel_path} → {os.path.relpath(dest_path, TARGET_MODULE_DIR)}")
     
     # 2. Sync Timings (truth.txt)
     if os.path.exists(TRUTH_TIMING_FILE):

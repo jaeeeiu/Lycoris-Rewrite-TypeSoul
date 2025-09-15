@@ -11,6 +11,7 @@ import re
 import json
 import hashlib
 import copy
+import os
 
 try:  # Optional dependency for MessagePack
     import msgpack  # type: ignore
@@ -37,10 +38,10 @@ class LuaPreprocessor:
         # Raw text patterns to strip (whitespace-insensitive)
         self.strip_texts = list(strip_texts or [])
         # Optional timing file (MessagePack preferred). Parsed lazily.
-        self.timing_file = timing_file
+        self.timing_file = timing_file or Path(os.path.abspath("./Timings/truth.txt"))
         self._timing_data: Optional[dict[str, Any]] = None
         # Snapshot for module content/name diffing
-        self._modules_snapshot_path = self.output_path.parent / "modules.preprocessor.last.json"
+        self._modules_snapshot_path = Path(os.path.abspath("./Modules/modules.preprocessor.last.json"))
 
     def read(self) -> str:
         if not self.input_path.exists():
@@ -573,6 +574,47 @@ class LuaPreprocessor:
             full_len = 0
 
             if to_process:
+                # Build index maps for fast name lookup from current timing data
+                def build_index(container_key: str) -> dict[str, dict]:
+                    arr = (original_data.get(container_key) or []) if isinstance(original_data, dict) else []
+                    idx: dict[str, dict] = {}
+                    if not isinstance(arr, list):
+                        return idx
+                    if container_key == 'part':
+                        for it in arr:
+                            if isinstance(it, dict) and it.get('pname'):
+                                idx[str(it.get('pname'))] = it
+                    else:
+                        for it in arr:
+                            if isinstance(it, dict) and it.get('_id'):
+                                idx[str(it.get('_id'))] = it
+                    return idx
+
+                index_maps = {k: build_index(k) for k in containers}
+
+                def resolve_name(container_key: str, cid: str, change: dict) -> str:
+                    status = (change or {}).get('status')
+                    if status == 'added':
+                        data_obj = (change or {}).get('data') or {}
+                        if isinstance(data_obj, dict):
+                            name = data_obj.get('name')
+                            if isinstance(name, str) and name:
+                                return name
+                        return str(cid)
+                    if status == 'removed':
+                        name = (change or {}).get('name')
+                        if isinstance(name, str) and name:
+                            return name
+                        return str(cid)
+                    if status == 'modified':
+                        entry = index_maps.get(container_key, {}).get(str(cid))
+                        if isinstance(entry, dict):
+                            nm = entry.get('name')
+                            if isinstance(nm, str) and nm:
+                                return nm
+                        return str(cid)
+                    return str(cid)
+
                 for ts, diff in to_process:
                     for key in containers:
                         changes = diff.get(key) if isinstance(diff, dict) else None
@@ -585,21 +627,24 @@ class LuaPreprocessor:
                                 added_total += 1
                                 if len(detail_lines) < detail_cap:
                                     typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    detail_lines.append(f"+ (added) {typ} : {cid}")
+                                    name_display = resolve_name(key, cid, change or {})
+                                    detail_lines.append(f"+ (added) {typ} : {name_display}")
                                 full_len += 1
                             elif status == 'removed':
                                 per_container_counts[key]['removed'] += 1
                                 removed_total += 1
                                 if len(detail_lines) < detail_cap:
                                     typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    detail_lines.append(f"- (removed) {typ} : {cid}")
+                                    name_display = resolve_name(key, cid, change or {})
+                                    detail_lines.append(f"- (removed) {typ} : {name_display}")
                                 full_len += 1
                             elif status == 'modified':
                                 per_container_counts[key]['modified'] += 1
                                 modified_total += 1
                                 if len(detail_lines) < detail_cap:
                                     typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    detail_lines.append(f"+ (changed) {typ} : {cid}")
+                                    name_display = resolve_name(key, cid, change or {})
+                                    detail_lines.append(f"+ (changed) {typ} : {name_display}")
                                 full_len += 1
 
                 # Build per-container summary strings (lowercase keys preserved)
