@@ -56,7 +56,7 @@ function AnimationBuilderSection:reset()
 	self.pastHitboxDetection:SetRawValue(false)
 	self.historySeconds:SetRawValue(0.5)
 	self.predictFacingHitboxes:SetRawValue(false)
-	self.extrapolationTime:SetRawValue(0.25)
+	self.extrapolationTime:SetRawValue(0.15)
 end
 
 ---Check before creating new timing. Override me.
