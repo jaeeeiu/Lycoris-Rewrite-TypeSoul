@@ -217,5 +217,6 @@
 **Also, SCHOOL.**
 
 *Your commit ID should == "33f7b1" when the update is fully pushed to you.*
+*Report any issues with timings, again.*
 
-@Updates
+@Buyer
