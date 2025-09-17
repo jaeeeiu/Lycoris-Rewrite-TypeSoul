@@ -296,7 +296,7 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	end
 
 	if Configuration.expectToggleValue("ForceAutoRotate") then
-		autoRotateStore:set(humanoid, "AutoRotate", true)
+		humanoid.AutoRotate = true
 	end
 
 	if not Configuration.expectToggleValue("AimLock") or not Configuration.expectToggleValue("StickyTargets") then
@@ -304,7 +304,7 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	end
 
 	if not Configuration.expectToggleValue("AimLock") then
-		return autoRotateStore:restore()
+		return not Configuration.expectToggleValue("ForceAutoRotate") and autoRotateStore:restore()
 	end
 
 	if Configuration.expectToggleValue("StickyTargets") then
@@ -317,7 +317,6 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	if not target then
 		failure = true
 		stickyTarget = nil
-		autoRotateStore:restore()
 	end
 
 	if target and not target.character.Parent then
@@ -331,7 +330,7 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	end
 
 	if failure then
-		return
+		return not Configuration.expectToggleValue("ForceAutoRotate") and autoRotateStore:restore()
 	end
 
 	if humanoid.PlatformStand then
@@ -354,7 +353,11 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 
 	local targetCFrame = CFrame.lookAt(humanoidRootPart.Position, targetPosition)
 
-	autoRotateStore:set(humanoid, "AutoRotate", false)
+	if Configuration.expectToggleValue("ForceAutoRotate") then
+		humanoid.AutoRotate = false
+	else
+		autoRotateStore:set(humanoid, "AutoRotate", false)
+	end
 
 	---@note: https://www.unknowncheats.me/forum/counterstrike-global-offensive/141636-scaled-smoothing-adaptive-smoothing.html
 	if Configuration.expectToggleValue("Smoothing") then
