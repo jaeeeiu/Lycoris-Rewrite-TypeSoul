@@ -57,7 +57,7 @@ function AttributeListener.krecently()
 		return false
 	end
 
-	return not AttributeListener.lastKnock or tick() - AttributeListener.lastKnock >= 0.250
+	return AttributeListener.lastKnock and tick() - AttributeListener.lastKnock <= 0.250
 end
 
 ---Can we parry?
