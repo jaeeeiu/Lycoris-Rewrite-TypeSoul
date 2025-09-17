@@ -25,16 +25,17 @@ return function(self, timing)
 	timing.fhb = false
 
 	local action = Action.new()
-	action._when = 230
+	action._when = 225
 	action._type = "Start Block"
 	action.ihbc = false
 	action.hitbox = Vector3.new(20, 20, 20)
-	action.name = "Specter Steps Timing"
+	action.name = "Start Timing"
 	self:action(timing, action)
 
 	local action2 = Action.new()
 	action2._when = 400
 	action2._type = "End Block"
 	action2.hitbox = Vector3.new(40, 40, 40)
+	action2.name = "End Timing"
 	self:action(timing, action2)
 end

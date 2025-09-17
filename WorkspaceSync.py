@@ -68,36 +68,115 @@ def save_data(data, path):
 def get_timing_key(timing, container_name):
     if container_name == 'part':
         return timing.get('pname')
-    return timing.get('_id')
+    # Animation & sound use _id; fallback to name if missing
+    return timing.get('_id') or timing.get('name')
 
 def find_differences(data1, data2):
-    """Finds differences and returns a patch dictionary."""
+    """Compute semantic differences grounded in the timing model (animation/part/sound).
+
+    Patch schema per timing:
+      removed  -> {status: removed, name: <displayName>}
+      added    -> {status: added, data: <fullTimingObj>}
+      modified -> {status: modified, changes: { field: {from: x, to: y}, ... }}
+
+    For action differences we replace the entire 'actions' list if any action added/removed/modified.
+    """
     patch = {}
-    all_containers = set(data1.keys()) | set(data2.keys())
+
+    if not isinstance(data1, dict):
+        data1 = {}
+    if not isinstance(data2, dict):
+        data2 = {}
+
+    EXPECTED_CONTAINERS = ("animation", "part", "sound")
+    all_containers = [c for c in EXPECTED_CONTAINERS if c in data1 or c in data2]
+
+    def index_timings(raw_list, container):
+        out = {}
+        if isinstance(raw_list, list):
+            for entry in raw_list:
+                if isinstance(entry, dict):
+                    k = get_timing_key(entry, container)
+                    if k:
+                        out[k] = entry
+        return out
+
+    def diff_actions(a1_list, a2_list):
+        if not (isinstance(a1_list, list) and isinstance(a2_list, list)):
+            return str(a1_list) != str(a2_list)  # treat as changed if structure differs
+        map1 = {a.get("name"): a for a in a1_list if isinstance(a, dict) and a.get("name")}
+        map2 = {a.get("name"): a for a in a2_list if isinstance(a, dict) and a.get("name")}
+        keys = set(map1.keys()) | set(map2.keys())
+        for k in keys:
+            a1 = map1.get(k)
+            a2 = map2.get(k)
+            if a1 and not a2:
+                return True
+            if not a1 and a2:
+                return True
+            if a1 and a2:
+                # Compare action fields (excluding transient like tp if present)
+                flds = set(a1.keys()) | set(a2.keys())
+                for f in flds:
+                    if f == "tp":
+                        continue  # transient runtime field
+                    if str(a1.get(f)) != str(a2.get(f)):
+                        return True
+        return False
+
+    IGNORE_ONLY_FIELDS = {"dp", "pfht"}  # If a timing's modified changes are confined to this set, ignore it
 
     for container in all_containers:
-        timings1_list = data1.get(container, [])
-        timings2_list = data2.get(container, [])
-        timings1 = {get_timing_key(t, container): t for t in timings1_list if get_timing_key(t, container)}
-        timings2 = {get_timing_key(t, container): t for t in timings2_list if get_timing_key(t, container)}
+        list1 = data1.get(container, [])
+        list2 = data2.get(container, [])
+        timings1 = index_timings(list1, container)
+        timings2 = index_timings(list2, container)
 
         all_keys = set(timings1.keys()) | set(timings2.keys())
         for key in all_keys:
             t1 = timings1.get(key)
             t2 = timings2.get(key)
-
-            if t1 and not t2: # Removed
-                patch.setdefault(container, {})[key] = {"status": "removed", "name": t1.get("name", key)}
-            elif not t1 and t2: # Added
+            if t1 and not t2:
+                patch.setdefault(container, {})[key] = {"status": "removed", "name": t1.get("name") or key}
+                continue
+            if t2 and not t1:
                 patch.setdefault(container, {})[key] = {"status": "added", "data": t2}
-            elif str(t1) != str(t2): # Modified
-                diff = {"status": "modified", "changes": {}}
-                all_fields = set(t1.keys()) | set(t2.keys()) # pyright: ignore[reportOptionalMemberAccess]
-                for field in all_fields:
-                    if str(t1.get(field)) != str(t2.get(field)): # pyright: ignore[reportOptionalMemberAccess]
-                        diff["changes"][field] = {"from": t1.get(field), "to": t2.get(field)} # pyright: ignore[reportOptionalMemberAccess]
-                patch.setdefault(container, {})[key] = diff
+                continue
+            # Both exist: field-level diff
+            changes = {}
+            if not (isinstance(t1, dict) and isinstance(t2, dict)):
+                if str(t1) != str(t2):
+                    patch.setdefault(container, {})[key] = {"status": "modified", "changes": {"*": {"from": t1, "to": t2}}}
+                continue
+            fields = set(t1.keys()) | set(t2.keys())
+            for field in fields:
+                v1 = t1.get(field)
+                v2 = t2.get(field)
+                if field == "actions":
+                    if diff_actions(v1, v2):
+                        changes[field] = {"from": v1, "to": v2}
+                    continue
+                if str(v1) != str(v2):
+                    changes[field] = {"from": v1, "to": v2}
+            if changes:
+                patch.setdefault(container, {})[key] = {"status": "modified", "changes": changes}
     return patch
+
+def write_patch_file(differences, author):
+    """Persist a differences dict (already in diff format) to a patch_*.json file and return its path."""
+    patch_id = uuid.uuid4()
+    timestamp = datetime.now().isoformat()
+    patch_filename = f"patch_{timestamp.replace(':', '-')}_{patch_id}.json"
+    patch_filepath = os.path.join(SOURCE_TIMING_DIR, patch_filename)
+    patch_content = {
+        "patch_id": str(patch_id),
+        "timestamp": timestamp,
+        "author": author,
+        "diff": differences
+    }
+    print(f"Generating new patch file: {patch_filename}")
+    save_json_data(patch_content, patch_filepath)
+    return patch_filepath
 
 def apply_patch(base_data, patch_data):
     """Applies a patch to the base data."""
@@ -260,7 +339,25 @@ def main():
         print(f"Created empty base file: {BASE_TIMING_FILE}")
 
     # Initial state setup
+    # 1. Rebuild local truth from patches so we have authoritative baseline
     rebuild_truth_from_patches()
+
+    # 2. If a remote truth already exists (TARGET_TRUTH_FILE), compute differences BEFORE overwriting it
+    if os.path.exists(TARGET_TRUTH_FILE) and os.path.getsize(TARGET_TRUTH_FILE) > 0 and os.path.exists(TRUTH_TIMING_FILE):
+        try:
+            local_truth_data = load_data(TRUTH_TIMING_FILE)
+            remote_truth_data = load_data(TARGET_TRUTH_FILE)
+            if str(local_truth_data) != str(remote_truth_data):
+                initial_diff = find_differences(local_truth_data, remote_truth_data)
+                if initial_diff:
+                    print("[!] Detected differences between existing remote truth and local truth on startup. Creating patch.")
+                    write_patch_file(initial_diff, DEV_NAME)
+                    # Rebuild again including the new patch, then push truth outward
+                    rebuild_truth_from_patches()
+        except Exception as e:
+            print(f"[!] Failed to compute initial differences: {e}")
+
+    # 3. Perform sync (this will copy our rebuilt truth outward)
     sync_all_dirs()
 
     # Start observers

@@ -6,12 +6,32 @@ local Action = getfenv().Action
 ---@param timing AnimationTiming
 return function(self, timing)
 	local distance = self:distance(self.entity)
-
 	local action = Action.new()
-	action._when = math.min(900 + distance * 3.5, 3000)
 	action._type = "Parry"
-	action.hitbox = Vector3.new(25, 30, 200)
-	action.name = string.format("(%.2f) Dynamic Blade Cero Timing", distance)
+	action.hitbox = Vector3.new(15, 15, 120)
+	action.name = string.format("(%.2f - %.2f) Dynamic Keyframe Action", distance, self.track.Speed)
 
-	return self:action(timing, action)
+	local tp = 1.0
+
+	if distance >= 20 then
+		tp = 1.1
+	end
+
+	if distance >= 25 then
+		tp = 1.12
+	end
+
+	if distance >= 30 then
+		tp = 1.15
+	end
+
+	if distance >= 35 then
+		tp = 1.18
+	end
+
+	if distance >= 40 then
+		tp = 1.2
+	end
+
+	return self:akeyframe(action, tp)
 end

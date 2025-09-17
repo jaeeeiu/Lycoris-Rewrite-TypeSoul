@@ -295,6 +295,10 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 		return
 	end
 
+	if Configuration.expectToggleValue("ForceAutoRotate") then
+		autoRotateStore:set(humanoid, "AutoRotate", true)
+	end
+
 	if not Configuration.expectToggleValue("AimLock") or not Configuration.expectToggleValue("StickyTargets") then
 		stickyTarget = nil
 	end

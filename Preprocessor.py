@@ -42,7 +42,7 @@ class LuaPreprocessor:
         self._timing_data: Optional[dict[str, Any]] = None
         # Snapshot for module content/name diffing
         self._modules_snapshot_path = Path(os.path.abspath("./Modules/modules.preprocessor.last.json"))
-
+        
     def read(self) -> str:
         if not self.input_path.exists():
             raise FileNotFoundError(f"Input file not found: {self.input_path}")
@@ -574,78 +574,138 @@ class LuaPreprocessor:
             full_len = 0
 
             if to_process:
-                # Build index maps for fast name lookup from current timing data
+                # Aggregate net changes across all new patches instead of emitting per-patch spam.
+                # For each (container, id) track starting presence and ending presence plus fields modified.
+                IGNORE_FIELDS = {'dp', 'pfht'}
+                aggregate: dict[str, dict[str, dict[str, Any]]] = {k: {} for k in containers}
+
+                # Build index maps from the CURRENT (original, unscrambled) timing data so we can recover display names.
+                # We index by multiple possible identifier keys (_id, pname) to maximize hit rate.
                 def build_index(container_key: str) -> dict[str, dict]:
                     arr = (original_data.get(container_key) or []) if isinstance(original_data, dict) else []
                     idx: dict[str, dict] = {}
-                    if not isinstance(arr, list):
-                        return idx
-                    if container_key == 'part':
+                    if isinstance(arr, list):
                         for it in arr:
-                            if isinstance(it, dict) and it.get('pname'):
-                                idx[str(it.get('pname'))] = it
-                    else:
-                        for it in arr:
-                            if isinstance(it, dict) and it.get('_id'):
-                                idx[str(it.get('_id'))] = it
+                            if not isinstance(it, dict):
+                                continue
+                            if it.get('_id'):
+                                idx[str(it['_id'])] = it
+                            if it.get('pname'):
+                                idx[str(it['pname'])] = it
                     return idx
-
                 index_maps = {k: build_index(k) for k in containers}
 
-                def resolve_name(container_key: str, cid: str, change: dict) -> str:
+                def record_change(container: str, cid: str, change: dict):
                     status = (change or {}).get('status')
+                    entry = aggregate[container].get(cid)
+                    if entry is None:
+                        # Initialize tracking record
+                        if status == 'added':
+                            entry = {
+                                'start_present': False,
+                                'end_present': True,
+                                'changed_fields': set(),
+                                'name': None,
+                            }
+                            data_obj = (change or {}).get('data') or {}
+                            if isinstance(data_obj, dict):
+                                nm = data_obj.get('name')
+                                if isinstance(nm, str):
+                                    entry['name'] = nm
+                        elif status == 'removed':
+                            entry = {
+                                'start_present': True,
+                                'end_present': False,
+                                'changed_fields': set(),
+                                'name': (change or {}).get('name'),
+                            }
+                        elif status == 'modified':
+                            entry = {
+                                'start_present': True,
+                                'end_present': True,
+                                'changed_fields': set(),
+                                'name': None,
+                            }
+                        else:  # Unknown / empty change entry
+                            return
+                        aggregate[container][cid] = entry
+                    # Update existing entry according to status
                     if status == 'added':
-                        data_obj = (change or {}).get('data') or {}
-                        if isinstance(data_obj, dict):
-                            name = data_obj.get('name')
-                            if isinstance(name, str) and name:
-                                return name
-                        return str(cid)
-                    if status == 'removed':
-                        name = (change or {}).get('name')
-                        if isinstance(name, str) and name:
-                            return name
-                        return str(cid)
-                    if status == 'modified':
-                        entry = index_maps.get(container_key, {}).get(str(cid))
-                        if isinstance(entry, dict):
-                            nm = entry.get('name')
-                            if isinstance(nm, str) and nm:
-                                return nm
-                        return str(cid)
-                    return str(cid)
+                        entry['end_present'] = True
+                        if entry['name'] is None:
+                            data_obj = (change or {}).get('data') or {}
+                            if isinstance(data_obj, dict):
+                                nm = data_obj.get('name')
+                                if isinstance(nm, str):
+                                    entry['name'] = nm
+                    elif status == 'removed':
+                        entry['end_present'] = False
+                        if not entry['name']:
+                            nm = (change or {}).get('name')
+                            if isinstance(nm, str):
+                                entry['name'] = nm
+                    elif status == 'modified':
+                        chg_map = (change or {}).get('changes')
+                        if isinstance(chg_map, dict):
+                            for field_name in chg_map.keys():
+                                fn = str(field_name)
+                                if fn in IGNORE_FIELDS:
+                                    continue
+                                entry['changed_fields'].add(fn)
+                        # Attempt to capture a name if not already set
+                        if not entry['name']:
+                            nm = (change or {}).get('name')
+                            if isinstance(nm, str):
+                                entry['name'] = nm
 
+                # Walk through all relevant patches in chronological order and accumulate net effect
                 for ts, diff in to_process:
                     for key in containers:
                         changes = diff.get(key) if isinstance(diff, dict) else None
                         if not isinstance(changes, dict):
                             continue
                         for cid, change in changes.items():
-                            status = (change or {}).get('status')
-                            if status == 'added':
-                                per_container_counts[key]['added'] += 1
-                                added_total += 1
-                                if len(detail_lines) < detail_cap:
-                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    name_display = resolve_name(key, cid, change or {})
-                                    detail_lines.append(f"+ (added) {typ} : {name_display}")
-                                full_len += 1
-                            elif status == 'removed':
-                                per_container_counts[key]['removed'] += 1
-                                removed_total += 1
-                                if len(detail_lines) < detail_cap:
-                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    name_display = resolve_name(key, cid, change or {})
-                                    detail_lines.append(f"- (removed) {typ} : {name_display}")
-                                full_len += 1
-                            elif status == 'modified':
-                                per_container_counts[key]['modified'] += 1
-                                modified_total += 1
-                                if len(detail_lines) < detail_cap:
-                                    typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
-                                    name_display = resolve_name(key, cid, change or {})
-                                    detail_lines.append(f"+ (changed) {typ} : {name_display}")
-                                full_len += 1
+                            record_change(key, str(cid), change or {})
+
+                # Classify net changes
+                for key in containers:
+                    for cid, info in aggregate[key].items():
+                        start_present = info['start_present']
+                        end_present = info['end_present']
+                        changed_fields = info['changed_fields']  # already excludes ignored fields
+                        # Attempt to resolve a friendly name: first any captured name, else lookup from index map, else cid.
+                        name_display = info['name']
+                        if not name_display:
+                            entry = index_maps.get(key, {}).get(cid)
+                            if isinstance(entry, dict):
+                                name_display = entry.get('name') or entry.get('pname')
+                        if not name_display:
+                            name_display = cid
+                        if not start_present and end_present:
+                            per_container_counts[key]['added'] += 1
+                            added_total += 1
+                            if len(detail_lines) < detail_cap:
+                                typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                detail_lines.append(f"+ (added) {typ} : {name_display}")
+                            full_len += 1
+                        elif start_present and not end_present:
+                            per_container_counts[key]['removed'] += 1
+                            removed_total += 1
+                            if len(detail_lines) < detail_cap:
+                                typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                detail_lines.append(f"- (removed) {typ} : {name_display}")
+                            full_len += 1
+                        elif start_present and end_present and changed_fields:
+                            per_container_counts[key]['modified'] += 1
+                            modified_total += 1
+                            if len(detail_lines) < detail_cap:
+                                typ = 'Animation' if key == 'animation' else ('Part' if key == 'part' else ('Sound' if key == 'sound' else key))
+                                detail_lines.append(f"+ (changed) {typ} : {name_display}")
+                            full_len += 1
+                        # Cases producing no net change:
+                        # - added then removed (start_present False, end_present False)
+                        # - modified fields only dp/pfht (changed_fields empty)
+                        # - other neutral cycles
 
                 # Build per-container summary strings (lowercase keys preserved)
                 for key in containers:

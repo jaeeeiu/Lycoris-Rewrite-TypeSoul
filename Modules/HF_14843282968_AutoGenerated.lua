@@ -5,9 +5,9 @@ local Action = getfenv().Action
 ---@param self AnimatorDefender
 ---@param timing AnimationTiming
 return function(self, timing)
-    local action = Action.new()
-    action._type = "Parry"
-    action.hitbox = Vector3.new(30, 30, 30)
-    action.name = "Keyframe Action"
-    return self:akeyframe(action, 0.383)
+	local action = Action.new()
+	action._type = "Parry"
+	action.hitbox = Vector3.new(30, 30, 30)
+	action.name = "Keyframe Action"
+	return self:akeyframe(action, 0.35)
 end

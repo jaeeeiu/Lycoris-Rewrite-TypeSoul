@@ -290,6 +290,12 @@ function CombatTab.initCombatAssistance(groupbox)
 
 	lsDepBox:AddDropdown("SmoothingDirection", { Text = "Smoothing Direction", Default = 0, Values = direction })
 
+	alDepBox:AddToggle("ForceAutoRotate", {
+		Text = "Force Auto Rotate",
+		Default = false,
+		Tooltip = "Use this if your aim-lock is not rotating your character. This is an un-fixable issue for now.",
+	})
+
 	alDepBox:AddToggle("StickyTargets", {
 		Text = "Sticky Targets",
 		Default = false,
