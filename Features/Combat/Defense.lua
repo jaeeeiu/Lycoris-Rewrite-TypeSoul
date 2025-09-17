@@ -313,6 +313,7 @@ local updateAssistance = LPH_NO_VIRTUALIZE(function()
 	if not target then
 		failure = true
 		stickyTarget = nil
+		autoRotateStore:restore()
 	end
 
 	if target and not target.character.Parent then
