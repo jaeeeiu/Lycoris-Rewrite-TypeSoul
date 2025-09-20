@@ -192,7 +192,6 @@ end)
 
 ---Run our facing extrapolation / interpolation.
 AnimatorDefender.fpc = LPH_NO_VIRTUALIZE(function(self, timing, options)
-	print(timing.duih, timing.pfh, timing.phd)
 	if timing.duih then
 		return false
 	end
