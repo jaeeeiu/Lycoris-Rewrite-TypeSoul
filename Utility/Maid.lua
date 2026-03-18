@@ -67,12 +67,6 @@ Maid.mark = LPH_NO_VIRTUALIZE(function(self, task)
 	return task
 end)
 
----Get a unique ID for a task.
----@return number
-Maid.uid = LPH_NO_VIRTUALIZE(function(self)
-	return #self._tasks + 1
-end)
-
 ---Add a task without a specific ID.
 ---@param task any
 ---@return number
@@ -81,7 +75,7 @@ Maid.add = LPH_NO_VIRTUALIZE(function(self, task)
 		return error("task cannot be false or nil", 2)
 	end
 
-	local taskId = self:uid()
+	local taskId = #self._tasks + 1
 	self[taskId] = task
 
 	return taskId
@@ -125,8 +119,6 @@ Maid.clean = LPH_NO_VIRTUALIZE(function(self)
 				_task:Pause()
 				_task:Cancel()
 				_task:Destroy()
-			elseif typeof(_task) == "Instance" and _task:IsA("AnimationTrack") then
-				_task:Stop()
 			elseif _task.Destroy then
 				_task:Destroy()
 			elseif _task.detach then

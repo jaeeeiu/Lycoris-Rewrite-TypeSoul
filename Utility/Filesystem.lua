@@ -69,13 +69,6 @@ return LPH_NO_VIRTUALIZE(function()
 		local new = {}
 
 		for idx, path in next, list do
-			---@note: Solara returns full paths.
-			--- C:/Users/brean/Downloads/Workspace/(path_here)/(file_here)
-			--- We must get rid of the C:/Users/brean/Downloads/Workspace and have that be fully dynamic and not break
-			if getexecutorname and getexecutorname():match("Solara") then
-				path = string.sub(path, #listfiles()[1] + 2, #path)
-			end
-
 			---@note: Non-raw weird behavior where the path is never detected in the string. Let's manually index remove it.
 			new[idx] = raw and path or string.sub(path, #(self:path() .. "\\") + 1, #path)
 		end
