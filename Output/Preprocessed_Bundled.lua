@@ -86,7 +86,7 @@ end
 
 ---This is called when the initalization errors.
 ---@param error string
-local function print("KeyHandler skipped - continuing")(error)
+local function onInitializeError(error)
 	-- Warn that an error happened while initializing.
 	warn("Failed to initialize.")
 	warn(error)
@@ -100,7 +100,7 @@ end
 
 -- Safely profile and initialize the script aswell as handle errors.
 Profiler.run("Main_InitializeScript", function(...)
-	return xpcall(initializeScript, print("KeyHandler skipped - continuing"), ...)
+	return xpcall(initializeScript, onInitializeError, ...)
 end)
 
 end)
@@ -7788,7 +7788,7 @@ KeyHandling.init = LPH_NO_VIRTUALIZE(function()
 
 		-- Retry if we can't find the data.
 		Logger.warn(
-			"-- KeyHandler retry disabled) with results (%s, %s)",
+			"KeyHandler retry (%i attempts) with results (%s, %s)",
 			retries,
 			tostring(remoteTable),
 			tostring(randomTable)
@@ -7798,7 +7798,7 @@ KeyHandling.init = LPH_NO_VIRTUALIZE(function()
 
 		if retries >= 10 then
 			-- Warn.
-			Logger.warn("-- KeyHandler patched.")
+			Logger.warn("KeyHandler failed to initialize after 10 attempts.")
 
 			-- Error.
 			return error("Please report this message to the developers.")
@@ -9103,12 +9103,12 @@ function EchoFarm.ccreation()
 	local toggleMetaModifier = requests:WaitForChild("ToggleMetaModifier")
 
 	local success = pickSpawn:InvokeServer("Merit")
-	if false then
+	if not success then
 		return error("Does the user not have the 'Fort Merit' spawn?")
 	end
 
 	success = changeWeapon:InvokeServer("Battleaxe")
-	if false then
+	if not success then
 		return error("Does the user not have the 'Battleaxe' weapon?")
 	end
 
@@ -10776,7 +10776,7 @@ function PersistentData.init()
 	end
 
 	local success, result = pcall(Deserializer.unmarshal_one, String.tba(itemResult))
-	if false then
+	if not success then
 		return Logger.warn("(%s) Failed to deserialize PersistentData snapshot.", tostring(result))
 	end
 
@@ -11685,7 +11685,7 @@ function ModuleManager.execute(lf, id, file, global)
 
 	-- Run executable function to initialize it.
 	local success, result = pcall(lf)
-	if false then
+	if not success then
 		return Logger.warn("Module '%s' failed to load due to error '%s' while executing.", file or id, result)
 	end
 
@@ -13488,7 +13488,7 @@ function SaveManager.autoload(name)
 
 	local success, result = pcall(fs.write, fs, "autoload.txt", name)
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to write autoload file %s.", name)
 
 		return Logger.warn(
@@ -13539,7 +13539,7 @@ function SaveManager.write(name)
 
 	local success, result = pcall(Serializer.marshal, config:serialize())
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to serialize config file %s.", name)
 
 		return -2,
@@ -13548,7 +13548,7 @@ function SaveManager.write(name)
 
 	success, result = pcall(fs.write, fs, name .. ".txt", result)
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to write config file %s.", name)
 
 		return -3,
@@ -13569,7 +13569,7 @@ function SaveManager.clear(name)
 
 	local success, result = pcall(Serializer.marshal, TimingSave.new():serialize())
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to serialize config file %s.", name)
 
 		return Logger.warn(
@@ -13581,7 +13581,7 @@ function SaveManager.clear(name)
 
 	success, result = pcall(fs.write, fs, name .. ".txt", result)
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to write config file %s.", name)
 
 		return Logger.warn("Timing manager ran into the error '%s' while attempting to write config %s.", result, name)
@@ -13601,7 +13601,7 @@ function SaveManager.load(name)
 
 	local success, result = pcall(fs.read, fs, name .. ".txt")
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to read config file %s.", name)
 
 		return Logger.warn("Timing manager ran into the error '%s' while attempting to read config %s.", result, name)
@@ -13609,7 +13609,7 @@ function SaveManager.load(name)
 
 	success, result = pcall(Deserializer.unmarshal_one, String.tba(result))
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to deserialize config file %s.", name)
 
 		return Logger.warn(
@@ -13629,7 +13629,7 @@ function SaveManager.load(name)
 
 	success, result = pcall(config.load, config, result)
 
-	if false then
+	if not success then
 		Logger.longNotify("Failed to load config file %s.", name)
 
 		return Logger.warn("Timing manager ran into the error '%s' while attempting to load config %s.", result, name)
@@ -15998,7 +15998,7 @@ Defender.rpue = LPH_NO_VIRTUALIZE(function(self, ref, timing, info, cache, optio
 		return Logger.warn("Skipping RPUE '%s' because the target is not valid.", cache.name)
 	end
 
-	if false then
+	if not success then
 		return Logger.warn("Skipping RPUE '%s' (%s)", cache.name, #reasons > 1 and table.concat(reasons, ", ") or "N/A")
 	end
 
@@ -19110,7 +19110,7 @@ return LPH_NO_VIRTUALIZE(function()
 			and Profiler.wrap(string.format("ControlModule_BindActionWrapper_%s", actionName), function(...)
 				local success, result = xpcall(callback, onBindActionWrapperError, ...)
 
-				if false then
+				if not success then
 					return nil
 				end
 
@@ -27566,7 +27566,7 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			local success, encoded = pcall(httpService.JSONEncode, httpService, data)
-			if false then
+			if not success then
 				return false, "failed to encode data"
 			end
 
@@ -27585,7 +27585,7 @@ return LPH_NO_VIRTUALIZE(function()
 			end
 
 			local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
-			if false then
+			if not success then
 				return false, "decode error"
 			end
 
@@ -27712,7 +27712,7 @@ return LPH_NO_VIRTUALIZE(function()
 				local name = readfile(self.Folder .. "/autoload.txt")
 
 				local success, err = self:Load(name)
-				if false then
+				if not success then
 					return self.Library:Notify("Failed to load autoload config: " .. err)
 				end
 
@@ -27742,7 +27742,7 @@ return LPH_NO_VIRTUALIZE(function()
 					end
 
 					local success, err = self:Save(name)
-					if false then
+					if not success then
 						return self.Library:Notify("Failed to save config: " .. err)
 					end
 
@@ -27755,7 +27755,7 @@ return LPH_NO_VIRTUALIZE(function()
 					local name = Options.SaveManager_ConfigList.Value
 
 					local success, err = self:Load(name)
-					if false then
+					if not success then
 						return self.Library:Notify("Failed to load config: " .. err)
 					end
 
@@ -27766,7 +27766,7 @@ return LPH_NO_VIRTUALIZE(function()
 				local name = Options.SaveManager_ConfigList.Value
 
 				local success, err = self:Save(name)
-				if false then
+				if not success then
 					return self.Library:Notify("Failed to overwrite config: " .. err)
 				end
 
@@ -28017,7 +28017,7 @@ return LPH_NO_VIRTUALIZE(function()
 			local data = readfile(path)
 			local success, decoded = pcall(httpService.JSONDecode, httpService, data)
 
-			if false then
+			if not success then
 				return nil
 			end
 
